@@ -7,6 +7,10 @@
 <meta name="apple-mobile-web-app-title" content="Folio.wax">
 <meta name="theme-color" content="#1a1814">
 <title>Folio.wax · Aktienclub</title>
+
+<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+<meta http-equiv="Pragma" content="no-cache">
+<meta http-equiv="Expires" content="0">
 <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=DM+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 <style>
 * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
@@ -148,9 +152,10 @@ footer { margin-top: 28px; padding-top: 14px; border-top: 1px solid #d8d4ce; fon
   <div class="sec-t"><span class="sec-n">2 ·</span> Ranking — aktuell & Alltime</div>
   <div class="tw"><table>
     <thead><tr>
-      <th>Pos.</th><th>Mitglied</th><th>Akt. Wert</th><th>Anteil %</th>
-      <th>YTD %</th><th>YTD €</th><th>Gewinn seit Start</th>
-      <th>Pos. AT</th><th>Alltime echt</th><th>Anteil AT %</th><th>Perf. p.a.</th>
+      <th>Pos.</th><th>Mitglied</th>
+      <th>YTD %</th><th>YTD €</th><th>Akt. Wert</th><th>Anteil %</th>
+      <th>Pos. AT</th><th>Alltime echt</th><th>Anteil AT %</th>
+      <th>Gewinn seit Start</th><th>Perf. p.a.</th>
     </tr></thead>
     <tbody id="rankingBody"></tbody>
   </table></div>
@@ -368,6 +373,25 @@ footer { margin-top: 28px; padding-top: 14px; border-top: 1px solid #d8d4ce; fon
 </div>
 
 <script>
+
+
+
+// WAX Auto-Update: prüft beim Start ob neue Version auf GitHub liegt
+// Build: 1775491161
+(async function waxAutoUpdate() {
+  try {
+    const resp = await fetch(location.pathname + '?nocache=' + 1775491161, 
+                             {method:'HEAD', cache:'no-store'});
+    const newEtag = resp.headers.get('etag') || resp.headers.get('last-modified') || '';
+    const lastEtag = localStorage.getItem('wax_build');
+    if (lastEtag && newEtag && lastEtag !== newEtag) {
+      localStorage.setItem('wax_build', newEtag);
+      location.reload(true);
+    } else {
+      localStorage.setItem('wax_build', newEtag || '1775491161');
+    }
+  } catch(e) {}
+})();
 const SB_URL = 'https://ywfpzdniicfrhnrvfqfe.supabase.co';
 const SB_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inl3ZnB6ZG5paWNmcmhucnZmcWZlIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzU0Mjc4ODcsImV4cCI6MjA5MTAwMzg4N30.St-f48-kfbmlN_QlAKtv-JbbLQYu5IaPmiPO7pyYQ9A';
 const PIN = '2000';
@@ -487,10 +511,10 @@ const CF_WORKER = 'https://wax-kurse.calvinjohncamp.workers.dev';
 // Benchmark-Jahresanfangskurse (Schluss 31.12. des Vorjahres)
 // Wird beim Jahresabschluss aktualisiert
 const BENCH_BASIS = {
-  '^IXIC':  19310.79,  // Nasdaq  31.12.2025
-  '^GSPC':   5881.63,  // S&P 500 31.12.2025
-  '^GDAXI': 19909.14,  // DAX     31.12.2025
-  '^HSI':   19760.27,  // Hang Seng 31.12.2025
+  '^IXIC':  19310.79,  // Nasdaq    Schluss 31.12.2025
+  '^GSPC':   5881.63,  // S&P 500   Schluss 31.12.2025
+  '^GDAXI': 19909.14,  // DAX       Schluss 30.12.2025 (letzter Handelstag)
+  '^HSI':   19760.27,  // Hang Seng Schluss 31.12.2025
 };
 const BENCH_JAHR = 2025; // wird beim Jahresabschluss aktualisiert
 
@@ -558,7 +582,7 @@ async function loadKurse() {
   }));
 }
 
-// Benchmark-YTD laden und anzeigen
+// Benchmark-YTD laden und anzeigen (via Cloudflare Worker)
 async function loadBenchmarks() {
   const benchmarks = [
     { ticker:'^IXIC',  id:'bNasdaq', label:'Nasdaq'    },
@@ -571,15 +595,32 @@ async function loadBenchmarks() {
   await Promise.all(benchmarks.map(async b => {
     const basis = BENCH_BASIS[b.ticker];
     if (!basis) return;
-    const aktuell = await cfFetch(b.ticker);
     const el = document.getElementById(b.id);
     if (!el) return;
-    if (aktuell && aktuell > 0) {
+    // ^ muss encoded werden für den Worker
+    const aktuell = await cfFetch(b.ticker);
+    if (aktuell && aktuell > 0 && basis > 0) {
       const ytd = (aktuell - basis) / basis;
       ytdWerte.push(ytd);
       el.textContent = fp(ytd);
       el.className = 'bench-v ' + (ytd >= 0 ? 'pos' : 'neg');
     } else {
+      // Fallback: YTD aus Yahoo direkt via CORS (Index-Ticker)
+      try {
+        const url = `https://query1.finance.yahoo.com/v8/finance/chart/${encodeURIComponent(b.ticker)}?interval=1d&range=1d`;
+        const r = await fetch(url, {signal: AbortSignal.timeout(8000)});
+        if (r.ok) {
+          const j = await r.json();
+          const price = j?.chart?.result?.[0]?.meta?.regularMarketPrice;
+          if (price && price > 0) {
+            const ytd = (price - basis) / basis;
+            ytdWerte.push(ytd);
+            el.textContent = fp(ytd);
+            el.className = 'bench-v ' + (ytd >= 0 ? 'pos' : 'neg');
+            return;
+          }
+        }
+      } catch {}
       el.textContent = '—';
     }
   }));
@@ -866,28 +907,34 @@ function renderUebersicht() {
     const at = calcAlltimeLive(m.id);
     const gewinn = at ? at.wert_echt-EINSATZ_PP : null;
     return { m, akt, ref, ytd, ytdAbs:akt-ref, at, anteilAkt:akt/gesamt, anteilAt:at?at.wert_echt/totalAlltime:0, gewinn };
-  }).sort((a,b)=>b.akt-a.akt);
+  }).sort((a,b)=>b.ytd-a.ytd); // Sortierung nach YTD% laufendes Jahr
 
   const atSorted = [...rows].sort((a,b)=>(b.at?.wert_echt||0)-(a.at?.wert_echt||0));
   let html='';
   rows.forEach((r,i)=>{
     const atRank = atSorted.findIndex(x=>x.m.id===r.m.id)+1;
+    // Bulle hinter Rang 1, Bär hinter letztem Rang
+    const emoji = i===0 ? ' 🐂' : i===rows.length-1 ? ' 🐻' : '';
     html+=`<tr>
-      <td class="bold">${i+1}</td><td class="bold">${r.m.name.split(',')[0]}</td>
-      <td class="bold">${f(r.akt)} €</td><td class="dim">${f(r.anteilAkt*100,1)}%</td>
-      <td class="${cl(r.ytd)} bold">${fp(r.ytd)}</td><td class="${cl(r.ytdAbs)}">${fc(r.ytdAbs)}</td>
-      <td class="${r.gewinn!=null?cl(r.gewinn):''}">  ${r.gewinn!=null?fc(r.gewinn):'—'}</td>
-      <td class="dim">${atRank}</td><td>${r.at?f(r.at.wert_echt)+' €':'—'}</td>
+      <td class="bold">${i+1}</td>
+      <td class="bold">${r.m.name.split(',')[0]}${emoji}</td>
+      <td class="${cl(r.ytd)} bold">${fp(r.ytd)}</td>
+      <td class="${cl(r.ytdAbs)}">${fc(r.ytdAbs)}</td>
+      <td class="bold">${f(r.akt)} €</td>
+      <td class="dim">${f(r.anteilAkt*100,1)}%</td>
+      <td class="dim">${atRank}</td>
+      <td>${r.at?f(r.at.wert_echt)+' €':'—'}</td>
       <td class="dim">${f(r.anteilAt*100,1)}%</td>
+      <td class="${r.gewinn!=null?cl(r.gewinn):''}">  ${r.gewinn!=null?fc(r.gewinn):'—'}</td>
       <td class="${r.at&&r.at.perf_pa>=0?'pos':'neg'}">${r.at?fp(r.at.perf_pa):'—'}</td>
     </tr>`;
   });
   const tg = rows.reduce((s,r)=>s+(r.gewinn||0),0);
   html+=`<tr class="total-row"><td></td><td>Gesamt / Ø</td>
-    <td>${f(gesamt)} €</td><td>100%</td>
     <td class="${cl(ytdPct)}">${fp(ytdPct)}</td><td class="${cl(ytdAbs)}">${fc(ytdAbs)}</td>
-    <td class="${cl(tg)}">${fc(tg)}</td>
+    <td>${f(gesamt)} €</td><td>100%</td>
     <td></td><td>${f(totalAlltime)} €</td><td>100%</td>
+    <td class="${cl(tg)}">${fc(tg)}</td>
     <td class="${perfPaLive>=0?'pos':'neg'}">${fp(perfPaLive)}</td>
   </tr>`;
   document.getElementById('rankingBody').innerHTML = html;
