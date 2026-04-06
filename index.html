@@ -247,6 +247,16 @@ footer { margin-top: 28px; padding-top: 14px; border-top: 1px solid #d8d4ce; fon
     <thead><tr><th>Position</th><th>Betrag</th><th>Info</th></tr></thead>
     <tbody id="comdirectInfo"></tbody>
   </table></div>
+
+  <div class="sec-t" style="margin-top:24px"><span class="sec-n">5.3 ·</span> Alltime-Transparenz — Formelaufschlüsselung</div>
+  <div style="font-size:11px;color:#666;margin-bottom:10px">
+    Alltime echt = aktueller Gesamtwert + Korrektursumme aus allen Reisen.<br>
+    Für jede Reise: <strong>Gutschrift</strong> (individueller Alltime-Anteil × Gesamtkosten) − <strong>Abzug</strong> (Gesamtkosten, gleich für alle) = Netto-Korrektur.
+  </div>
+  <div class="tw" id="alltimeTransparenzBody"></div>
+
+  <div class="sec-t" style="margin-top:24px"><span class="sec-n">5.4 ·</span> Jahresehrungen — Bulle, Bär &amp; Alltime-Bulle</div>
+  <div id="ehrungBody"></div>
 </div>
 
 <footer>
@@ -297,16 +307,29 @@ footer { margin-top: 28px; padding-top: 14px; border-top: 1px solid #d8d4ce; fon
 
   <div class="modal" id="modalReise" style="display:none">
     <div class="modal-title">✈ Reiseentnahme buchen</div>
-    <div class="form-row"><label class="form-label">Reisename</label><input type="text" class="form-input" id="rName"></div>
-    <div class="form-row-2">
-      <div class="form-row"><label class="form-label">Datum</label><input type="date" class="form-input" id="rDatum"></div>
-      <div class="form-row"><label class="form-label">Gesamtbetrag (€)</label><input type="number" class="form-input" id="rBetrag" oninput="calcReise()"></div>
+    <div id="reiseStep1">
+      <div class="form-row"><label class="form-label">Reisename</label><input type="text" class="form-input" id="rName"></div>
+      <div class="form-row-2">
+        <div class="form-row"><label class="form-label">Datum</label><input type="date" class="form-input" id="rDatum"></div>
+        <div class="form-row"><label class="form-label">Gesamtkosten alle 6 (€)</label><input type="number" class="form-input" id="rBetrag" oninput="calcReise()"></div>
+      </div>
+      <div class="info-box">Aufteilung nach aktuellen <strong>Alltime-Anteilen</strong>. Nach Eingabe siehst du eine detaillierte Vorschau aller Buchungen — erst dann wird gebucht.</div>
+      <div id="reiseVorschau" style="margin-bottom:14px"></div>
+      <div class="modal-footer">
+        <button class="btn btn-outline" onclick="closeModal()">Abbrechen</button>
+        <button class="btn btn-red" id="rBtnVorschau" onclick="showReiseBestätigung()" style="display:none">Vorschau & Bestätigung →</button>
+      </div>
     </div>
-    <div class="info-box">Aufteilung nach <strong>Alltime-Anteilen</strong>.</div>
-    <div id="reiseVorschau" style="margin-bottom:14px"></div>
-    <div class="modal-footer">
-      <button class="btn btn-outline" onclick="closeModal()">Abbrechen</button>
-      <button class="btn btn-red" onclick="saveReise()">Buchen</button>
+    <div id="reiseStep2" style="display:none">
+      <div class="modal-title" style="font-size:14px;margin-bottom:12px">📋 Bitte prüfen — wird so gebucht:</div>
+      <div id="reiseBestätigungDetail"></div>
+      <div class="info-box" style="background:#fff3cd;border-color:#ffc107;color:#856404;margin-top:12px">
+        ⚠️ Nach dem Buchen werden die Alltime-Korrekturen automatisch aktualisiert. Diese Aktion kann nicht rückgängig gemacht werden.
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-outline" onclick="document.getElementById('reiseStep1').style.display='block';document.getElementById('reiseStep2').style.display='none'">← Zurück</button>
+        <button class="btn btn-red" onclick="saveReise()">✓ Jetzt buchen</button>
+      </div>
     </div>
   </div>
 
@@ -359,8 +382,8 @@ const TICKER_MAP = {
   'A0D9PT': { t:'MTX.DE',         fx:'EUR' },
   '823212': { t:'LHA.DE',         fx:'EUR' },
   'A0LD6E': { t:'GXI.DE',         fx:'EUR' },
-  'A2TT3D': { t:'21XTC.DE',       fx:'EUR' },
-  'A2T0VS': { t:'DBSVS.DE',       fx:'EUR' },
+  'A2TT3D': { t:'21XH.DE',        fx:'EUR' },
+  'A2T0VS': { t:'XSLR.DE',        fx:'EUR' },
   'A1KWPR': { t:'VZLB.DE',        fx:'EUR' },
   'A0YEDG': { t:'SXR8.DE',        fx:'EUR' },
   'EWG2LD': { t:'EWG2.DE',        fx:'EUR' },
@@ -548,10 +571,28 @@ function calcXIRR(cashflows) {
   return isFinite(r) ? r : null;
 }
 
+// Historische Reisen für Alltime-Neutralisierung
+// Jede Reise: { name, datum, gesamt (Gesamtkosten alle 6), anteile: {id: gutschrift} }
+// Gutschrift = damaliger Alltime-Anteil × Gesamtkosten; Abzug = gesamt für alle gleich
+const REISE_HISTORY = [
+  { name:'Ablöse Bladdy',    datum:'Sep 2003', gesamt: 722.50,   anteile:{1:328.16, 2:609.93, 3:1017.42, 4:425.70,  5:1046.47, 6:907.75}  },
+  { name:'USA',              datum:'Jan 2008', gesamt: 2927.26,  anteile:{1:1198.62,2:2166.59,3:4517.12, 4:1893.36, 5:4646.97, 6:3140.91} },
+  { name:'Mauritius',        datum:'Dez 2017', gesamt: 2500.00,  anteile:{1:1087.40,2:2171.54,3:4442.31, 4:1877.50, 5:3390.26, 6:2030.98} },
+  { name:'Sylt',             datum:'Mai 2020', gesamt: 772.55,   anteile:{1:412.29, 2:703.88, 3:1556.69, 4:592.22,  5:854.78,  6:515.43}  },
+  { name:'Barcelona',        datum:'Jun 2022', gesamt: 1538.36,  anteile:{1:562.11, 2:1316.22,3:3319.15, 4:1244.22, 5:1824.80, 6:963.63}  },
+  { name:'Lappland',         datum:'Sep 2022', gesamt: 1639.23,  anteile:{1:921.57, 2:1864.78,3:3197.47, 4:1252.04, 5:1592.34, 6:1007.14} },
+];
+
+// Korrektursummen berechnen (sum(anteile) - gesamt für jedes Mitglied)
+function getAltimeKorr(id) {
+  return REISE_HISTORY.reduce((s, r) => s + (r.anteile[id] || 0) - r.gesamt, 0);
+}
+
 // Live-Alltime fuer ein Mitglied berechnen: { wert_echt, perf_pa }
 function calcAlltimeLive(id) {
   const depotwert = getDepotwert(id);
   if (depotwert <= 0) return null;
+  const wert_echt = depotwert + getAltimeKorr(id);
   const cashflows = [];
   cashflows.push({ date: new Date(2000, 0, 1), amount: -511.29 });
   const steps = [
@@ -569,7 +610,7 @@ function calcAlltimeLive(id) {
   }
   cashflows.push({ date: today, amount: depotwert });
   const perf_pa = calcXIRR(cashflows);
-  return perf_pa !== null ? { wert_echt: depotwert, perf_pa } : null;
+  return perf_pa !== null ? { wert_echt, perf_pa } : null;
 }
 
 function getDepotwert(id) {
@@ -900,6 +941,98 @@ function renderPflege() {
     <tr class="total-row"><td>Puffer (Dividenden/Gebühren)</td>
       <td class="${puffer!=null?cl(puffer):''}">${puffer!=null?fc(puffer):'—'}</td>
       <td class="dim">= Betrag der freigegeben werden kann</td></tr>`;
+
+  // Alltime-Transparenz: Formel-Aufschlüsselung für alle 6
+  renderAlltimeTransparenz();
+}
+
+function renderAlltimeTransparenz() {
+  const namen = {1:'Bantel',2:'Hallwig',3:'Kämper',4:'Neumann',5:'Poschner',6:'Schmitz'};
+  let html = '';
+  html += '<table style="width:100%;border-collapse:collapse;font-size:11px;margin-top:4px">';
+  html += '<thead><tr style="border-bottom:2px solid #d8d4ce">';
+  html += '<th style="text-align:left;padding:6px 8px;font-size:9px;letter-spacing:.1em;text-transform:uppercase;color:#777">Reise</th>';
+  html += '<th style="text-align:right;padding:6px 8px;font-size:9px;letter-spacing:.1em;text-transform:uppercase;color:#777">Gesamt−</th>';
+  [1,2,3,4,5,6].forEach(function(id){
+    html+='<th style="text-align:right;padding:6px 8px;font-size:9px;letter-spacing:.1em;text-transform:uppercase;color:#777">'+namen[id].substring(0,3)+'.<br><span style="font-size:8px;color:#aaa">Netto</span></th>';
+  });
+  html += '</tr></thead><tbody>';
+
+  REISE_HISTORY.forEach(function(r) {
+    html += '<tr style="border-bottom:1px solid #f0ede8">';
+    html += '<td style="padding:5px 8px;font-weight:700">'+r.name+'<br><span style="font-size:9px;color:#999;font-weight:400">'+r.datum+'</span></td>';
+    html += '<td style="text-align:right;padding:5px 8px;color:#c8441a">−'+f(r.gesamt)+'</td>';
+    [1,2,3,4,5,6].forEach(function(id){
+      var ant=r.anteile[id]||0;
+      var netto=ant-r.gesamt;
+      html+='<td style="text-align:right;padding:5px 8px;font-size:10px">'
+        +'<span style="color:#888;font-size:9px">+'+f(ant,0)+'</span><br>'
+        +'<span style="font-weight:700;color:'+(netto>=0?'#1a6e3a':'#c8441a')+'">'+(netto>=0?'+':'')+f(netto,0)+'</span>'
+        +'</td>';
+    });
+    html += '</tr>';
+  });
+
+  // Summenzeile Korrekturen
+  html += '<tr style="border-top:2px solid #d8d4ce;background:#f5f2ed;font-weight:700">';
+  html += '<td style="padding:6px 8px;font-size:10px;text-transform:uppercase;letter-spacing:.08em;color:#666">Korrektur gesamt</td>';
+  html += '<td></td>';
+  [1,2,3,4,5,6].forEach(function(id){
+    var k=getAltimeKorr(id);
+    html+='<td style="text-align:right;padding:6px 8px;font-weight:700;color:'+(k>=0?'#1a6e3a':'#c8441a')+'">'+(k>=0?'+':'')+f(k,0)+'</td>';
+  });
+  html += '</tr>';
+
+  // Alltime echt live
+  html += '<tr style="background:#1a1814;color:#faf9f6">';
+  html += '<td style="padding:6px 8px;font-weight:700">Alltime echt (live)</td>';
+  html += '<td></td>';
+  [1,2,3,4,5,6].forEach(function(id){
+    var at=calcAlltimeLive(id);
+    html+='<td style="text-align:right;padding:6px 8px;font-weight:700">'+(at?f(at.wert_echt)+'':'—')+'</td>';
+  });
+  html += '</tr></tbody></table>';
+
+  document.getElementById('alltimeTransparenzBody').innerHTML = html;
+  renderEhrungen();
+}
+
+function renderEhrungen() {
+  // YTD-Ranking für Bulle (bester YTD) und Bär (schlechtester YTD) des laufenden Jahres
+  const rows = db.mitglieder.map(m=>{
+    const akt = getDepotwert(m.id);
+    const ref = REF[m.id]?.total || 0;
+    const ytd = ref>0 ? (akt-ref)/ref : 0;
+    const at = calcAlltimeLive(m.id);
+    return { m, akt, ytd, at };
+  });
+
+  const byYtd = [...rows].sort((a,b)=>b.ytd-a.ytd);
+  const byAt  = [...rows].sort((a,b)=>(b.at?.perf_pa||0)-(a.at?.perf_pa||0));
+
+  const bulle   = byYtd[0];
+  const baer    = byYtd[byYtd.length-1];
+  const atBulle = byAt[0];
+
+  const jahr = new Date().getFullYear();
+  let html = '<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin-top:4px">';
+
+  function ehrungCard(emoji, titel, person, wert, farbe) {
+    return '<div style="background:#fff;border:1px solid #e8e4de;border-radius:6px;padding:16px;text-align:center">'
+      +'<div style="font-size:32px;margin-bottom:8px">'+emoji+'</div>'
+      +'<div style="font-size:9px;font-weight:700;letter-spacing:.15em;text-transform:uppercase;color:#999;margin-bottom:4px">'+titel+' '+jahr+'</div>'
+      +'<div style="font-size:18px;font-weight:700;margin-bottom:4px">'+person+'</div>'
+      +'<div style="font-size:14px;font-weight:700;color:'+farbe+'">'+wert+'</div>'
+      +'</div>';
+  }
+
+  html += ehrungCard('🐂', 'Bulle des Jahres', bulle.m.name.split(',')[0], fp(bulle.ytd)+' YTD', '#1a6e3a');
+  html += ehrungCard('🐻', 'Bär des Jahres',   baer.m.name.split(',')[0],  fp(baer.ytd)+' YTD',  '#c8441a');
+  html += ehrungCard('🏆', 'Alltime-Bulle',    atBulle.m.name.split(',')[0], atBulle.at?fp(atBulle.at.perf_pa)+' p.a.':'—', '#c8441a');
+  html += '</div>';
+  html += '<div style="font-size:10px;color:#999;margin-top:8px">Basierend auf aktuellen Live-Daten. Bulle = höchste YTD-Performance, Bär = niedrigste YTD-Performance, Alltime-Bulle = höchster interner Zinsfuß seit 2000.</div>';
+
+  document.getElementById('ehrungBody').innerHTML = html;
 }
 
 // MODALS
@@ -972,31 +1105,73 @@ async function saveFreigabe() {
 
 function calcReise() {
   const betrag=parseFloat(document.getElementById('rBetrag').value);
-  if(!betrag){document.getElementById('reiseVorschau').innerHTML='';return;}
+  const btn=document.getElementById('rBtnVorschau');
+  if(!betrag){document.getElementById('reiseVorschau').innerHTML='';btn.style.display='none';return;}
   const _rAt=db.mitglieder.map(m=>calcAlltimeLive(m.id));
   const totalAt=_rAt.reduce((s,a)=>s+(a?a.wert_echt:0),0);
   reiseVorschauData=db.mitglieder.map((m,i)=>{
     const at=_rAt[i];
     const anteil=at&&totalAt>0?at.wert_echt/totalAt:1/6;
-    return{m,anteil,betrag:betrag*anteil};
+    const gutschrift=anteil*betrag; // individuelle Gutschrift (positiver Alltime-Anteil)
+    return{m,anteil,betrag:betrag*anteil,gutschrift,gesamtAbzug:betrag};
   });
-  let html='<table style="width:100%;font-size:11px;border-collapse:collapse"><tr style="border-bottom:1px solid #e8e4de"><th style="text-align:left;padding:4px 6px">Mitglied</th><th style="text-align:right;padding:4px 6px">Anteil</th><th style="text-align:right;padding:4px 6px">Betrag</th></tr>';
-  reiseVorschauData.forEach(r=>{html+=`<tr style="border-bottom:1px solid #f5f5f5"><td style="padding:4px 6px">${r.m.name.split(',')[0]}</td><td style="text-align:right;padding:4px 6px">${f(r.anteil*100,2)}%</td><td style="text-align:right;padding:4px 6px;font-weight:700">${f(r.betrag)} €</td></tr>`;});
-  html+=`<tr style="font-weight:700;border-top:2px solid #ddd"><td style="padding:4px 6px">Gesamt</td><td></td><td style="text-align:right;padding:4px 6px">${f(betrag)} €</td></tr></table>`;
+  let html='<table style="width:100%;font-size:11px;border-collapse:collapse"><tr style="border-bottom:1px solid #e8e4de"><th style="text-align:left;padding:4px 6px">Mitglied</th><th style="text-align:right;padding:4px 6px">Alltime-Anteil</th><th style="text-align:right;padding:4px 6px">Entnahme aus Cash</th></tr>';
+  reiseVorschauData.forEach(r=>{html+=`<tr style="border-bottom:1px solid #f5f5f5"><td style="padding:4px 6px">${r.m.name.split(',')[0]}</td><td style="text-align:right;padding:4px 6px">${f(r.anteil*100,2)}%</td><td style="text-align:right;padding:4px 6px;font-weight:700;color:#c8441a">−${f(r.betrag)} €</td></tr>`;});
+  html+=`<tr style="font-weight:700;border-top:2px solid #ddd"><td style="padding:4px 6px">Gesamt</td><td></td><td style="text-align:right;padding:4px 6px;color:#c8441a">−${f(betrag)} €</td></tr></table>`;
   document.getElementById('reiseVorschau').innerHTML=html;
+  btn.style.display='block';
+}
+
+function showReiseBestätigung() {
+  const name=document.getElementById('rName').value.trim();
+  const datum=document.getElementById('rDatum').value;
+  const betrag=parseFloat(document.getElementById('rBetrag').value);
+  if(!name||!datum||!betrag||!reiseVorschauData){alert('Bitte alle Felder ausfüllen.');return;}
+  
+  let html=`<div style="background:#f8f6f2;border-radius:4px;padding:12px;margin-bottom:12px;font-size:12px">`;
+  html+=`<div style="font-weight:700;font-size:13px;margin-bottom:8px">✈ ${name} — ${datum}</div>`;
+  html+=`<div style="color:#666;margin-bottom:12px">Gesamtkosten: <strong>${f(betrag)} €</strong></div>`;
+  html+=`<table style="width:100%;border-collapse:collapse;font-size:11px">`;
+  html+=`<tr style="border-bottom:1px solid #ddd;font-weight:700"><td style="padding:3px 6px">Mitglied</td><td style="text-align:right;padding:3px 6px">AT-Anteil</td><td style="text-align:right;padding:3px 6px">Cash −</td><td style="text-align:right;padding:3px 6px">AT-Gutschrift</td><td style="text-align:right;padding:3px 6px">AT-Abzug</td><td style="text-align:right;padding:3px 6px">Netto AT</td></tr>`;
+  reiseVorschauData.forEach(r=>{
+    const nettoAt = r.gutschrift - r.gesamtAbzug;
+    html+=`<tr style="border-bottom:1px solid #f0f0f0">
+      <td style="padding:3px 6px;font-weight:700">${r.m.name.split(',')[0]}</td>
+      <td style="text-align:right;padding:3px 6px">${f(r.anteil*100,2)}%</td>
+      <td style="text-align:right;padding:3px 6px;color:#c8441a">−${f(r.betrag)}</td>
+      <td style="text-align:right;padding:3px 6px;color:#1a6e3a">+${f(r.gutschrift)}</td>
+      <td style="text-align:right;padding:3px 6px;color:#c8441a">−${f(r.gesamtAbzug)}</td>
+      <td style="text-align:right;padding:3px 6px;font-weight:700;color:${nettoAt>=0?'#1a6e3a':'#c8441a'}">${nettoAt>=0?'+':''}${f(nettoAt)}</td>
+    </tr>`;
+  });
+  html+=`</table></div>`;
+  html+=`<div style="font-size:11px;color:#666;margin-top:8px">Die <strong>Alltime-Korrekturen</strong> werden automatisch um diese Reise ergänzt.</div>`;
+  document.getElementById('reiseBestätigungDetail').innerHTML=html;
+  document.getElementById('reiseStep1').style.display='none';
+  document.getElementById('reiseStep2').style.display='block';
 }
 
 async function saveReise() {
   if(!reiseVorschauData){calcReise();return;}
-  const name=document.getElementById('rName').value;
+  const name=document.getElementById('rName').value.trim();
   const datum=document.getElementById('rDatum').value;
-  if(!name||!datum){alert('Bitte Reisename und Datum angeben.');return;}
+  const gesamtBetrag=parseFloat(document.getElementById('rBetrag').value);
+  if(!name||!datum||!gesamtBetrag){alert('Bitte alle Felder ausfüllen.');return;}
+  
+  // Cash-Buchungen für alle Mitglieder
   for(const r of reiseVorschauData){
-    await sbPost('buchungen',{datum,typ:'REISE',mitglied_id:r.m.id,bezeichnung:name,betrag:-r.betrag,notiz:`Anteil ${f(r.anteil*100,2)}%`});
+    await sbPost('buchungen',{datum,typ:'REISE',mitglied_id:r.m.id,bezeichnung:name,betrag:-r.betrag,notiz:`Alltime-Anteil ${f(r.anteil*100,2)}% | Gutschrift +${f(r.gutschrift)}€ | Abzug −${f(r.gesamtAbzug)}€`});
     const c=db.cash.find(x=>x.mitglied_id===r.m.id);
     await sbPatch('cash',`mitglied_id=eq.${r.m.id}`,{betrag:(c?.betrag||0)-r.betrag,updated_at:new Date().toISOString()});
   }
+  
+  // REISE_HISTORY aktualisieren (in-memory für diese Session)
+  const neueAnteile={};
+  reiseVorschauData.forEach(r=>{ neueAnteile[r.m.id]=parseFloat(r.gutschrift.toFixed(2)); });
+  REISE_HISTORY.push({ name, datum, gesamt:parseFloat(gesamtBetrag.toFixed(2)), anteile:neueAnteile });
+  
   closeModal(); await init();
+  alert(`✓ Reise "${name}" gebucht.\n\nWichtig: Bitte die Projektdoku (WAX_PROJEKT.md) mit den neuen REISE_HISTORY-Daten aktualisieren, damit der neue Eintrag beim nächsten App-Start erhalten bleibt:\n\n{ name:'${name}', datum:'${datum}', gesamt:${gesamtBetrag.toFixed(2)}, anteile:{${reiseVorschauData.map(r=>r.m.id+':'+r.gutschrift.toFixed(2)).join(', ')}} }`);
 }
 
 async function saveAlltime() {
