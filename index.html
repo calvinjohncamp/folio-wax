@@ -888,7 +888,7 @@ async function saveKauf() {
 
   await sbPost('buchungen',{datum,typ,mitglied_id:mid,bezeichnung:bez,wkn,stueck,kurs,betrag:typ==='VERKAUF'?betrag:-betrag,notiz});
   if(typ==='KAUF') {
-    await sbPost('positionen',{mitglied_id:mid,bezeichnung:bez,wkn,art,stueck,kaufkurs:kurs,kaufwert:betrag,kauf_datum:datum,verkauft:false});
+    await sbPost('positionen',{mitglied_id:mid,bezeichnung:bez,wkn,art,stueck,kaufkurs:kurs,kaufwert:betrag,kauf_datum:datum,verkauft:false,kurs_ref:kurs,wert_ref:betrag});
     const c=db.cash.find(x=>x.mitglied_id===mid);
     await sbPatch('cash',`mitglied_id=eq.${mid}`,{betrag:(c?.betrag||0)-betrag,updated_at:new Date().toISOString()});
   } else {
