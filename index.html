@@ -140,7 +140,7 @@ footer { margin-top: 28px; padding-top: 14px; border-top: 1px solid #d8d4ce; fon
   <div class="kpi-grid">
     <div class="kpi"><div class="kpi-l">Gesamtwert</div><div class="kpi-v" id="kGesamt">—</div><div class="kpi-s">alle 6 Mitglieder</div></div>
     <div class="kpi"><div class="kpi-l">Ø pro Person</div><div class="kpi-v" id="kProPerson">—</div><div class="kpi-s">inkl. Cash</div></div>
-    <div class="kpi"><div class="kpi-l">YTD Performance</div><div class="kpi-v" id="kYtd">—</div><div class="kpi-s">seit 31.12.2025</div></div>
+    <div class="kpi"><div class="kpi-l">YTD Performance</div><div class="kpi-v" id="kYtd">—</div><div class="kpi-s">seit 31.12.${REF_JAHR}</div></div>
     <div class="kpi"><div class="kpi-l">YTD absolut</div><div class="kpi-v" id="kYtdAbs">—</div><div class="kpi-s">Gewinn/Verlust</div></div>
     <div class="kpi"><div class="kpi-l">Perf. p.a. (Alltime)</div><div class="kpi-v" id="kPerfPa">—</div><div class="kpi-s">interner Zinsfuß Ø</div></div>
     <div class="kpi"><div class="kpi-l">Einsatz pro Person</div><div class="kpi-v">14.304,81 €</div><div class="kpi-s">seit Jan 2000</div></div>
@@ -257,6 +257,16 @@ footer { margin-top: 28px; padding-top: 14px; border-top: 1px solid #d8d4ce; fon
 
   <div class="sec-t" style="margin-top:24px"><span class="sec-n">5.4 ·</span> Jahresehrungen — Bulle, Bär &amp; Alltime-Bulle</div>
   <div id="ehrungBody"></div>
+
+  <div class="sec-t" style="margin-top:24px"><span class="sec-n">5.5 ·</span> Jahresabschluss — Vorjahreswerte einfrieren</div>
+  <div class="info-box" style="margin-bottom:12px">
+    Am <strong>31. Dezember</strong> einmalig ausführen. Friert für alle 6 Mitglieder ein:<br>
+    Gesamtwert, Cash, Invest-Wert, sowie <strong>Kurs und Wert jeder aktiven Position</strong> (werden als neue kurs_ref / wert_ref gesetzt).<br>
+    Ab 01. Januar vergleicht die App automatisch gegen diese Werte.
+  </div>
+  <div id="jahresabschlussInfo" style="font-size:12px;color:#666;margin-bottom:12px"></div>
+  <button class="btn btn-outline" onclick="vorschauJahresabschluss()" style="margin-right:8px">📋 Vorschau anzeigen</button>
+  <div id="jahresabschlussVorschau" style="margin:12px 0"></div>
 </div>
 
 <footer>
@@ -364,7 +374,9 @@ const PIN = '2000';
 const EINSATZ_PP = 14304.81;
 
 // Referenzwerte 31.12.2025 (aus Excel, unveränderlich)
-const REF = {
+// REF-Werte (Vorjahresstand) — werden aus Supabase geladen (jahresabschluss-Tabelle)
+// Fallback: hardcodierte Werte für 2025 falls Tabelle noch nicht existiert
+const REF_FALLBACK = {
   1: { total: 14811.28,  cash: 2424.25,  invest: 12387.03 },
   2: { total: 21602.89,  cash: 1905.15,  invest: 19697.74 },
   3: { total: 62003.30,  cash: 13927.52, invest: 48075.78 },
@@ -372,6 +384,8 @@ const REF = {
   5: { total: 33593.55,  cash: 833.44,   invest: 32760.11 },
   6: { total: 39923.51,  cash: 1270.03,  invest: 38653.48 },
 };
+let REF = {...REF_FALLBACK};
+let REF_JAHR = 2025; // aktuell geladenes Referenzjahr
 
 // WKN → Yahoo-Ticker + Heimatwährung (via Cloudflare Worker)
 // Stooq.com: kostenlos, kein API-Key, CORS-fähig im Browser
@@ -510,6 +524,22 @@ async function loadKurse() {
 async function init() {
   setStatus('loading','Lade Daten…');
   document.getElementById('hdDate').textContent = new Date().toLocaleDateString('de-DE',{weekday:'short',day:'2-digit',month:'short',year:'numeric'});
+  // Jahresabschluss laden (neuesten verfügbaren Eintrag)
+  try {
+    const jaResp = await fetch(`${SB_URL}/rest/v1/jahresabschluss?order=jahr.desc&limit=6`,
+      {headers:{'apikey':SB_KEY,'Authorization':'Bearer '+SB_KEY}});
+    if(jaResp.ok) {
+      const jaData = await jaResp.json();
+      if(jaData && jaData.length > 0) {
+        REF_JAHR = jaData[0].jahr;
+        REF = {};
+        jaData.forEach(r => {
+          REF[r.mitglied_id] = { total: r.gesamt_ref, cash: r.cash_ref, invest: r.invest_ref };
+        });
+      }
+    }
+  } catch(e) { /* Fallback auf REF_FALLBACK */ }
+
   const [mitglieder, positionen, cash, alltime, buchungen] = await Promise.all([
     sbGet('mitglieder','order=sortierung'),
     sbGet('positionen','order=mitglied_id,id'),
@@ -548,27 +578,49 @@ function getMitglied(id) { return db.mitglieder.find(m=>m.id===id); }
 function getAlltime(id) { return db.alltime.find(a=>a.mitglied_id===id); }
 function getCash(id) { return db.cash.find(c=>c.mitglied_id===id)?.betrag || 0; }
 
-// XIRR (Newton-Raphson)
+// XIRR (Newton-Raphson, robust — mehrere Startpunkte, Clamping)
 function calcXIRR(cashflows) {
   if (!cashflows || cashflows.length < 2) return null;
   const t0 = cashflows[0].date;
   const days = cashflows.map(cf => (cf.date - t0) / 86400000);
   const amounts = cashflows.map(cf => cf.amount);
-  let r = 0.1;
-  for (let iter = 0; iter < 200; iter++) {
-    let f = 0, df = 0;
+
+  function npv(r) {
+    let s = 0;
     for (let i = 0; i < amounts.length; i++) {
       const exp = days[i] / 365;
       const base = Math.pow(1 + r, exp);
-      f  += amounts[i] / base;
-      df -= amounts[i] * exp / (base * (1 + r));
+      if (!isFinite(base) || base <= 0) return Infinity;
+      s += amounts[i] / base;
     }
-    if (Math.abs(df) < 1e-12) break;
-    const rNew = r - f / df;
-    if (Math.abs(rNew - r) < 1e-8) { r = rNew; break; }
-    r = rNew;
+    return s;
   }
-  return isFinite(r) ? r : null;
+  function deriv(r) {
+    let s = 0;
+    for (let i = 0; i < amounts.length; i++) {
+      const exp = days[i] / 365;
+      const base = Math.pow(1 + r, exp);
+      if (!isFinite(base) || base <= 0) return 0;
+      s -= amounts[i] * exp / (base * (1 + r));
+    }
+    return s;
+  }
+
+  // Mehrere Startpunkte versuchen
+  for (const guess of [0.1, 0.05, -0.05, 0.3, -0.15, 0.5, -0.3, -0.5, -0.8]) {
+    let r = guess;
+    for (let iter = 0; iter < 300; iter++) {
+      const f = npv(r), df = deriv(r);
+      if (!isFinite(f) || Math.abs(df) < 1e-12) break;
+      let rNew = r - f / df;
+      rNew = Math.max(-0.99, Math.min(rNew, 5.0)); // Clamping verhindert Divergenz
+      if (Math.abs(rNew - r) < 1e-9) { r = rNew; break; }
+      r = rNew;
+    }
+    // Nur akzeptieren wenn Lösung sinnvoll und konvergiert
+    if (r > -0.99 && r < 5.0 && Math.abs(npv(r)) < 1.0) return r;
+  }
+  return null;
 }
 
 // Historische Reisen für Alltime-Neutralisierung
@@ -588,27 +640,58 @@ function getAltimeKorr(id) {
   return REISE_HISTORY.reduce((s, r) => s + (r.anteile[id] || 0) - r.gesamt, 0);
 }
 
+// Sonderzahlungen im XIRR-Zahlungsstrom (individuell pro Mitglied, aus Excel)
+// Format: { datum: 'YYYY-MM-DD', vals: {mitglied_id: netto_betrag} }
+// Netto = normaler Monatsbeitrag ERSETZT durch diesen Wert
+// Reise-Erstattungen sind positiv (Gutschrift nach Alltime-Anteil)
+// Bei neuer Reise: neuen Eintrag hinzufügen mit individuellen Netto-Beträgen
+const XIRR_SONDER = [
+  { d:'2003-09-01', v:{1:-201.13, 2:-201.13, 3:-201.13, 4:-201.13, 5:-201.13, 6:-201.13} }, // Sep 2003: -51.13 normal + -150 Ablöse Bladdy
+  { d:'2008-01-01', v:{1:590.47,  2:590.47,  3:590.47,  4:590.47,  5:590.47,  6:590.47} },  // Jan 2008: USA-Reise +660.47 vs. -70 normal
+  { d:'2017-12-01', v:{1:228.16,  2:509.93,  3:917.42,  4:325.70,  5:946.47,  6:807.75} },  // Dez 2017: Mauritius Teil 1
+  { d:'2018-07-01', v:{1:1098.62, 2:2066.59, 3:4417.12, 4:1793.36, 5:4546.97, 6:3040.91} }, // Jul 2018: Mauritius Teil 2
+  { d:'2020-05-01', v:{1:987.40,  2:2071.54, 3:4342.31, 4:1777.50, 5:3290.26, 6:1930.98} }, // Mai 2020: Sylt
+  { d:'2022-06-01', v:{1:312.29,  2:603.88,  3:1456.69, 4:492.22,  5:754.78,  6:415.43} },  // Jun 2022: Barcelona
+  { d:'2022-09-01', v:{1:462.11,  2:1216.22, 3:3219.15, 4:1144.22, 5:1724.80, 6:863.63} },  // Sep 2022: Lappland Teil 1
+  { d:'2023-02-01', v:{1:821.57,  2:1764.78, 3:3097.47, 4:1152.04, 5:1492.34, 6:907.14} },  // Feb 2023: Lappland Teil 2
+];
+
+// Hilfsfunktion: ist ein Datum ein Sonderdatum?
+function getSonderBetrag(id, year, month) {
+  const key = `${year}-${String(month+1).padStart(2,'0')}-01`;
+  const s = XIRR_SONDER.find(x => x.d === key);
+  return s ? s.v[id] : null;
+}
+
 // Live-Alltime fuer ein Mitglied berechnen: { wert_echt, perf_pa }
 function calcAlltimeLive(id) {
   const depotwert = getDepotwert(id);
   if (depotwert <= 0) return null;
   const wert_echt = depotwert + getAltimeKorr(id);
+
   const cashflows = [];
+  // Startkapital (Tag 0 = 01.01.2000)
   cashflows.push({ date: new Date(2000, 0, 1), amount: -511.29 });
+
+  // Monatliche Beiträge von Jan 2000 bis heute
+  const today = new Date();
   const steps = [
     { from: new Date(2000, 0, 1), to: new Date(2007, 7, 1), betrag: -51.13 },
     { from: new Date(2007, 8, 1), to: new Date(2015, 1, 1), betrag: -70.00 },
     { from: new Date(2015, 2, 1), to: new Date(9999, 0, 1), betrag: -100.00 },
   ];
-  const today = new Date();
   for (const step of steps) {
     let d = new Date(step.from);
     while (d <= step.to && d <= today) {
-      cashflows.push({ date: new Date(d), amount: step.betrag });
+      // Prüfen ob Sonderzahlung für diesen Monat
+      const sonder = getSonderBetrag(id, d.getFullYear(), d.getMonth());
+      cashflows.push({ date: new Date(d), amount: sonder !== null ? sonder : step.betrag });
       d = new Date(d.getFullYear(), d.getMonth() + 1, 1);
     }
   }
-  cashflows.push({ date: today, amount: depotwert });
+
+  // Aktueller wert_echt als Endwert
+  cashflows.push({ date: today, amount: wert_echt });
   const perf_pa = calcXIRR(cashflows);
   return perf_pa !== null ? { wert_echt, perf_pa } : null;
 }
@@ -651,7 +734,7 @@ function renderAll() {
 // ÜBERSICHT
 function renderUebersicht() {
   const gesamt = db.mitglieder.reduce((s,m)=>s+getDepotwert(m.id),0);
-  const ref2025 = Object.values(REF).reduce((s,r)=>s+r.total,0); // 201246.13
+  const ref2025 = Object.values(REF).reduce((s,r)=>s+r.total,0);
   const ytdPct = (gesamt-ref2025)/ref2025;
   const ytdAbs = gesamt-ref2025;
   document.getElementById('kGesamt').textContent = f(gesamt)+' €';
@@ -702,27 +785,22 @@ function renderUebersicht() {
   </tr>`;
   document.getElementById('rankingBody').innerHTML = html;
 
-  // Top Holdings
-  const holdings={};
+  // Top 10 Holdings — clubweit, nach WKN aggregiert, absteigend
+  const holdingsMap={}; // wkn → {bezeichnung, wert}
   db.positionen.filter(p=>!p.verkauft).forEach(p=>{
     const k=liveKurse[p.wkn];
     const w=k!=null?k*p.stueck:(p.wert_ref||p.kaufwert);
-    let name=p.bezeichnung;
-    if(name.includes('Krypto')||name.includes('21Shares Krypto')) name='Krypto (21Shares)';
-    holdings[name]=(holdings[name]||0)+w;
+    if(!holdingsMap[p.wkn]) holdingsMap[p.wkn]={bezeichnung:p.bezeichnung, wkn:p.wkn, wert:0};
+    holdingsMap[p.wkn].wert+=w;
   });
-  const totalInvest = db.mitglieder.reduce((s,m)=>{
-    return s+db.positionen.filter(p=>p.mitglied_id===m.id&&!p.verkauft).reduce((ss,p)=>{
-      const k=liveKurse[p.wkn]; return ss+(k!=null?k*p.stueck:(p.wert_ref||p.kaufwert));
-    },0);
-  },0);
-  const sorted=Object.entries(holdings).sort((a,b)=>b[1]-a[1]).slice(0,7);
+  const totalInvest = Object.values(holdingsMap).reduce((s,h)=>s+h.wert,0);
+  const top10=Object.values(holdingsMap).sort((a,b)=>b.wert-a.wert).slice(0,10);
   let cum=0, hhtml='';
-  sorted.forEach(([name,wert],i)=>{
-    const ant=totalInvest>0?wert/totalInvest:0; cum+=ant;
-    hhtml+=`<tr><td class="bold">${i+1}</td><td>${name}</td><td class="bold">${f(wert)} €</td><td class="dim">${f(ant*100,2)}%</td><td class="dim">${f(cum*100,2)}%</td></tr>`;
+  top10.forEach((h,i)=>{
+    const ant=totalInvest>0?h.wert/totalInvest:0; cum+=ant;
+    hhtml+=`<tr><td class="bold">${i+1}</td><td>${h.bezeichnung}</td><td class="dim" style="font-size:10px">${h.wkn}</td><td class="bold">${f(h.wert)} €</td><td class="dim">${f(ant*100,2)}%</td><td class="dim">${f(cum*100,2)}%</td></tr>`;
   });
-  document.getElementById('topHoldingsBody').innerHTML = hhtml||'<tr><td colspan="5" style="text-align:center;color:#888">Lade…</td></tr>';
+  document.getElementById('topHoldingsBody').innerHTML = hhtml||'<tr><td colspan="6" style="text-align:center;color:#888">Lade…</td></tr>';
 }
 
 // EINZELDEPOTS
@@ -770,7 +848,7 @@ function renderDepot(id) {
 
   let html=`<div class="kpi-grid" style="margin-bottom:16px">
     <div class="kpi"><div class="kpi-l">Aktueller Wert</div><div class="kpi-v bold">${f(gesamtAkt)} €</div><div class="kpi-s">Invest + Cash</div></div>
-    <div class="kpi"><div class="kpi-l">YTD %</div><div class="kpi-v ${cl(ytd)}">${fp(ytd)}</div><div class="kpi-s">seit 31.12.2025</div></div>
+    <div class="kpi"><div class="kpi-l">YTD %</div><div class="kpi-v ${cl(ytd)}">${fp(ytd)}</div><div class="kpi-s">seit 31.12.${REF_JAHR}</div></div>
     <div class="kpi"><div class="kpi-l">YTD absolut</div><div class="kpi-v ${cl(ytdAbs)}">${fc(ytdAbs)}</div><div class="kpi-s">Gewinn/Verlust</div></div>
     <div class="kpi"><div class="kpi-l">Cash aktuell</div><div class="kpi-v">${f(cash)} €</div><div class="kpi-s">${f(cash/Math.max(gesamtAkt,1)*100,1)}% des Depots</div></div>
     <div class="kpi"><div class="kpi-l">Alltime echt</div><div class="kpi-v">${atData?f(atData.wert_echt)+' €':'—'}</div><div class="kpi-s">neutralisiert</div></div>
@@ -786,10 +864,25 @@ function renderDepot(id) {
     <th>Akt. Kurs</th><th>Akt. Wert</th><th>Diff. %</th><th>Diff. €</th>
   </tr></thead><tbody>`;
 
-  // Aktive Positionen
+  // Aktive Positionen — nach aktuellem Wert absteigend
+  // Gleiche WKN werden für Sortierung zusammengerechnet, aber einzeln angezeigt
   if (aktivPos.length > 0) {
     html+=`<tr class="gr"><td colspan="12">Aktive Positionen</td></tr>`;
+    // Gesamtwert pro WKN berechnen (für Sortierung)
+    const wknWert={};
     aktivPos.forEach(p=>{
+      const k=liveKurse[p.wkn];
+      const w=k!=null?k*p.stueck:(p.wert_ref||p.kaufwert);
+      wknWert[p.wkn]=(wknWert[p.wkn]||0)+w;
+    });
+    // Sortieren: erst nach WKN-Gesamtwert (desc), dann nach Einzelwert (desc)
+    const sortedPos=[...aktivPos].sort((a,b)=>{
+      const wa=wknWert[a.wkn]||0, wb=wknWert[b.wkn]||0;
+      if(Math.abs(wa-wb)>0.01) return wb-wa;
+      const ka=liveKurse[a.wkn],kb=liveKurse[b.wkn];
+      return (kb!=null?kb*b.stueck:(b.wert_ref||b.kaufwert))-(ka!=null?ka*a.stueck:(a.wert_ref||a.kaufwert));
+    });
+    sortedPos.forEach(p=>{
       const k=liveKurse[p.wkn];
       const wAkt=k!=null?k*p.stueck:(p.wert_ref||p.kaufwert);
       const wRef=p.wert_ref||p.kaufwert;
@@ -1191,6 +1284,109 @@ async function saveComdirect() {
   closeModal();
   alert(`Comdirect-Stand ${f(betrag)} € gespeichert.`);
   await init();
+}
+
+// ── JAHRESABSCHLUSS ──────────────────────────────────────────────────────────
+function vorschauJahresabschluss() {
+  const jahr = new Date().getFullYear();
+  const heute = new Date().toLocaleDateString('de-DE');
+  let html = `<div style="background:#f8f6f2;border-radius:4px;padding:14px;font-size:12px">`;
+  html += `<div style="font-weight:700;font-size:13px;margin-bottom:10px">📋 Jahresabschluss ${jahr} — Vorschau (Stand: ${heute})</div>`;
+  html += `<table style="width:100%;border-collapse:collapse;font-size:11px">`;
+  html += `<tr style="border-bottom:2px solid #ddd;font-weight:700"><td style="padding:4px 8px">Mitglied</td><td style="text-align:right;padding:4px 8px">Gesamtwert</td><td style="text-align:right;padding:4px 8px">Cash</td><td style="text-align:right;padding:4px 8px">Invest</td><td style="text-align:right;padding:4px 8px">Akt. Pos.</td></tr>`;
+  
+  let gesamt = 0;
+  db.mitglieder.forEach(m => {
+    const cash = getCash(m.id);
+    const pos = db.positionen.filter(p=>p.mitglied_id===m.id&&!p.verkauft);
+    let invest = 0;
+    pos.forEach(p => {
+      const k = liveKurse[p.wkn];
+      invest += k!=null ? k*p.stueck : (p.wert_ref||p.kaufwert);
+    });
+    const total = invest + cash;
+    gesamt += total;
+    html += `<tr style="border-bottom:1px solid #f0f0f0">
+      <td style="padding:4px 8px;font-weight:700">${m.name.split(',')[0]}</td>
+      <td style="text-align:right;padding:4px 8px;font-weight:700">${f(total)} €</td>
+      <td style="text-align:right;padding:4px 8px">${f(cash)} €</td>
+      <td style="text-align:right;padding:4px 8px">${f(invest)} €</td>
+      <td style="text-align:right;padding:4px 8px">${pos.length} Pos.</td>
+    </tr>`;
+  });
+  
+  html += `<tr style="border-top:2px solid #ddd;font-weight:700;background:#f0ede8">
+    <td style="padding:4px 8px">Gesamt Club</td>
+    <td style="text-align:right;padding:4px 8px">${f(gesamt)} €</td>
+    <td colspan="3"></td>
+  </tr>`;
+  html += `</table>`;
+  
+  const aktivePos = db.positionen.filter(p=>!p.verkauft).length;
+  html += `<div style="margin-top:10px;color:#666">Es werden <strong>${aktivePos} aktive Positionen</strong> mit aktuellem Kurs und Wert als neue kurs_ref / wert_ref eingefroren.</div>`;
+  html += `<div style="margin-top:12px">`;
+  html += `<button class="btn btn-red" onclick="saveJahresabschluss(${new Date().getFullYear()})">✓ Jahresabschluss ${new Date().getFullYear()} jetzt einfrieren</button>`;
+  html += `</div></div>`;
+  
+  document.getElementById('jahresabschlussVorschau').innerHTML = html;
+}
+
+async function saveJahresabschluss(jahr) {
+  if(!confirm(`Jahresabschluss ${jahr} wirklich einfrieren?\n\nDies setzt:\n• REF-Werte für alle 6 Mitglieder\n• kurs_ref + wert_ref für alle aktiven Positionen\n\nDieser Schritt kann nicht rückgängig gemacht werden.`)) return;
+  
+  const info = document.getElementById('jahresabschlussInfo');
+  info.textContent = 'Speichere…';
+  
+  try {
+    // 1. kurs_ref + wert_ref für alle aktiven Positionen setzen
+    const aktivePos = db.positionen.filter(p=>!p.verkauft);
+    for(const p of aktivePos) {
+      const k = liveKurse[p.wkn];
+      if(k != null) {
+        const wert_ref = k * p.stueck;
+        await sbPatch('positionen', `id=eq.${p.id}`, {kurs_ref: k, wert_ref});
+      }
+    }
+    
+    // 2. cash.betrag_ref für alle Mitglieder setzen
+    for(const m of db.mitglieder) {
+      const cash = getCash(m.id);
+      await sbPatch('cash', `mitglied_id=eq.${m.id}`, {betrag_ref: cash, updated_at: new Date().toISOString()});
+    }
+    
+    // 3. jahresabschluss-Tabelle befüllen
+    for(const m of db.mitglieder) {
+      const cash = getCash(m.id);
+      const pos = db.positionen.filter(p=>p.mitglied_id===m.id&&!p.verkauft);
+      let invest = 0;
+      pos.forEach(p => {
+        const k = liveKurse[p.wkn];
+        invest += k!=null ? k*p.stueck : (p.wert_ref||p.kaufwert);
+      });
+      const total = invest + cash;
+      
+      // Upsert: erst versuchen patch, dann post
+      const existing = await fetch(`${SB_URL}/rest/v1/jahresabschluss?jahr=eq.${jahr}&mitglied_id=eq.${m.id}`,
+        {headers:{'apikey':SB_KEY,'Authorization':'Bearer '+SB_KEY}});
+      const ex = await existing.json();
+      
+      const payload = {jahr, mitglied_id:m.id, gesamt_ref:total, cash_ref:cash, invest_ref:invest};
+      if(ex && ex.length > 0) {
+        await sbPatch('jahresabschluss', `jahr=eq.${jahr}&mitglied_id=eq.${m.id}`, payload);
+      } else {
+        await sbPost('jahresabschluss', payload);
+      }
+    }
+    
+    info.textContent = `✓ Jahresabschluss ${jahr} erfolgreich eingefroren am ${new Date().toLocaleDateString('de-DE')}. Seite wird neu geladen…`;
+    info.style.color = '#1a6e3a';
+    document.getElementById('jahresabschlussVorschau').innerHTML = '';
+    setTimeout(()=>init(), 2000);
+    
+  } catch(e) {
+    info.textContent = `Fehler: ${e.message}`;
+    info.style.color = '#c8441a';
+  }
 }
 </script>
 </body>
