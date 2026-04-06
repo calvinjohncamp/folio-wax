@@ -26,10 +26,10 @@ body { background: #f0ede8; color: #111; font-family: 'DM Sans', sans-serif; fon
 .hd-logo img { height: 32px; display: block; }
 .hd-spacer { flex: 1; }
 .hd-date { font-size: 10px; color: #666; text-align: right; line-height: 1.6; }
-.nav { background: #1a1814; border-bottom: 1px solid #2a2520; display: flex; overflow-x: auto; padding: 0 24px; }
-.nav-btn { font-size: 10px; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; color: #666; padding: 11px 14px; border: none; background: none; cursor: pointer; border-bottom: 2px solid transparent; margin-bottom: -1px; white-space: nowrap; transition: color .15s; }
+.nav { background: #1a1814; border-bottom: 1px solid #2a2520; display: flex; overflow-x: auto; padding: 0 24px; position: sticky; top: 64px; z-index: 99; }
+.nav-btn { font-size: 10px; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; color: #999; padding: 11px 14px; border: none; background: none; cursor: pointer; border-bottom: 2px solid transparent; margin-bottom: -1px; white-space: nowrap; transition: color .15s; }
 .nav-btn.active { color: #faf9f6; border-bottom-color: #c8441a; }
-.nav-btn:hover:not(.active) { color: #aaa; }
+.nav-btn:hover:not(.active) { color: #ccc; }
 .content { max-width: 1400px; margin: 0 auto; padding: 20px 24px 40px; }
 .sec-t { font-size: 9px; font-weight: 700; letter-spacing: .2em; text-transform: uppercase; color: #666; padding-bottom: 10px; border-bottom: 1px solid #d8d4ce; margin-bottom: 16px; }
 .sec-n { color: #1a1814; }
@@ -74,7 +74,7 @@ td:nth-child(2) { text-align: left; }
 .form-row-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
 .modal-footer { display: flex; gap: 10px; justify-content: flex-end; margin-top: 20px; }
 .info-box { background: #f5f2ed; border: 1px solid #d8d4ce; padding: 12px; border-radius: 3px; margin-bottom: 14px; font-size: 11px; color: #555; line-height: 1.6; }
-.statusbar { background: #141210; border-bottom: 1px solid #222; padding: 5px 24px; display: flex; align-items: center; gap: 8px; font-size: 10px; color: #666; }
+.statusbar { background: #141210; border-bottom: 1px solid #222; padding: 5px 24px; display: flex; align-items: center; gap: 8px; font-size: 10px; color: #666; position: sticky; top: 102px; z-index: 98; }
 .sdot { width: 6px; height: 6px; border-radius: 50%; background: #333; flex-shrink: 0; }
 .sdot.live { background: #2a9a5a; animation: pulse 2s infinite; }
 .sdot.loading { background: #c8441a; animation: pulse 1s infinite; }
@@ -400,26 +400,19 @@ async function sbPatch(table, filter, data) {
   } catch { return false; }
 }
 
-// YAHOO FETCH — mit Fallback-Proxy
+// KURSE via Supabase Edge Function (eigener Yahoo-Proxy, kein CORS-Problem)
+const EDGE_URL = `${SB_URL}/functions/v1/yahoo-proxy`;
+
 async function yahooFetch(ticker) {
-  const url = `https://query1.finance.yahoo.com/v8/finance/chart/${ticker}?interval=1d&range=5d`;
-  const proxies = [
-    `https://api.allorigins.win/get?url=${encodeURIComponent(url)}`,
-    `https://corsproxy.io/?${encodeURIComponent(url)}`,
-  ];
-  for (const proxy of proxies) {
-    try {
-      const r = await fetch(proxy, {signal: AbortSignal.timeout(8000)});
-      if (!r.ok) continue;
-      const j = await r.json();
-      // allorigins wraps in .contents, corsproxy returns direct
-      const text = j.contents || (typeof j === 'string' ? j : JSON.stringify(j));
-      const d = typeof text === 'string' ? JSON.parse(text) : text;
-      const price = d?.chart?.result?.[0]?.meta?.regularMarketPrice;
-      if (price && price > 0) return price;
-    } catch {}
-  }
-  return null;
+  try {
+    const r = await fetch(`${EDGE_URL}?ticker=${encodeURIComponent(ticker)}`, {
+      headers: { 'Authorization': `Bearer ${SB_KEY}` },
+      signal: AbortSignal.timeout(10000)
+    });
+    if (!r.ok) return null;
+    const j = await r.json();
+    return j.price && j.price > 0 ? j.price : null;
+  } catch { return null; }
 }
 
 // FX
