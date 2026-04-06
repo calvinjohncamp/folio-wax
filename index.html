@@ -379,7 +379,7 @@ const TICKER_MAP = {
   'A3DHHB': { t:'APLD',        fx:'USD' },
   'A2APCZ': { t:'MDGL',        fx:'USD' },
   'A2QB38': { t:'SNOW',        fx:'USD' },
-  'A2UBKC': { t:'XRP-USD', fx:'USD' },
+  'A2UBKC': { t:'21XP.DE',      fx:'EUR' },
   'A0YEFE': { t:'FTNT',        fx:'USD' },
   'A3CND6': { t:'PATH',        fx:'USD' },
   'A2AT0Z': { t:'CRSP',        fx:'USD' },
@@ -701,10 +701,8 @@ function renderDepot(id) {
       const wRef=p.wert_ref||p.kaufwert;
       const dp=k!=null&&p.wert_ref?(wAkt-wRef)/wRef:null;
       const de=k!=null&&p.wert_ref?wAkt-wRef:null;
-      const info=TICKER_MAP[p.wkn];
-      const fxLbl=info&&info.fx!=='EUR'?`<span class="fx-note">${info.fx}</span>`:'';
       const dateBadge=p.kauf_datum?`<span class="badge b-new">NEU ${fdate(p.kauf_datum)}</span>`:'';
-      const kursDisplay = k!=null ? f(k,4)+fxLbl : `<span class="kurs-loading">lädt…</span>`;
+      const kursDisplay = k!=null ? f(k,4) : `<span class="kurs-loading">lädt…</span>`;
       html+=`<tr>
         <td>${f(p.stueck,0)}</td><td>${p.bezeichnung}${dateBadge}</td>
         <td class="dim">${p.wkn}</td><td class="dim">${p.art}</td>
@@ -888,7 +886,7 @@ async function saveKauf() {
 
   await sbPost('buchungen',{datum,typ,mitglied_id:mid,bezeichnung:bez,wkn,stueck,kurs,betrag:typ==='VERKAUF'?betrag:-betrag,notiz});
   if(typ==='KAUF') {
-    await sbPost('positionen',{mitglied_id:mid,bezeichnung:bez,wkn,art,stueck,kaufkurs:kurs,kaufwert:betrag,kauf_datum:datum,verkauft:false,kurs_ref:kurs,wert_ref:betrag});
+    await sbPost('positionen',{mitglied_id:mid,bezeichnung:bez,wkn,art,stueck,kaufkurs:kurs,kaufwert:betrag,kauf_datum:datum,verkauft:false});
     const c=db.cash.find(x=>x.mitglied_id===mid);
     await sbPatch('cash',`mitglied_id=eq.${mid}`,{betrag:(c?.betrag||0)-betrag,updated_at:new Date().toISOString()});
   } else {
