@@ -142,7 +142,7 @@ footer { margin-top: 28px; padding-top: 14px; border-top: 1px solid #d8d4ce; fon
     <div class="kpi"><div class="kpi-l">Ø pro Person</div><div class="kpi-v" id="kProPerson">—</div><div class="kpi-s">inkl. Cash</div></div>
     <div class="kpi"><div class="kpi-l">YTD Performance</div><div class="kpi-v" id="kYtd">—</div><div class="kpi-s">seit 31.12.${REF_JAHR}</div></div>
     <div class="kpi"><div class="kpi-l">YTD absolut</div><div class="kpi-v" id="kYtdAbs">—</div><div class="kpi-s">Gewinn/Verlust</div></div>
-    <div class="kpi"><div class="kpi-l">Perf. p.a. (Alltime)</div><div class="kpi-v" id="kPerfPa">—</div><div class="kpi-s">interner Zinsfuß Ø</div></div>
+    <div class="kpi"><div class="kpi-l">Perf. p.a. (Alltime)</div><div class="kpi-v" id="kPerfPa">—</div><div class="kpi-s">interner Zinsfuß Club</div></div>
     <div class="kpi"><div class="kpi-l">Einsatz pro Person</div><div class="kpi-v">14.304,81 €</div><div class="kpi-s">seit Jan 2000</div></div>
   </div>
   <div class="sec-t"><span class="sec-n">2 ·</span> Ranking — aktuell & Alltime</div>
@@ -769,6 +769,40 @@ function calcAlltimeLive(id) {
   return perf_pa !== null ? { wert_echt, perf_pa } : null;
 }
 
+// Club-XIRR: Gesamter Club als ein Cashflow (wie Excel Interner Zinsfuß Gesamt)
+// 6 × Einzahlungen, Sondermonate summiert, Endwert = Summe aller wert_echt
+function calcClubXIRR() {
+  const heute = new Date();
+  const cashflows = [];
+  // Startkapital × 6
+  cashflows.push({ date: new Date(2000, 0, 1), amount: -511.29 * 6 });
+  // Monatsbeiträge × 6
+  const steps = [
+    { from: new Date(2000, 0, 1), to: new Date(2007, 7, 1), betrag: -51.13 * 6 },
+    { from: new Date(2007, 8, 1), to: new Date(2015, 1, 1), betrag: -70.00 * 6 },
+    { from: new Date(2015, 2, 1), to: new Date(9999, 0, 1), betrag: -100.00 * 6 },
+  ];
+  for (const step of steps) {
+    let d = new Date(step.from);
+    while (d <= step.to && d <= heute) {
+      // Sondermonat? → Summe aller 6 individuellen Werte
+      const key = d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-01';
+      const sonder = XIRR_SONDER.find(x => x.d === key);
+      const betrag = sonder ? Object.values(sonder.v).reduce((s,v)=>s+v,0) : step.betrag;
+      cashflows.push({ date: new Date(d), amount: betrag });
+      d = new Date(d.getFullYear(), d.getMonth() + 1, 1);
+    }
+  }
+  // Endwert = Summe aller wert_echt
+  const gesamtWertEcht = db.mitglieder.reduce((s, m) => {
+    const at = calcAlltimeLive(m.id);
+    return s + (at ? at.wert_echt : 0);
+  }, 0);
+  if (gesamtWertEcht <= 0) return null;
+  cashflows.push({ date: heute, amount: gesamtWertEcht });
+  return calcXIRR(cashflows);
+}
+
 function getDepotwert(id) {
   const pos = db.positionen.filter(p=>p.mitglied_id===id&&!p.verkauft);
   let invest = 0;
@@ -821,7 +855,7 @@ function renderUebersicht() {
 
   const liveAt = db.mitglieder.map(m=>calcAlltimeLive(m.id)).filter(Boolean);
   const totalAlltime = liveAt.reduce((s,a)=>s+a.wert_echt,0);
-  const perfPaLive = liveAt.length ? liveAt.reduce((s,a)=>s+a.perf_pa,0)/liveAt.length : 0;
+  const perfPaLive = calcClubXIRR() || 0;
   const perfPaEl = document.getElementById('kPerfPa');
   perfPaEl.textContent = fp(perfPaLive);
   perfPaEl.className = 'kpi-v '+(perfPaLive>=0?'pos':'neg');
@@ -913,7 +947,7 @@ function renderDepot(id) {
   const gesamt = db.mitglieder.reduce((s,m2)=>s+getDepotwert(m2.id),0);
   const liveAt = db.mitglieder.map(m=>calcAlltimeLive(m.id)).filter(Boolean);
   const totalAlltime = liveAt.reduce((s,a)=>s+a.wert_echt,0);
-  const perfPaLive = liveAt.length ? liveAt.reduce((s,a)=>s+a.perf_pa,0)/liveAt.length : 0;
+  const perfPaLive = calcClubXIRR() || 0;
   const perfPaEl = document.getElementById('kPerfPa');
   perfPaEl.textContent = fp(perfPaLive);
   perfPaEl.className = 'kpi-v '+(perfPaLive>=0?'pos':'neg');
@@ -1047,7 +1081,7 @@ function renderPerf() {
     </tr>`;
   });
   const tg=sorted.reduce((s,a)=>s+(a.wert_echt-EINSATZ_PP),0);
-  const avg=liveAtArr.length?liveAtArr.reduce((s,a)=>s+a.perf_pa,0)/liveAtArr.length:0;
+  const avg = calcClubXIRR() || 0;
   html+=`<tr class="total-row"><td>Gesamt / Ø</td><td>${f(totalAt)} €</td>
     <td class="${cl(tg)}">${fc(tg)}</td><td></td>
     <td class="${cl(avg)}">${fp(avg)}</td><td>100%</td><td></td></tr>`;
