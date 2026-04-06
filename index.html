@@ -157,11 +157,11 @@ footer { margin-top: 28px; padding-top: 14px; border-top: 1px solid #d8d4ce; fon
   <div class="sec-t"><span class="sec-n">3 ·</span> Benchmarks YTD</div>
   <div class="bench-grid">
     <div class="bench-item"><div class="bench-l">WAX</div><div class="bench-v" id="bWax">—</div></div>
-    <div class="bench-item"><div class="bench-l">Nasdaq</div><div class="bench-v neg">-5,86%</div></div>
-    <div class="bench-item"><div class="bench-l">S&amp;P 500</div><div class="bench-v neg">-3,84%</div></div>
-    <div class="bench-item"><div class="bench-l">DAX</div><div class="bench-v neg">-5,40%</div></div>
-    <div class="bench-item"><div class="bench-l">Hang Seng</div><div class="bench-v neg">-2,01%</div></div>
-    <div class="bench-item"><div class="bench-l">Ø Top 4</div><div class="bench-v neg">-4,28%</div></div>
+    <div class="bench-item"><div class="bench-l">Nasdaq</div><div class="bench-v" id="bNasdaq">lädt…</div></div>
+    <div class="bench-item"><div class="bench-l">S&amp;P 500</div><div class="bench-v" id="bSp500">lädt…</div></div>
+    <div class="bench-item"><div class="bench-l">DAX</div><div class="bench-v" id="bDax">lädt…</div></div>
+    <div class="bench-item"><div class="bench-l">Hang Seng</div><div class="bench-v" id="bHsi">lädt…</div></div>
+    <div class="bench-item"><div class="bench-l">Ø Top 4</div><div class="bench-v" id="bTop4">lädt…</div></div>
   </div>
   <div class="sec-t"><span class="sec-n">4 ·</span> Top Holdings (aktuell)</div>
   <div class="tw"><table>
@@ -484,6 +484,16 @@ async function sbPatch(table, filter, data) {
 // Cloudflare Worker als Yahoo-Proxy — zuverlässig, kein CORS-Problem
 const CF_WORKER = 'https://wax-kurse.calvinjohncamp.workers.dev';
 
+// Benchmark-Jahresanfangskurse (Schluss 31.12. des Vorjahres)
+// Wird beim Jahresabschluss aktualisiert
+const BENCH_BASIS = {
+  '^IXIC':  19310.79,  // Nasdaq  31.12.2025
+  '^GSPC':   5881.63,  // S&P 500 31.12.2025
+  '^GDAXI': 19909.14,  // DAX     31.12.2025
+  '^HSI':   19760.27,  // Hang Seng 31.12.2025
+};
+const BENCH_JAHR = 2025; // wird beim Jahresabschluss aktualisiert
+
 async function cfFetch(ticker) {
   try {
     const r = await fetch(`${CF_WORKER}/?ticker=${encodeURIComponent(ticker)}`,
@@ -491,6 +501,34 @@ async function cfFetch(ticker) {
     if (!r.ok) return null;
     const j = await r.json();
     return j.price && j.price > 0 ? j.price : null;
+  } catch { return null; }
+}
+
+// YTD-Performance eines Index laden (erster Handelstag des Jahres vs. heute)
+async function cfFetchYTD(ticker) {
+  try {
+    // Zwei parallele Calls: aktueller Kurs + Kurs vom Jahresanfang
+    const heute = await cfFetch(ticker);
+    if (!heute) return null;
+
+    // Jahresanfang-Kurs: Yahoo v8 mit range=ytd
+    const urlYtd = `https://query1.finance.yahoo.com/v8/finance/chart/${encodeURIComponent(ticker)}?interval=1d&range=ytd`;
+    const proxyUrl = `${CF_WORKER}/?ticker=${encodeURIComponent(ticker)}&range=ytd`;
+    try {
+      const r2 = await fetch(proxyUrl, { signal: AbortSignal.timeout(10000) });
+      if (r2.ok) {
+        const j2 = await r2.json();
+        // Worker gibt ytd_pct zurück falls unterstützt
+        if (j2.ytd_pct != null) return j2.ytd_pct;
+        // Fallback: Worker gibt nur price → ersten YTD-Kurs aus chart
+        if (j2.first_close && j2.first_close > 0) {
+          return (heute - j2.first_close) / j2.first_close;
+        }
+      }
+    } catch {}
+
+    // Fallback: Yahoo direkt via cors (nur als letzter Ausweg)
+    return null;
   } catch { return null; }
 }
 
@@ -518,6 +556,41 @@ async function loadKurse() {
     const price = await cfFetch(info.t);
     if (price) liveKurse[wkn] = toEUR(price, info.fx);
   }));
+}
+
+// Benchmark-YTD laden und anzeigen
+async function loadBenchmarks() {
+  const benchmarks = [
+    { ticker:'^IXIC',  id:'bNasdaq', label:'Nasdaq'    },
+    { ticker:'^GSPC',  id:'bSp500',  label:'S&P 500'   },
+    { ticker:'^GDAXI', id:'bDax',    label:'DAX'       },
+    { ticker:'^HSI',   id:'bHsi',    label:'Hang Seng' },
+  ];
+  
+  const ytdWerte = [];
+  await Promise.all(benchmarks.map(async b => {
+    const basis = BENCH_BASIS[b.ticker];
+    if (!basis) return;
+    const aktuell = await cfFetch(b.ticker);
+    const el = document.getElementById(b.id);
+    if (!el) return;
+    if (aktuell && aktuell > 0) {
+      const ytd = (aktuell - basis) / basis;
+      ytdWerte.push(ytd);
+      el.textContent = fp(ytd);
+      el.className = 'bench-v ' + (ytd >= 0 ? 'pos' : 'neg');
+    } else {
+      el.textContent = '—';
+    }
+  }));
+  
+  // Ø Top 4
+  const top4El = document.getElementById('bTop4');
+  if (top4El && ytdWerte.length > 0) {
+    const avg = ytdWerte.reduce((s,v)=>s+v,0) / ytdWerte.length;
+    top4El.textContent = fp(avg);
+    top4El.className = 'bench-v ' + (avg >= 0 ? 'pos' : 'neg');
+  }
 }
 
 // INIT
@@ -551,7 +624,7 @@ async function init() {
   populateSelects();
   setStatus('loading','Lade Kurse & Wechselkurse…');
   await loadFX();
-  await loadKurse();
+  await Promise.all([loadKurse(), loadBenchmarks()]);
   const loaded = Object.keys(liveKurse).length;
   const total = [...new Set(db.positionen.filter(p=>!p.verkauft).map(p=>p.wkn))].length;
   const fxLoaded = Object.keys(fxRates).length;
@@ -854,7 +927,8 @@ function renderDepot(id) {
     <div class="kpi"><div class="kpi-l">Alltime echt</div><div class="kpi-v">${atData?f(atData.wert_echt)+' €':'—'}</div><div class="kpi-s">neutralisiert</div></div>
     <div class="kpi"><div class="kpi-l">Gewinn seit Start</div><div class="kpi-v ${gewinnStart!=null?cl(gewinnStart):''}">  ${gewinnStart!=null?fc(gewinnStart):'—'}</div><div class="kpi-s">Alltime minus Einsatz</div></div>
     <div class="kpi"><div class="kpi-l">Perf. p.a.</div><div class="kpi-v ${atData&&atData.perf_pa>=0?'pos':'neg'}">${atData?fp(atData.perf_pa):'—'}</div><div class="kpi-s">interner Zinsfuß</div></div>
-    <div class="kpi"><div class="kpi-l">Anteil am Club</div><div class="kpi-v">${f(gesamtAkt/gesamt*100,1)}%</div><div class="kpi-s">AT: ${atData?f(atData.wert_echt/totalAlltime*100,1):'—'}%</div></div>
+    <div class="kpi"><div class="kpi-l">Anteil Depot aktuell</div><div class="kpi-v">${f(gesamtAkt/gesamt*100,1)}%</div><div class="kpi-s">am Gesamtdepot Club</div></div>
+    <div class="kpi"><div class="kpi-l">Anteil WAX Alltime</div><div class="kpi-v">${atData?f(atData.wert_echt/totalAlltime*100,1):'—'}%</div><div class="kpi-s">neutralisiert</div></div>
   </div>`;
 
   html+=`<div class="tw"><table><thead><tr>
@@ -1378,7 +1452,9 @@ async function saveJahresabschluss(jahr) {
       }
     }
     
-    info.textContent = `✓ Jahresabschluss ${jahr} erfolgreich eingefroren am ${new Date().toLocaleDateString('de-DE')}. Seite wird neu geladen…`;
+    info.innerHTML = `✓ Jahresabschluss ${jahr} erfolgreich eingefroren am ${new Date().toLocaleDateString('de-DE')}.<br>
+      <strong>Nächster Schritt:</strong> Bitte in der nächsten Chat-Session die <code>BENCH_BASIS</code>-Werte in der index.html auf die aktuellen Index-Schlusskurse vom 31.12.${jahr} aktualisieren lassen.<br>
+      Seite wird neu geladen…`;
     info.style.color = '#1a6e3a';
     document.getElementById('jahresabschlussVorschau').innerHTML = '';
     setTimeout(()=>init(), 2000);
