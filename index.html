@@ -582,50 +582,67 @@ async function loadKurse() {
   }));
 }
 
-// Benchmark-YTD laden und anzeigen (via Cloudflare Worker)
+// Benchmark-YTD laden und anzeigen
 async function loadBenchmarks() {
   const benchmarks = [
-    { ticker:'^IXIC',  id:'bNasdaq', label:'Nasdaq'    },
-    { ticker:'^GSPC',  id:'bSp500',  label:'S&P 500'   },
-    { ticker:'^GDAXI', id:'bDax',    label:'DAX'       },
-    { ticker:'^HSI',   id:'bHsi',    label:'Hang Seng' },
+    { ticker:'^IXIC',  alt:'IXIC',  id:'bNasdaq' },
+    { ticker:'^GSPC',  alt:'GSPC',  id:'bSp500'  },
+    { ticker:'^GDAXI', alt:'GDAXI', id:'bDax'    },
+    { ticker:'^HSI',   alt:'HSI',   id:'bHsi'    },
   ];
-  
+
+  async function fetchIndexPrice(ticker, alt) {
+    // Versuch 1: Worker mit ^-Ticker
+    let price = await cfFetch(ticker);
+    if (price && price > 0) return price;
+    // Versuch 2: Worker ohne ^ 
+    price = await cfFetch(alt);
+    if (price && price > 0) return price;
+    // Versuch 3: Yahoo v8 direkt (Indizes haben oft kein CORS-Problem)
+    for (const t of [ticker, alt]) {
+      try {
+        const r = await fetch(
+          `https://query1.finance.yahoo.com/v8/finance/chart/${encodeURIComponent(t)}?interval=1d&range=1d`,
+          {signal: AbortSignal.timeout(8000), cache:'no-store'}
+        );
+        if (r.ok) {
+          const j = await r.json();
+          const p = j?.chart?.result?.[0]?.meta?.regularMarketPrice;
+          if (p && p > 0) return p;
+        }
+      } catch {}
+    }
+    // Versuch 4: query2.finance.yahoo.com
+    try {
+      const r = await fetch(
+        `https://query2.finance.yahoo.com/v8/finance/chart/${encodeURIComponent(ticker)}?interval=1d&range=1d`,
+        {signal: AbortSignal.timeout(8000), cache:'no-store'}
+      );
+      if (r.ok) {
+        const j = await r.json();
+        const p = j?.chart?.result?.[0]?.meta?.regularMarketPrice;
+        if (p && p > 0) return p;
+      }
+    } catch {}
+    return null;
+  }
+
   const ytdWerte = [];
   await Promise.all(benchmarks.map(async b => {
     const basis = BENCH_BASIS[b.ticker];
-    if (!basis) return;
     const el = document.getElementById(b.id);
-    if (!el) return;
-    // ^ muss encoded werden für den Worker
-    const aktuell = await cfFetch(b.ticker);
-    if (aktuell && aktuell > 0 && basis > 0) {
+    if (!basis || !el) return;
+    const aktuell = await fetchIndexPrice(b.ticker, b.alt);
+    if (aktuell && aktuell > 0) {
       const ytd = (aktuell - basis) / basis;
       ytdWerte.push(ytd);
       el.textContent = fp(ytd);
       el.className = 'bench-v ' + (ytd >= 0 ? 'pos' : 'neg');
     } else {
-      // Fallback: YTD aus Yahoo direkt via CORS (Index-Ticker)
-      try {
-        const url = `https://query1.finance.yahoo.com/v8/finance/chart/${encodeURIComponent(b.ticker)}?interval=1d&range=1d`;
-        const r = await fetch(url, {signal: AbortSignal.timeout(8000)});
-        if (r.ok) {
-          const j = await r.json();
-          const price = j?.chart?.result?.[0]?.meta?.regularMarketPrice;
-          if (price && price > 0) {
-            const ytd = (price - basis) / basis;
-            ytdWerte.push(ytd);
-            el.textContent = fp(ytd);
-            el.className = 'bench-v ' + (ytd >= 0 ? 'pos' : 'neg');
-            return;
-          }
-        }
-      } catch {}
       el.textContent = '—';
     }
   }));
-  
-  // Ø Top 4
+
   const top4El = document.getElementById('bTop4');
   if (top4El && ytdWerte.length > 0) {
     const avg = ytdWerte.reduce((s,v)=>s+v,0) / ytdWerte.length;
@@ -914,7 +931,7 @@ function renderUebersicht() {
   rows.forEach((r,i)=>{
     const atRank = atSorted.findIndex(x=>x.m.id===r.m.id)+1;
     // Bulle hinter Rang 1, Bär hinter letztem Rang
-    const emoji = i===0 ? ' 🐂' : i===rows.length-1 ? ' 🐻' : '';
+    const emoji = i===0 ? '<span style="font-size:1.5em;margin-left:6px">🐂</span>' : i===rows.length-1 ? '<span style="font-size:1.5em;margin-left:6px">🐻</span>' : '';
     html+=`<tr>
       <td class="bold">${i+1}</td>
       <td class="bold">${r.m.name.split(',')[0]}${emoji}</td>
