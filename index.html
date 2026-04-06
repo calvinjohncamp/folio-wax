@@ -525,6 +525,53 @@ function getMitglied(id) { return db.mitglieder.find(m=>m.id===id); }
 function getAlltime(id) { return db.alltime.find(a=>a.mitglied_id===id); }
 function getCash(id) { return db.cash.find(c=>c.mitglied_id===id)?.betrag || 0; }
 
+// XIRR (Newton-Raphson)
+function calcXIRR(cashflows) {
+  if (!cashflows || cashflows.length < 2) return null;
+  const t0 = cashflows[0].date;
+  const days = cashflows.map(cf => (cf.date - t0) / 86400000);
+  const amounts = cashflows.map(cf => cf.amount);
+  let r = 0.1;
+  for (let iter = 0; iter < 200; iter++) {
+    let f = 0, df = 0;
+    for (let i = 0; i < amounts.length; i++) {
+      const exp = days[i] / 365;
+      const base = Math.pow(1 + r, exp);
+      f  += amounts[i] / base;
+      df -= amounts[i] * exp / (base * (1 + r));
+    }
+    if (Math.abs(df) < 1e-12) break;
+    const rNew = r - f / df;
+    if (Math.abs(rNew - r) < 1e-8) { r = rNew; break; }
+    r = rNew;
+  }
+  return isFinite(r) ? r : null;
+}
+
+// Live-Alltime fuer ein Mitglied berechnen: { wert_echt, perf_pa }
+function calcAlltimeLive(id) {
+  const depotwert = getDepotwert(id);
+  if (depotwert <= 0) return null;
+  const cashflows = [];
+  cashflows.push({ date: new Date(2000, 0, 1), amount: -511.29 });
+  const steps = [
+    { from: new Date(2000, 0, 1), to: new Date(2007, 7, 1), betrag: -51.13 },
+    { from: new Date(2007, 8, 1), to: new Date(2015, 1, 1), betrag: -70.00 },
+    { from: new Date(2015, 2, 1), to: new Date(9999, 0, 1), betrag: -100.00 },
+  ];
+  const today = new Date();
+  for (const step of steps) {
+    let d = new Date(step.from);
+    while (d <= step.to && d <= today) {
+      cashflows.push({ date: new Date(d), amount: step.betrag });
+      d = new Date(d.getFullYear(), d.getMonth() + 1, 1);
+    }
+  }
+  cashflows.push({ date: today, amount: depotwert });
+  const perf_pa = calcXIRR(cashflows);
+  return perf_pa !== null ? { wert_echt: depotwert, perf_pa } : null;
+}
+
 function getDepotwert(id) {
   const pos = db.positionen.filter(p=>p.mitglied_id===id&&!p.verkauft);
   let invest = 0;
@@ -566,24 +613,26 @@ function renderUebersicht() {
   const ref2025 = Object.values(REF).reduce((s,r)=>s+r.total,0); // 201246.13
   const ytdPct = (gesamt-ref2025)/ref2025;
   const ytdAbs = gesamt-ref2025;
-  const perfPa = db.alltime.length ? db.alltime.reduce((s,a)=>s+a.perf_pa,0)/db.alltime.length : 0;
-
   document.getElementById('kGesamt').textContent = f(gesamt)+' €';
   document.getElementById('kProPerson').textContent = f(gesamt/6)+' €';
   const ytdEl = document.getElementById('kYtd');
   ytdEl.textContent = fp(ytdPct); ytdEl.className = 'kpi-v '+(ytdPct>=0?'pos':'neg');
   const ytdAbsEl = document.getElementById('kYtdAbs');
   ytdAbsEl.textContent = fc(ytdAbs); ytdAbsEl.className = 'kpi-v '+(ytdAbs>=0?'pos':'neg');
-  document.getElementById('kPerfPa').textContent = fp(perfPa);
   document.getElementById('bWax').textContent = fp(ytdPct);
   document.getElementById('bWax').className = 'bench-v '+(ytdPct>=0?'pos':'neg');
 
-  const totalAlltime = db.alltime.reduce((s,a)=>s+a.wert_echt,0);
+  const liveAt = db.mitglieder.map(m=>calcAlltimeLive(m.id)).filter(Boolean);
+  const totalAlltime = liveAt.reduce((s,a)=>s+a.wert_echt,0);
+  const perfPaLive = liveAt.length ? liveAt.reduce((s,a)=>s+a.perf_pa,0)/liveAt.length : 0;
+  const perfPaEl = document.getElementById('kPerfPa');
+  perfPaEl.textContent = fp(perfPaLive);
+  perfPaEl.className = 'kpi-v '+(perfPaLive>=0?'pos':'neg');
   const rows = db.mitglieder.map(m=>{
     const akt = getDepotwert(m.id);
     const ref = REF[m.id]?.total || 0;
     const ytd = ref>0 ? (akt-ref)/ref : 0;
-    const at = getAlltime(m.id);
+    const at = calcAlltimeLive(m.id);
     const gewinn = at ? at.wert_echt-EINSATZ_PP : null;
     return { m, akt, ref, ytd, ytdAbs:akt-ref, at, anteilAkt:akt/gesamt, anteilAt:at?at.wert_echt/totalAlltime:0, gewinn };
   }).sort((a,b)=>b.akt-a.akt);
@@ -608,7 +657,7 @@ function renderUebersicht() {
     <td class="${cl(ytdPct)}">${fp(ytdPct)}</td><td class="${cl(ytdAbs)}">${fc(ytdAbs)}</td>
     <td class="${cl(tg)}">${fc(tg)}</td>
     <td></td><td>${f(totalAlltime)} €</td><td>100%</td>
-    <td class="${perfPa>=0?'pos':'neg'}">${fp(perfPa)}</td>
+    <td class="${perfPaLive>=0?'pos':'neg'}">${fp(perfPaLive)}</td>
   </tr>`;
   document.getElementById('rankingBody').innerHTML = html;
 
@@ -652,8 +701,7 @@ function renderDepot(id) {
   const aktivPos = pos.filter(p=>!p.verkauft);
   const verkauftPos = pos.filter(p=>p.verkauft);
   const cash = getCash(id);
-  const at = getAlltime(m=>m);
-  const atData = getAlltime(id);
+  const atData = calcAlltimeLive(id);
   const ref = REF[id] || {};
 
   // Invest aktuell
@@ -671,7 +719,12 @@ function renderDepot(id) {
   const ytd = gesamtRef>0 ? (gesamtAkt-gesamtRef)/gesamtRef : 0;
   const ytdAbs = gesamtAkt-gesamtRef;
   const gesamt = db.mitglieder.reduce((s,m2)=>s+getDepotwert(m2.id),0);
-  const totalAlltime = db.alltime.reduce((s,a)=>s+a.wert_echt,0);
+  const liveAt = db.mitglieder.map(m=>calcAlltimeLive(m.id)).filter(Boolean);
+  const totalAlltime = liveAt.reduce((s,a)=>s+a.wert_echt,0);
+  const perfPaLive = liveAt.length ? liveAt.reduce((s,a)=>s+a.perf_pa,0)/liveAt.length : 0;
+  const perfPaEl = document.getElementById('kPerfPa');
+  perfPaEl.textContent = fp(perfPaLive);
+  perfPaEl.className = 'kpi-v '+(perfPaLive>=0?'pos':'neg');
   const gewinnStart = atData ? atData.wert_echt-EINSATZ_PP : null;
 
   let html=`<div class="kpi-grid" style="margin-bottom:16px">
@@ -769,14 +822,16 @@ function renderDepot(id) {
 
 // PERFORMANCE
 function renderPerf() {
-  const totalAt=db.alltime.reduce((s,a)=>s+a.wert_echt,0);
-  const sorted=[...db.alltime].sort((a,b)=>b.wert_echt-a.wert_echt);
+  const liveAtArr = db.mitglieder.map(m=>({mitglied_id:m.id,...(calcAlltimeLive(m.id)||{wert_echt:0,perf_pa:0})}));
+  const totalAt=liveAtArr.reduce((s,a)=>s+a.wert_echt,0);
+  const sorted=[...liveAtArr].sort((a,b)=>b.wert_echt-a.wert_echt);
   let html='';
   sorted.forEach((a,i)=>{
     const m=getMitglied(a.mitglied_id);
+    const m2=getMitglied(a.mitglied_id);
     const g=a.wert_echt-EINSATZ_PP;
     html+=`<tr>
-      <td class="bold">${m?.name||'—'}</td><td class="bold">${f(a.wert_echt)} €</td>
+      <td class="bold">${m2?.name||'—'}</td><td class="bold">${f(a.wert_echt)} €</td>
       <td class="${cl(g)}">${fc(g)}</td>
       <td class="${cl(a.perf_pa)}">${f(a.perf_pa*100/12,4)}%</td>
       <td class="${cl(a.perf_pa)} bold">${fp(a.perf_pa)}</td>
@@ -784,7 +839,7 @@ function renderPerf() {
     </tr>`;
   });
   const tg=sorted.reduce((s,a)=>s+(a.wert_echt-EINSATZ_PP),0);
-  const avg=sorted.length?sorted.reduce((s,a)=>s+a.perf_pa,0)/sorted.length:0;
+  const avg=liveAtArr.length?liveAtArr.reduce((s,a)=>s+a.perf_pa,0)/liveAtArr.length:0;
   html+=`<tr class="total-row"><td>Gesamt / Ø</td><td>${f(totalAt)} €</td>
     <td class="${cl(tg)}">${fc(tg)}</td><td></td>
     <td class="${cl(avg)}">${fp(avg)}</td><td>100%</td><td></td></tr>`;
@@ -918,10 +973,11 @@ async function saveFreigabe() {
 function calcReise() {
   const betrag=parseFloat(document.getElementById('rBetrag').value);
   if(!betrag){document.getElementById('reiseVorschau').innerHTML='';return;}
-  const totalAt=db.alltime.reduce((s,a)=>s+a.wert_echt,0);
-  reiseVorschauData=db.mitglieder.map(m=>{
-    const at=getAlltime(m.id);
-    const anteil=at?at.wert_echt/totalAt:1/6;
+  const _rAt=db.mitglieder.map(m=>calcAlltimeLive(m.id));
+  const totalAt=_rAt.reduce((s,a)=>s+(a?a.wert_echt:0),0);
+  reiseVorschauData=db.mitglieder.map((m,i)=>{
+    const at=_rAt[i];
+    const anteil=at&&totalAt>0?at.wert_echt/totalAt:1/6;
     return{m,anteil,betrag:betrag*anteil};
   });
   let html='<table style="width:100%;font-size:11px;border-collapse:collapse"><tr style="border-bottom:1px solid #e8e4de"><th style="text-align:left;padding:4px 6px">Mitglied</th><th style="text-align:right;padding:4px 6px">Anteil</th><th style="text-align:right;padding:4px 6px">Betrag</th></tr>';
