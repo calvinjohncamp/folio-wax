@@ -240,6 +240,12 @@ footer { margin-top: 28px; padding-top: 14px; border-top: 1px solid #d8d4ce; fon
   <div class="tw"><table>
     <thead><tr><th>Mitglied</th><th>Cash aktuell</th><th>Cash 31.12.2025</th><th>Veränderung</th></tr></thead>
     <tbody id="cashBody"></tbody>
+    <tfoot id="cashFoot"></tfoot>
+  </table></div>
+  <div class="sec-t"><span class="sec-n">5.2 ·</span> Comdirect-Gesamtkonto vs. Summe Einzel-Cash</div>
+  <div class="tw"><table>
+    <thead><tr><th>Position</th><th>Betrag</th><th>Info</th></tr></thead>
+    <tbody id="comdirectInfo"></tbody>
   </table></div>
 </div>
 
@@ -344,52 +350,50 @@ const REF = {
   6: { total: 39923.51,  cash: 1270.03,  invest: 38653.48 },
 };
 
-// WKN → Stooq-Ticker + Heimatwährung
+// WKN → Yahoo-Ticker + Heimatwährung (via Cloudflare Worker)
 // Stooq.com: kostenlos, kein API-Key, CORS-fähig im Browser
 const TICKER_MAP = {
   // EUR — direkt, keine Umrechnung nötig
-  '716460': { t:'sap.de',         fx:'EUR' },
-  '766403': { t:'vow3.de',        fx:'EUR' },
-  'A0D9PT': { t:'mtx.de',         fx:'EUR' },
-  '823212': { t:'lha.de',         fx:'EUR' },
-  'A0LD6E': { t:'gxi.de',         fx:'EUR' },
-  'A2TT3D': { t:'21xtc.de',       fx:'EUR' },
-  'A2T0VS': { t:'dbsvs.de',       fx:'EUR' },
-  'A1KWPR': { t:'vzlb.de',        fx:'EUR' },
-  'A0YEDG': { t:'sxr8.de',        fx:'EUR' },
-  'EWG2LD': { t:'ewg2.de',        fx:'EUR' },
+  '716460': { t:'SAP.DE',         fx:'EUR' },
+  '766403': { t:'VOW3.DE',        fx:'EUR' },
+  'A0D9PT': { t:'MTX.DE',         fx:'EUR' },
+  '823212': { t:'LHA.DE',         fx:'EUR' },
+  'A0LD6E': { t:'GXI.DE',         fx:'EUR' },
+  'A2TT3D': { t:'21XTC.DE',       fx:'EUR' },
+  'A2T0VS': { t:'DBSVS.DE',       fx:'EUR' },
+  'A1KWPR': { t:'VZLB.DE',        fx:'EUR' },
+  'A0YEDG': { t:'SXR8.DE',        fx:'EUR' },
+  'EWG2LD': { t:'EWG2.DE',        fx:'EUR' },
   // CHF → EUR
-  'A0Q4DC': { t:'nesn.ch',        fx:'CHF' },
+  'A0Q4DC': { t:'NESN.SW',        fx:'CHF' },
   // USD → EUR
-  '906866': { t:'amzn.us',        fx:'USD' },
-  '850471': { t:'ba.us',          fx:'USD' },
-  'A0NJ38': { t:'awk.us',         fx:'USD' },
-  '932798': { t:'d.us',           fx:'USD' },
-  'A2JG9Z': { t:'avgo.us',        fx:'USD' },
-  '870747': { t:'msft.us',        fx:'USD' },
-  'A4A59K': { t:'ibit.us',        fx:'USD' },
-  'A3CL8W': { t:'asts.us',        fx:'USD' },
-  'A3CVQC': { t:'hood.us',        fx:'USD' },
-  'A3DHHB': { t:'apld.us',        fx:'USD' },
-  'A2APCZ': { t:'mdgl.us',        fx:'USD' },
-  'A2QB38': { t:'snow.us',        fx:'USD' },
-  'A2UBKC': { t:'xrp-usd.crypto', fx:'USD' },
-  'A0YEFE': { t:'ftnt.us',        fx:'USD' },
-  'A3CND6': { t:'path.us',        fx:'USD' },
-  'A2AT0Z': { t:'crsp.us',        fx:'USD' },
-  '936386': { t:'sgmo.us',        fx:'USD' },
-  '918422': { t:'nvda.us',        fx:'USD' },
-  'A2PK2R': { t:'crwd.us',        fx:'USD' },
-  'A0YAND': { t:'ktos.us',        fx:'USD' },
-  'A12GD6': { t:'vktx.us',        fx:'USD' },
+  '906866': { t:'AMZN',        fx:'USD' },
+  '850471': { t:'BA',          fx:'USD' },
+  'A0NJ38': { t:'AWK',         fx:'USD' },
+  '932798': { t:'D',           fx:'USD' },
+  'A2JG9Z': { t:'AVGO',        fx:'USD' },
+  '870747': { t:'MSFT',        fx:'USD' },
+  'A4A59K': { t:'IBIT',        fx:'USD' },
+  'A3CL8W': { t:'ASTS',        fx:'USD' },
+  'A3CVQC': { t:'HOOD',        fx:'USD' },
+  'A3DHHB': { t:'APLD',        fx:'USD' },
+  'A2APCZ': { t:'MDGL',        fx:'USD' },
+  'A2QB38': { t:'SNOW',        fx:'USD' },
+  'A2UBKC': { t:'XRP-USD', fx:'USD' },
+  'A0YEFE': { t:'FTNT',        fx:'USD' },
+  'A3CND6': { t:'PATH',        fx:'USD' },
+  'A2AT0Z': { t:'CRSP',        fx:'USD' },
+  '936386': { t:'SGMO',        fx:'USD' },
+  '918422': { t:'NVDA',        fx:'USD' },
+  'A2PK2R': { t:'CRWD',        fx:'USD' },
+  'A0YAND': { t:'KTOS',        fx:'USD' },
+  'A12GD6': { t:'VKTX',        fx:'USD' },
   // AUD → EUR
-  'A3DESP': { t:'ipx.au',         fx:'AUD' },
+  'A3DESP': { t:'IPX.AX',         fx:'AUD' },
   // CAD → EUR
-  'A2PX5N': { t:'grsl.ca',        fx:'CAD' },
+  'A2PX5N': { t:'GRSL.V',        fx:'CAD' },
 };
 
-// FX-Ticker für Stooq (Wechselkurse EUR/CCY)
-const FX_STOOQ = { USD:'eurusd', CHF:'eurchf', AUD:'euraud', CAD:'eurcad' };
 
 let db = { mitglieder:[], positionen:[], cash:[], alltime:[], buchungen:[] };
 let liveKurse = {};
@@ -440,39 +444,41 @@ async function sbPatch(table, filter, data) {
   } catch { return false; }
 }
 
-// Stooq-Fetch: direkt, kein Proxy, CORS-offen
-async function stooqFetch(ticker) {
-  const url = `https://stooq.com/q/l/?s=${ticker}&f=sd2c&e=json`;
+// Cloudflare Worker als Yahoo-Proxy — zuverlässig, kein CORS-Problem
+const CF_WORKER = 'https://wax-kurse.calvinjohncamp.workers.dev';
+
+async function cfFetch(ticker) {
   try {
-    const r = await fetch(url, { signal: AbortSignal.timeout(8000) });
+    const r = await fetch(`${CF_WORKER}/?ticker=${encodeURIComponent(ticker)}`,
+      { signal: AbortSignal.timeout(10000) });
     if (!r.ok) return null;
     const j = await r.json();
-    const close = parseFloat(j?.d?.[0]?.c);
-    return close > 0 ? close : null;
+    return j.price && j.price > 0 ? j.price : null;
   } catch { return null; }
 }
 
-// FX-Kurse laden (EUR/CCY → wie viele CCY pro EUR)
+// FX-Kurse laden via Cloudflare Worker
 async function loadFX() {
-  await Promise.all(Object.entries(FX_STOOQ).map(async ([ccy, ticker]) => {
-    const rate = await stooqFetch(ticker);
+  const pairs = { USD:'EURUSD=X', CHF:'EURCHF=X', AUD:'EURAUD=X', CAD:'EURCAD=X' };
+  await Promise.all(Object.entries(pairs).map(async ([ccy, ticker]) => {
+    const rate = await cfFetch(ticker);
     if (rate) fxRates[ccy] = rate;
   }));
 }
 
 function toEUR(priceLocal, ccy) {
   if (ccy === 'EUR') return priceLocal;
-  const rate = fxRates[ccy]; // z.B. EURUSD = 1.09 → 1 EUR = 1.09 USD
+  const rate = fxRates[ccy];
   return rate ? priceLocal / rate : priceLocal;
 }
 
-// Kurse laden
+// Kurse laden via Cloudflare Worker
 async function loadKurse() {
   const aktiveWkns = [...new Set(db.positionen.filter(p=>!p.verkauft).map(p=>p.wkn))];
   await Promise.all(aktiveWkns.map(async wkn => {
     const info = TICKER_MAP[wkn];
     if (!info) return;
-    const price = await stooqFetch(info.t);
+    const price = await cfFetch(info.t);
     if (price) liveKurse[wkn] = toEUR(price, info.fx);
   }));
 }
@@ -808,12 +814,13 @@ function renderLog() {
 
 // PFLEGE
 function renderPflege() {
-  let html='';
+  let html='', sumAkt=0, sumRef=0;
   db.mitglieder.forEach(m=>{
     const c=db.cash.find(x=>x.mitglied_id===m.id);
     const akt=c?.betrag||0;
     const ref=REF[m.id]?.cash||0;
     const diff=akt-ref;
+    sumAkt+=akt; sumRef+=ref;
     html+=`<tr>
       <td class="bold">${m.name}</td>
       <td class="bold">${f(akt)} €</td>
@@ -822,6 +829,24 @@ function renderPflege() {
     </tr>`;
   });
   document.getElementById('cashBody').innerHTML = html;
+  // Summenzeile
+  document.getElementById('cashFoot').innerHTML = `<tr class="total-row">
+    <td>Summe alle Mitglieder</td>
+    <td class="bold">${f(sumAkt)} €</td>
+    <td class="dim">${f(sumRef)} €</td>
+    <td class="${cl(sumAkt-sumRef)}">${fc(sumAkt-sumRef)}</td>
+  </tr>`;
+
+  // Comdirect-Vergleich: letzter gespeicherter Stand aus buchungen
+  const cdBuchung = db.buchungen.find(b=>b.bezeichnung&&b.bezeichnung.includes('Comdirect-Gesamtstand'));
+  const cdBetrag = cdBuchung?.betrag || null;
+  const puffer = cdBetrag ? cdBetrag - sumAkt : null;
+  document.getElementById('comdirectInfo').innerHTML = `
+    <tr><td>Summe Einzel-Cash (alle 6)</td><td class="bold">${f(sumAkt)} €</td><td class="dim">berechnet aus Supabase</td></tr>
+    <tr><td>Comdirect-Kontostand (manuell)</td><td class="bold">${cdBetrag?f(cdBetrag)+' €':'— (noch nicht eingetragen)'}</td><td class="dim">${cdBuchung?'Stand: '+fdate(cdBuchung.datum):''}</td></tr>
+    <tr class="total-row"><td>Puffer (Dividenden/Gebühren)</td>
+      <td class="${puffer!=null?cl(puffer):''}">${puffer!=null?fc(puffer):'—'}</td>
+      <td class="dim">= Betrag der freigegeben werden kann</td></tr>`;
 }
 
 // MODALS
