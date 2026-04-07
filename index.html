@@ -27,7 +27,7 @@ body { background: #f0ede8; color: #111; font-family: 'DM Sans', sans-serif; fon
 .pin-btn.del { font-size: 14px; color: #888; }
 .pin-err { color: #c8441a; font-size: 12px; height: 16px; }
 .hd { background: #1a1814; padding: 0 24px; display: flex; align-items: center; height: 64px; position: sticky; top: 0; z-index: 100; }
-.hd-logo img { height: 32px; display: block; }
+.hd-logo img { height: 48px; display: block; }
 .hd-spacer { flex: 1; }
 .hd-date { font-size: 10px; color: #666; text-align: right; line-height: 1.6; }
 .nav { background: #1a1814; border-bottom: 1px solid #2a2520; display: flex; overflow-x: auto; padding: 0 24px; position: sticky; top: 64px; z-index: 99; }
@@ -74,6 +74,7 @@ td:nth-child(2) { text-align: left; }
 .btn-red:hover { background: #a33515; }
 .btn-outline { background: transparent; border-color: #bbb; color: #555; }
 .btn-outline:hover { border-color: #c8441a; color: #c8441a; }
+.btn-del { width:100%; text-align:left; padding-left:16px; }
 .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,.5); z-index: 200; display: flex; align-items: center; justify-content: center; padding: 20px; }
 .modal { background: #fff; border-radius: 4px; padding: 24px; max-width: 520px; width: 100%; max-height: 90vh; overflow-y: auto; }
 .modal-title { font-size: 16px; font-weight: 700; margin-bottom: 16px; }
@@ -100,50 +101,33 @@ td:nth-child(2) { text-align: left; }
   .kpi-grid { grid-template-columns: repeat(2,1fr); }
   table { font-size: 11px; }
   td, thead th { padding: 7px 6px; }
-  .hd-logo img { height: 26px; }
+  .hd-logo img { height: 39px; }
 }
 footer { margin-top: 28px; padding-top: 14px; border-top: 1px solid #d8d4ce; font-size: 10px; color: #888; display: flex; justify-content: space-between; flex-wrap: wrap; gap: 4px; }
 </style>
 
 <script>
-// Service Worker für automatischen Cache-Bust
-const WAX_BUILD = '1775505001';
+// Build-Reset / Cache-Bereinigung
+const WAX_BUILD = '1775506202';
 try {
   const prevBuild = localStorage.getItem('wax_build_seen');
   if (prevBuild !== WAX_BUILD) {
     localStorage.clear();
     sessionStorage.clear();
     localStorage.setItem('wax_build_seen', WAX_BUILD);
+    if (!sessionStorage.getItem('wax_build_reloaded')) {
+      sessionStorage.setItem('wax_build_reloaded', '1');
+      location.replace(location.pathname + '?v=' + WAX_BUILD);
+    }
+  } else {
+    sessionStorage.removeItem('wax_build_reloaded');
   }
 } catch(e) {}
 if ('serviceWorker' in navigator) {
   navigator.serviceWorker.getRegistrations().then(regs => regs.forEach(r => r.unregister())).catch(()=>{});
-  if (window.caches && caches.keys) caches.keys().then(keys => Promise.all(keys.map(k => caches.delete(k)))).catch(()=>{});
-  // SW-Code als Blob registrieren (kein extra sw.js File nötig)
-  const swCode = `
-    const CACHE = 'wax-v1775497863';
-    self.addEventListener('install', e => { self.skipWaiting(); });
-    self.addEventListener('activate', e => {
-      e.waitUntil(
-        caches.keys().then(keys => Promise.all(
-          keys.filter(k => k !== CACHE).map(k => caches.delete(k))
-        )).then(() => self.clients.getAll()).then(clients => {
-          clients.forEach(c => c.postMessage('reload'));
-        })
-      );
-    });
-    self.addEventListener('fetch', e => {
-      if (e.request.mode === 'navigate') {
-        e.respondWith(fetch(e.request, {cache:'no-store'}).catch(() => caches.match(e.request)));
-      }
-    });
-  `;
-  const blob = new Blob([swCode], {type:'application/javascript'});
-  const swUrl = URL.createObjectURL(blob);
-  navigator.serviceWorker.register(swUrl, {scope:'/'}).catch(()=>{});
-  navigator.serviceWorker.addEventListener('message', e => {
-    if (e.data === 'reload') location.reload(true);
-  });
+}
+if (window.caches && caches.keys) {
+  caches.keys().then(keys => Promise.all(keys.map(k => caches.delete(k)))).catch(()=>{});
 }
 </script>
 </head>
@@ -287,12 +271,11 @@ if ('serviceWorker' in navigator) {
     </div>
   </div>
   <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:12px;margin:-8px 0 20px">
-    <button class="btn btn-outline" style="width:100%" onclick="deleteLastBookingByGroup('transaktion')">↶ Letzte Transaktion löschen</button>
-    <button class="btn btn-outline" style="width:100%" onclick="deleteLastBookingByGroup('freigabe')">↶ Letzte Freigabe löschen</button>
-    <button class="btn btn-outline" style="width:100%" onclick="deleteLastBookingByGroup('reise')">↶ Letzte Reise löschen</button>
-    <button class="btn btn-outline" style="width:100%" onclick="deleteLastBookingByGroup('comdirect')">↶ Letzten Comdirect-Stand löschen</button>
+    <button class="btn btn-outline btn-del" onclick="deleteLastBookingByGroup('transaktion')">× Letzte Transaktion löschen</button>
+    <button class="btn btn-outline btn-del" onclick="deleteLastBookingByGroup('freigabe')">× Letzte Freigabe löschen</button>
+    <button class="btn btn-outline btn-del" onclick="deleteLastBookingByGroup('reise')">× Letzte Reise löschen</button>
+    <div></div>
   </div>
-  <div id="lastBookingInfo" style="font-size:11px;color:#777;margin:-8px 0 20px"></div>
   <div class="sec-t"><span class="sec-n">5.1 ·</span> Cash-Bestände der Mitglieder</div>
   <div class="tw"><table>
     <thead><tr><th>Mitglied</th><th>Cash aktuell</th><th>Cash 31.12.2025</th><th>Veränderung</th></tr></thead>
@@ -1267,7 +1250,6 @@ function renderPflege() {
       <td class="${puffer!=null?cl(puffer):''}">${puffer!=null?fc(puffer):'—'}</td>
       <td class="dim">negativ = Comdirect unter Summe Einzel-Cash</td></tr>`;
   const lb = db.buchungen[0];
-  document.getElementById('lastBookingInfo').textContent = lb ? `Letzte Buchung: ${fdate(lb.datum)} · ${lb.typ} · ${lb.bezeichnung || '—'}${lb.mitglied_id ? ' · ID '+lb.mitglied_id : ''}` : 'Noch keine Buchungen';
 
   // Alltime-Transparenz: Formel-Aufschlüsselung für alle 6
   renderAlltimeTransparenz();
@@ -1585,10 +1567,6 @@ WKN: ${last.wkn||'—'} | Stück: ${last.stueck||'—'} | Betrag: ${last.betrag!
 Es werden ${rows.length} Einzelbuchungen gelöscht.
 Gesamtvolumen: ${f(total)} €`;
   }
-  if(group==='comdirect'){
-    return `${fdate(last.datum)} · Comdirect-Gesamtstand
-Erfasster Stand: ${last.betrag!=null?f(parseFloat(last.betrag)||0)+' €':'—'}`;
-  }
   return `${fdate(last.datum)} · ${last.typ} · ${last.bezeichnung||'—'}`;
 }
 
@@ -1602,8 +1580,7 @@ async function deleteLastBookingByGroup(group) {
   const labelMap = {
     transaktion:'letzte Transaktion',
     freigabe:'letzte Cash-Freigabe',
-    reise:'letzte Reise',
-    comdirect:'letzten Comdirect-Stand'
+    reise:'letzte Reise'
   };
   const summary = buildDeleteSummary(group, last);
   const txt = `Wirklich ${labelMap[group] || 'letzte Buchung'} löschen?
@@ -1621,8 +1598,6 @@ Nur direkt nach einer Fehl- oder Testbuchung verwenden.`;
     ok = await undoGroupedCashBooking(last, -1);
   } else if(group==='reise'){
     ok = await undoGroupedCashBooking(last, +1);
-  } else if(group==='comdirect'){
-    ok = await sbDelete('buchungen', `id=eq.${last.id}`);
   }
 
   if(!ok){
