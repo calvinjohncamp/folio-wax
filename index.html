@@ -96,8 +96,8 @@ td:nth-child(2) { text-align: left; }
 .fx-note { font-size: 9px; color: #888; font-weight: 400; margin-left: 3px; }
 .kurs-loading { color: #bbb; font-style: italic; }
 
-.rank-icon{height:20px;vertical-align:middle;margin-left:6px;display:inline-block}
-.kpi-v.rank-pos{display:flex;align-items:center;gap:6px}
+.rank-icon{height:24px;width:auto;vertical-align:middle;display:inline-block;object-fit:contain;image-rendering:auto;flex-shrink:0}
+.kpi-v.rank-pos{display:flex;align-items:center;gap:6px;white-space:nowrap}
 
 @media (max-width: 640px) {
   .content, .hd, .nav, .statusbar { padding-left: 14px; padding-right: 14px; }
@@ -167,12 +167,12 @@ if (window.caches && caches.keys) {
 <div id="view-uebersicht">
   <div class="sec-t" style="margin-top:4px"><span class="sec-n">1 ·</span> Gesamtübersicht — WAX Aktienclub 2026</div>
   <div class="kpi-grid">
-    <div class="kpi"><div class="kpi-l">Gesamtwert</div><div class="kpi-v" id="kGesamt">—</div><div class="kpi-s">alle 6 Mitglieder</div></div>
-    <div class="kpi"><div class="kpi-l">Ø pro Person</div><div class="kpi-v" id="kProPerson">—</div><div class="kpi-s">inkl. Cash</div></div>
-    <div class="kpi"><div class="kpi-l">YTD Performance</div><div class="kpi-v" id="kYtd">—</div><div class="kpi-s">seit 31.12.${REF_JAHR}</div></div>
-    <div class="kpi"><div class="kpi-l">YTD absolut</div><div class="kpi-v" id="kYtdAbs">—</div><div class="kpi-s">Gewinn/Verlust</div></div>
-    <div class="kpi"><div class="kpi-l">Perf. p.a. (Alltime)</div><div class="kpi-v" id="kPerfPa">—</div><div class="kpi-s">interner Zinsfuß Club</div></div>
-    <div class="kpi"><div class="kpi-l">Einsatz pro Person</div><div class="kpi-v">14.304,81 €</div><div class="kpi-s">seit Jan 2000</div></div>
+    <div class="kpi"><div class="kpi-l">Gesamtwert</div><div class="kpi-v" id="kGesamt">—</div><div class="kpi-s">inkl. Anpassung Cash-Puffer</div></div>
+    <div class="kpi"><div class="kpi-l">Ø pro Person</div><div class="kpi-v" id="kProPerson">—</div><div class="kpi-s">inkl. Puffer</div></div>
+    <div class="kpi"><div class="kpi-l">YTD Performance</div><div class="kpi-v" id="kYtd">—</div><div class="kpi-s">seit 31.12. des Vorjahres</div></div>
+    <div class="kpi"><div class="kpi-l">Gewinn ytd</div><div class="kpi-v" id="kYtdAbs">—</div><div class="kpi-s">Gewinn/Verlust</div></div>
+    <div class="kpi"><div class="kpi-l">Perf. p.a.</div><div class="kpi-v" id="kPerfPa">—</div><div class="kpi-s">interner Zinsfuß seit Start</div></div>
+    <div class="kpi"><div class="kpi-l">Gewinn Alltime</div><div class="kpi-v" id="kGewinnAlltime">—</div><div class="kpi-s">neutralisiert seit Start</div></div>
   </div>
   <div class="sec-t"><span class="sec-n">2 ·</span> Ranking — aktuell & Alltime</div>
   <div class="tw"><table>
@@ -180,7 +180,7 @@ if (window.caches && caches.keys) {
       <th>Pos.</th><th>Mitglied</th>
       <th>YTD %</th><th>YTD €</th><th>Akt. Wert</th><th>Anteil %</th>
       <th>Pos. AT</th><th>Alltime echt</th><th>Anteil AT %</th>
-      <th>Gewinn seit Start</th><th>Perf. p.a.</th>
+      <th>Gewinn Alltime</th><th>Perf. p.a.</th>
     </tr></thead>
     <tbody id="rankingBody"></tbody>
   </table></div>
@@ -212,14 +212,14 @@ if (window.caches && caches.keys) {
     <div class="kpi"><div class="kpi-l">Startkapital p.P.</div><div class="kpi-v">511,29 €</div><div class="kpi-s">Jan 2000</div></div>
     <div class="kpi"><div class="kpi-l">Monatsbeitrag</div><div class="kpi-v">100,00 €</div><div class="kpi-s">seit März 2015</div></div>
     <div class="kpi"><div class="kpi-l">Einsatz p.P.</div><div class="kpi-v">14.304,81 €</div><div class="kpi-s">inkl. Startkapital</div></div>
-    <div class="kpi"><div class="kpi-l">Gewinn seit Start p.P.</div><div class="kpi-v pos">+17.576,42 €</div><div class="kpi-s">Depotwert minus Einsatz</div></div>
+    <div class="kpi"><div class="kpi-l">Perf. p.a.</div><div class="kpi-v pos">+4,89%</div><div class="kpi-s">interner Zinsfuß seit Start</div></div>
+    <div class="kpi"><div class="kpi-l">Gewinn Alltime</div><div class="kpi-v pos">+17.576,42 €</div><div class="kpi-s">Depotwert minus Einsatz</div></div>
     <div class="kpi"><div class="kpi-l">Perf. gesamt p.P.</div><div class="kpi-v pos">+122,87%</div><div class="kpi-s">auf Gesamteinsatz</div></div>
-    <div class="kpi"><div class="kpi-l">Perf. p.a.</div><div class="kpi-v pos">+4,89%</div><div class="kpi-s">interner Zinsfuß</div></div>
   </div>
   <div class="sec-t"><span class="sec-n">3.1 ·</span> Performance je Mitglied (Alltime, neutralisiert)</div>
   <div class="tw"><table>
     <thead><tr>
-      <th>Mitglied</th><th>Alltime echt</th><th>Gewinn seit Start</th>
+      <th>Mitglied</th><th>Alltime echt</th><th>Gewinn Alltime</th>
       <th>Int. Zinsfuß p.M.</th><th>Int. Zinsfuß p.a.</th><th>Anteil Alltime</th><th>Pos.</th>
     </tr></thead>
     <tbody id="perfBody"></tbody>
@@ -897,8 +897,28 @@ function renderAll() {
 }
 
 // ÜBERSICHT
+
+function getLatestComdirectBooking() {
+  const rows = (db.buchungen||[])
+    .filter(b => b && b.bezeichnung && b.bezeichnung.includes('Comdirect-Gesamtstand'))
+    .sort((a,b) => {
+      const da = (a.datum||'') + '|' + (a.id||0);
+      const dbb = (b.datum||'') + '|' + (b.id||0);
+      return da < dbb ? 1 : da > dbb ? -1 : 0;
+    });
+  return rows[0] || null;
+}
+function getComdirectPuffer() {
+  const cd = getLatestComdirectBooking();
+  if(!cd) return 0;
+  const sumCash = db.mitglieder.reduce((s,m)=>s+(db.cash.find(c=>c.mitglied_id===m.id)?.betrag||0),0);
+  return (cd.betrag||0) - sumCash;
+}
+
 function renderUebersicht() {
-  const gesamt = db.mitglieder.reduce((s,m)=>s+getDepotwert(m.id),0);
+  const gesamtOhnePuffer = db.mitglieder.reduce((s,m)=>s+getDepotwert(m.id),0);
+  const puffer = getComdirectPuffer();
+  const gesamt = gesamtOhnePuffer + puffer;
   const ref2025 = Object.values(REF).reduce((s,r)=>s+r.total,0);
   const ytdPct = (gesamt-ref2025)/ref2025;
   const ytdAbs = gesamt-ref2025;
@@ -917,6 +937,12 @@ function renderUebersicht() {
   const perfPaEl = document.getElementById('kPerfPa');
   perfPaEl.textContent = fp(perfPaLive);
   perfPaEl.className = 'kpi-v '+(perfPaLive>=0?'pos':'neg');
+  const gewinnAlltime = totalAlltime - (EINSATZ_PP * 6);
+  const gewAllEl = document.getElementById('kGewinnAlltime');
+  if (gewAllEl) {
+    gewAllEl.textContent = fc(gewinnAlltime);
+    gewAllEl.className = 'kpi-v ' + (gewinnAlltime>=0?'pos':'neg');
+  }
   const rows = db.mitglieder.map(m=>{
     const akt = getDepotwert(m.id);
     const ref = REF[m.id]?.total || 0;
@@ -1037,19 +1063,19 @@ function renderEhrungenDepot() {
   const jahr = new Date().getFullYear();
   function ehrungCard(icon, titel, person, wert, farbe) {
     return '<div style="background:#fff;border:1px solid #e8e4de;border-radius:6px;padding:16px;text-align:center">'
-      +'<div style="font-size:0;margin-bottom:10px"><img src="'+icon+'" style="height:56px;width:auto"></div>'
+      +'<div style="font-size:0;margin-bottom:10px"><img src="'+icon+'" style="height:64px;width:auto;object-fit:contain"></div>'
       +'<div style="font-size:9px;font-weight:700;letter-spacing:.15em;text-transform:uppercase;color:#999;margin-bottom:4px">'+titel+' '+jahr+'</div>'
       +'<div style="font-size:18px;font-weight:700;margin-bottom:4px">'+person+'</div>'
       +'<div style="font-size:14px;font-weight:700;color:'+farbe+'">'+wert+'</div>'
       +'</div>';
   }
-  let html = '<div class="sec-t" style="margin-top:0"><span class="sec-n">2.1 ·</span> Jahresehrungen — Bulle, Bär & Alltime-Bulle</div>';
+  let html = '<div class="sec-t" style="margin-top:0"><span class="sec-n">2.1 ·</span> Jahresehrungen — Bulle, Bär & Alltime-Wertung</div>';
   html += '<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin-top:4px">';
-  html += ehrungCard('data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACEAAAAcCAYAAADvANYcAAAEaklEQVR4nLXWaahVVRQH8N+9zqmJ5kA2GKnNkE0ihWURUUllSBEUSjQYgkVFCUGfAhtp0ghTSCXqQ3Mh9aGikhAbwIwGw6zMKacGM1Of7/Vhrd09976n0rTgcPbZe+19/mut/1prQzchs3BijuuV+Wk4N8dl7n+ROfgRvdA9nzK+HNsxJnW7J5jy/k/kZnTg4f3o7MDPGLKP9fq/AVDDavyAPnhWWLc31zpwEGZgJUZhA9bme3E+Kvv+EYjfcTam4li0V9bb8/C5OAyTsAgL8A6OEqGaik9FiDpyX8ffAbIQS3AGjsifHZXPKIzEZQn2bYwTHrtXhOG+XJvUxdmF4IVn+wxbL6wS7v0De7A+vz/H99iIN7EJL2K8CGORKcLyV3AFBh/A8C5JPRef5MET0Dufm3BS6ixKcGfh5ARWR49cn5cGfJ4GfIEP8ZYI3w3Cy1WpVweD8DzWJUq4RRB2dOpcIjhDhG6x4FQ9n2NSfzCOw0RcizvxJD4W/PkMT2nUnnoVTS9sSbQ1UReG5lpvPIf+rS5ssWhJgt2XjMdW7BJ16bGyUGLzIJbnuFbZWEvlb4Xre+hMsFo+ByfgQshyTiEnjMXmBLRRpD8iE3bjdOHOnhiI+fgOX4qw9MEyDGsBW8KiZb4/7kC//C78WSY4OEOF4INFZszCPfn9vojjOBEquWmVBg9apdbyPhS/idSXxtXxiEaVXklzOLYJNn8tyvQ3Iv3gTFERz8/vqruH4oQKgDI/WKT44RUQ8HiCW5/rTZsuFVlxsSg+u0RIhuFX0WeqwMv7aqzIceFDN5wnuFT0Ci+ex9N5/sJSZou8VhmfKgh0vUizFWkBzT2i/GB3BQS0YbjIgr2ae9IIUU96Yml3zdItD2kXNWMQDsEAQdCRiX6tBhn3iOK1Lve35fxkUaC2pW4BMSbB9RO8u1sXUg4/OL30gMiM1SJLrku9wvQLBH8uyu9TRKVcKZrc8hb9+XgjdSYJb3eS4p1pgjhbMV2EqkOkc9EpXfcJwZtHNXoIcVPr0EzaL3Gh6EUvibA0SYnn8bn5HJFe2wUxF1R0RybIDpHKm0QpnylC11fUlZ14twL8W9Gfxube77sCURcufEgQZ45wd8n3AbgLP+EZQdobE3iRlxPIaOHRDnENGCJKwdLUu0YUrr+kpOnw/ClxWVktUur1nJuZXpnQaoHm8nx/Aj0atyeQeYIbW8RFiri5NYGoidq/URBtoojZVzkmClmpF9WLcb1yTpE1OE20gDbMzvkVuEojGztZQlTJbaISlqrWDx8IV/bJH9daD9DIroGiRvQVadiGK0XYdmhcmru8bZXJj0R6fiV6xmy8V/l5VwBohOM2jdqxRoTjSLwq7hdV3U5SesKE3LgwlVeJLlt09mfAdOHJycLydnEXHSD4MFrnztulJbcKPgwRN6UNojLub3MPUTs2i6vhMHEtXCKa2RSRogeUYuULokTvFH3hF+HOqsVavkeIeLeLDNojvLkzz2oT1bLpjD8Bl9wPKxlMx6wAAAAASUVORK5CYII=', 'Bulle des Jahres', bulle.m.name.split(',')[0], fp(bulle.ytd)+' YTD', '#1a6e3a');
-  html += ehrungCard('data:image/png;base64,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', 'Bär des Jahres', baer.m.name.split(',')[0], fp(baer.ytd)+' YTD', '#c8441a');
-  html += ehrungCard('data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACEAAAAcCAYAAADvANYcAAAEaklEQVR4nLXWaahVVRQH8N+9zqmJ5kA2GKnNkE0ihWURUUllSBEUSjQYgkVFCUGfAhtp0ghTSCXqQ3Mh9aGikhAbwIwGw6zMKacGM1Of7/Vhrd09976n0rTgcPbZe+19/mut/1prQzchs3BijuuV+Wk4N8dl7n+ROfgRvdA9nzK+HNsxJnW7J5jy/k/kZnTg4f3o7MDPGLKP9fq/AVDDavyAPnhWWLc31zpwEGZgJUZhA9bme3E+Kvv+EYjfcTam4li0V9bb8/C5OAyTsAgL8A6OEqGaik9FiDpyX8ffAbIQS3AGjsifHZXPKIzEZQn2bYwTHrtXhOG+XJvUxdmF4IVn+wxbL6wS7v0De7A+vz/H99iIN7EJL2K8CGORKcLyV3AFBh/A8C5JPRef5MET0Dufm3BS6ixKcGfh5ARWR49cn5cGfJ4GfIEP8ZYI3w3Cy1WpVweD8DzWJUq4RRB2dOpcIjhDhG6x4FQ9n2NSfzCOw0RcizvxJD4W/PkMT2nUnnoVTS9sSbQ1UReG5lpvPIf+rS5ssWhJgt2XjMdW7BJ16bGyUGLzIJbnuFbZWEvlb4Xre+hMsFo+ByfgQshyTiEnjMXmBLRRpD8iE3bjdOHOnhiI+fgOX4qw9MEyDGsBW8KiZb4/7kC//C78WSY4OEOF4INFZszCPfn9vojjOBEquWmVBg9apdbyPhS/idSXxtXxiEaVXklzOLYJNn8tyvQ3Iv3gTFERz8/vqruH4oQKgDI/WKT44RUQ8HiCW5/rTZsuFVlxsSg+u0RIhuFX0WeqwMv7aqzIceFDN5wnuFT0Ci+ex9N5/sJSZou8VhmfKgh0vUizFWkBzT2i/GB3BQS0YbjIgr2ae9IIUU96Yml3zdItD2kXNWMQDsEAQdCRiX6tBhn3iOK1Lve35fxkUaC2pW4BMSbB9RO8u1sXUg4/OL30gMiM1SJLrku9wvQLBH8uyu9TRKVcKZrc8hb9+XgjdSYJb3eS4p1pgjhbMV2EqkOkc9EpXfcJwZtHNXoIcVPr0EzaL3Gh6EUvibA0SYnn8bn5HJFe2wUxF1R0RybIDpHKm0QpnylC11fUlZ14twL8W9Gfxube77sCURcufEgQZ45wd8n3AbgLP+EZQdobE3iRlxPIaOHRDnENGCJKwdLUu0YUrr+kpOnw/ClxWVktUur1nJuZXpnQaoHm8nx/Aj0atyeQeYIbW8RFiri5NYGoidq/URBtoojZVzkmClmpF9WLcb1yTpE1OE20gDbMzvkVuEojGztZQlTJbaISlqrWDx8IV/bJH9daD9DIroGiRvQVadiGK0XYdmhcmru8bZXJj0R6fiV6xmy8V/l5VwBohOM2jdqxRoTjSLwq7hdV3U5SesKE3LgwlVeJLlt09mfAdOHJycLydnEXHSD4MFrnztulJbcKPgwRN6UNojLub3MPUTs2i6vhMHEtXCKa2RSRogeUYuULokTvFH3hF+HOqsVavkeIeLeLDNojvLkzz2oT1bLpjD8Bl9wPKxlMx6wAAAAASUVORK5CYII=', 'Alltime-Bulle', atBulle.m.name.split(',')[0], atBulle.at?fp(atBulle.at.perf_pa)+' p.a.':'—', '#c8441a');
+  html += ehrungCard('bull_wax_hd.png', 'Bulle des Jahres', bulle.m.name.split(',')[0], fp(bulle.ytd)+' YTD', '#1a6e3a');
+  html += ehrungCard('bear_wax_hd.png', 'Bär des Jahres', baer.m.name.split(',')[0], fp(baer.ytd)+' YTD', '#c8441a');
+  html += ehrungCard('data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACEAAAAcCAYAAADvANYcAAAEaklEQVR4nLXWaahVVRQH8N+9zqmJ5kA2GKnNkE0ihWURUUllSBEUSjQYgkVFCUGfAhtp0ghTSCXqQ3Mh9aGikhAbwIwGw6zMKacGM1Of7/Vhrd09976n0rTgcPbZe+19/mut/1prQzchs3BijuuV+Wk4N8dl7n+ROfgRvdA9nzK+HNsxJnW7J5jy/k/kZnTg4f3o7MDPGLKP9fq/AVDDavyAPnhWWLc31zpwEGZgJUZhA9bme3E+Kvv+EYjfcTam4li0V9bb8/C5OAyTsAgL8A6OEqGaik9FiDpyX8ffAbIQS3AGjsifHZXPKIzEZQn2bYwTHrtXhOG+XJvUxdmF4IVn+wxbL6wS7v0De7A+vz/H99iIN7EJL2K8CGORKcLyV3AFBh/A8C5JPRef5MET0Dufm3BS6ixKcGfh5ARWR49cn5cGfJ4GfIEP8ZYI3w3Cy1WpVweD8DzWJUq4RRB2dOpcIjhDhG6x4FQ9n2NSfzCOw0RcizvxJD4W/PkMT2nUnnoVTS9sSbQ1UReG5lpvPIf+rS5ssWhJgt2XjMdW7BJ16bGyUGLzIJbnuFbZWEvlb4Xre+hMsFo+ByfgQshyTiEnjMXmBLRRpD8iE3bjdOHOnhiI+fgOX4qw9MEyDGsBW8KiZb4/7kC//C78WSY4OEOF4INFZszCPfn9vojjOBEquWmVBg9apdbyPhS/idSXxtXxiEaVXklzOLYJNn8tyvQ3Iv3gTFERz8/vqruH4oQKgDI/WKT44RUQ8HiCW5/rTZsuFVlxsSg+u0RIhuFX0WeqwMv7aqzIceFDN5wnuFT0Ci+ex9N5/sJSZou8VhmfKgh0vUizFWkBzT2i/GB3BQS0YbjIgr2ae9IIUU96Yml3zdItD2kXNWMQDsEAQdCRiX6tBhn3iOK1Lve35fxkUaC2pW4BMSbB9RO8u1sXUg4/OL30gMiM1SJLrku9wvQLBH8uyu9TRKVcKZrc8hb9+XgjdSYJb3eS4p1pgjhbMV2EqkOkc9EpXfcJwZtHNXoIcVPr0EzaL3Gh6EUvibA0SYnn8bn5HJFe2wUxF1R0RybIDpHKm0QpnylC11fUlZ14twL8W9Gfxube77sCURcufEgQZ45wd8n3AbgLP+EZQdobE3iRlxPIaOHRDnENGCJKwdLUu0YUrr+kpOnw/ClxWVktUur1nJuZXpnQaoHm8nx/Aj0atyeQeYIbW8RFiri5NYGoidq/URBtoojZVzkmClmpF9WLcb1yTpE1OE20gDbMzvkVuEojGztZQlTJbaISlqrWDx8IV/bJH9daD9DIroGiRvQVadiGK0XYdmhcmru8bZXJj0R6fiV6xmy8V/l5VwBohOM2jdqxRoTjSLwq7hdV3U5SesKE3LgwlVeJLlt09mfAdOHJycLydnEXHSD4MFrnztulJbcKPgwRN6UNojLub3MPUTs2i6vhMHEtXCKa2RSRogeUYuULokTvFH3hF+HOqsVavkeIeLeLDNojvLkzz2oT1bLpjD8Bl9wPKxlMx6wAAAAASUVORK5CYII=', 'Alltime-Wertung', atBulle.m.name.split(',')[0], atBulle.at?fp(atBulle.at.perf_pa)+' p.a.':'—', '#c8441a');
   html += '</div>';
-  html += '<div style="font-size:10px;color:#999;margin-top:8px">Basierend auf aktuellen Live-Daten. Bulle = höchste YTD-Performance, Bär = niedrigste YTD-Performance, Alltime-Bulle = höchster interner Zinsfuß seit 2000.</div>';
+  html += '<div style="font-size:10px;color:#999;margin-top:8px">Basierend auf aktuellen Live-Daten. Bulle = höchste YTD-Performance, Bär = niedrigste YTD-Performance, Alltime-Wertung = höchster interner Zinsfuß seit 2000.</div>';
   box.innerHTML = html;
 }
 
@@ -1083,6 +1109,12 @@ function renderDepot(id) {
   const perfPaEl = document.getElementById('kPerfPa');
   perfPaEl.textContent = fp(perfPaLive);
   perfPaEl.className = 'kpi-v '+(perfPaLive>=0?'pos':'neg');
+  const gewinnAlltime = totalAlltime - (EINSATZ_PP * 6);
+  const gewAllEl = document.getElementById('kGewinnAlltime');
+  if (gewAllEl) {
+    gewAllEl.textContent = fc(gewinnAlltime);
+    gewAllEl.className = 'kpi-v ' + (gewinnAlltime>=0?'pos':'neg');
+  }
   const gewinnStart = atData ? atData.wert_echt-EINSATZ_PP : null;
 
   // Ranglogik für Einzeldepot-KPIs
@@ -1101,14 +1133,14 @@ function renderDepot(id) {
   const posAlltime = alltimeRanks.findIndex(r=>r.id===id) + 1;
 
   let html=`<div class="kpi-grid" style="margin-bottom:16px">
-    <div class="kpi"><div class="kpi-l">Position YTD</div><div class="kpi-v bold rank-pos">${rankDisplay(rankings.ytdPos[id])}</div><div class="kpi-s">Bulle / Bär des Jahres</div></div>
+    <div class="kpi"><div class="kpi-l">Position YTD</div><div class="kpi-v bold rank-pos">${rankDisplay(rankings.ytdPos[id])}</div><div class="kpi-s">des Jahres</div></div>
     <div class="kpi"><div class="kpi-l">Aktueller Wert</div><div class="kpi-v bold">${f(gesamtAkt)} €</div><div class="kpi-s">Invest + Cash</div></div>
-    <div class="kpi"><div class="kpi-l">YTD %</div><div class="kpi-v ${cl(ytd)}">${fp(ytd)}</div><div class="kpi-s">seit 31.12.${REF_JAHR}</div></div>
-    <div class="kpi"><div class="kpi-l">YTD absolut</div><div class="kpi-v ${cl(ytdAbs)}">${fc(ytdAbs)}</div><div class="kpi-s">Gewinn/Verlust</div></div>
+    <div class="kpi"><div class="kpi-l">YTD %</div><div class="kpi-v ${cl(ytd)}">${fp(ytd)}</div><div class="kpi-s">seit 31.12. des Vorjahres</div></div>
+    <div class="kpi"><div class="kpi-l">Gewinn ytd</div><div class="kpi-v ${cl(ytdAbs)}">${fc(ytdAbs)}</div><div class="kpi-s">Gewinn/Verlust</div></div>
     <div class="kpi"><div class="kpi-l">Cash aktuell</div><div class="kpi-v">${f(cash)} €</div><div class="kpi-s">${f(cash/Math.max(gesamtAkt,1)*100,1)}% des Depots</div></div>
-    <div class="kpi"><div class="kpi-l">Position Alltime</div><div class="kpi-v bold rank-pos">${rankDisplay(rankings.atPos[id])}</div><div class="kpi-s">Alltime-Bulle</div></div>
+    <div class="kpi"><div class="kpi-l">Position Alltime</div><div class="kpi-v bold rank-pos">${rankDisplay(rankings.atPos[id])}</div><div class="kpi-s">Alltime-Wertung</div></div>
     <div class="kpi"><div class="kpi-l">Alltime echt</div><div class="kpi-v">${atData?f(atData.wert_echt)+' €':'—'}</div><div class="kpi-s">neutralisiert</div></div>
-    <div class="kpi"><div class="kpi-l">Gewinn seit Start</div><div class="kpi-v ${gewinnStart!=null?cl(gewinnStart):''}">  ${gewinnStart!=null?fc(gewinnStart):'—'}</div><div class="kpi-s">Alltime minus Einsatz</div></div>
+    <div class="kpi"><div class="kpi-l">Gewinn Alltime</div><div class="kpi-v ${gewinnStart!=null?cl(gewinnStart):''}">  ${gewinnStart!=null?fc(gewinnStart):'—'}</div><div class="kpi-s">Alltime minus Einsatz</div></div>
     <div class="kpi"><div class="kpi-l">Perf. p.a.</div><div class="kpi-v ${atData&&atData.perf_pa>=0?'pos':'neg'}">${atData?fp(atData.perf_pa):'—'}</div><div class="kpi-s">interner Zinsfuß</div></div>
     <div class="kpi"><div class="kpi-l">Anteil Depot aktuell</div><div class="kpi-v">${f(gesamtAkt/gesamt*100,1)}%</div><div class="kpi-s">am Gesamtdepot Club</div></div>
     <div class="kpi"><div class="kpi-l">Anteil WAX Alltime</div><div class="kpi-v">${atData?f(atData.wert_echt/totalAlltime*100,1):'—'}%</div><div class="kpi-s">neutralisiert</div></div>
@@ -1281,10 +1313,10 @@ function renderPflege() {
     <td class="${cl(sumAkt-sumRef)}">${fc(sumAkt-sumRef)}</td>
   </tr>`;
 
-  // Comdirect-Vergleich: letzter gespeicherter Stand aus buchungen
-  const cdBuchung = db.buchungen.find(b=>b.bezeichnung&&b.bezeichnung.includes('Comdirect-Gesamtstand'));
+  // Comdirect-Vergleich: letzter gespeicherter Stand aus Buchungen
+  const cdBuchung = getLatestComdirectBooking();
   const cdBetrag = cdBuchung?.betrag || null;
-  const puffer = cdBetrag ? cdBetrag - sumAkt : null;
+  const puffer = cdBetrag!=null ? (cdBetrag - sumAkt) : null;
   document.getElementById('comdirectInfo').innerHTML = `
     <tr><td>Summe Einzel-Cash (alle 6)</td><td class="bold">${f(sumAkt)} €</td><td class="dim">berechnet aus Supabase</td></tr>
     <tr><td>Comdirect-Kontostand (manuell)</td><td class="bold">${cdBetrag?f(cdBetrag)+' €':'— (noch nicht eingetragen)'}</td><td class="dim">${cdBuchung?'Stand: '+fdate(cdBuchung.datum):''}</td></tr>
