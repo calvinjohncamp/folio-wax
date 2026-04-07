@@ -107,11 +107,11 @@ footer { margin-top: 28px; padding-top: 14px; border-top: 1px solid #d8d4ce; fon
 
 <script>
 // Service Worker für automatischen Cache-Bust
-const WAX_BUILD = '1775602001';
+const WAX_BUILD = '1775602003';
 if ('serviceWorker' in navigator) {
   // SW-Code als Blob registrieren (kein extra sw.js File nötig)
   const swCode = `
-    const CACHE = 'wax-v1775497863';
+    const CACHE = 'wax-v1775602003';
     self.addEventListener('install', e => { self.skipWaiting(); });
     self.addEventListener('activate', e => {
       e.waitUntil(
@@ -180,8 +180,8 @@ if ('serviceWorker' in navigator) {
 <div id="view-uebersicht">
   <div class="sec-t" style="margin-top:4px"><span class="sec-n">1 ·</span> Gesamtübersicht — WAX Aktienclub 2026</div>
   <div class="kpi-grid">
-    <div class="kpi"><div class="kpi-l">Gesamtwert</div><div class="kpi-v" id="kGesamt">—</div><div class="kpi-s">alle 6 Mitglieder</div></div>
-    <div class="kpi"><div class="kpi-l">Ø pro Person</div><div class="kpi-v" id="kProPerson">—</div><div class="kpi-s">inkl. Cash</div></div>
+    <div class="kpi"><div class="kpi-l">Gesamtwert</div><div class="kpi-v" id="kGesamt">—</div><div class="kpi-s">inkl. Comdirect-Puffer</div></div>
+    <div class="kpi"><div class="kpi-l">Ø pro Person</div><div class="kpi-v" id="kProPerson">—</div><div class="kpi-s">inkl. Puffer</div></div>
     <div class="kpi"><div class="kpi-l">YTD Performance</div><div class="kpi-v" id="kYtd">—</div><div class="kpi-s">seit 31.12.${REF_JAHR}</div></div>
     <div class="kpi"><div class="kpi-l">YTD absolut</div><div class="kpi-v" id="kYtdAbs">—</div><div class="kpi-s">Gewinn/Verlust</div></div>
     <div class="kpi"><div class="kpi-l">Perf. p.a. (Alltime)</div><div class="kpi-v" id="kPerfPa">—</div><div class="kpi-s">interner Zinsfuß Club</div></div>
@@ -274,9 +274,6 @@ if ('serviceWorker' in navigator) {
     </div>
     <div class="kpi" style="cursor:pointer;border:1px solid #d8d4ce" onclick="openModal('comdirect')">
       <div class="kpi-l">Comdirect-Stand</div><div class="kpi-v" style="font-size:14px">€ Gesamtstand</div><div class="kpi-s">Gesamtkonto eintragen</div>
-    </div>
-    <div class="kpi" style="cursor:pointer;border:1px solid #d8d4ce" onclick="openModal('alltime')">
-      <div class="kpi-l">Alltime-Update</div><div class="kpi-v" style="font-size:14px">∞ Performance</div><div class="kpi-s">Nach Reiseentnahme</div>
     </div>
   </div>
   <div class="sec-t"><span class="sec-n">5.1 ·</span> Cash-Bestände der Mitglieder</div>
@@ -385,17 +382,6 @@ if ('serviceWorker' in navigator) {
       </div>
     </div>
   </div>
-
-  <div class="modal" id="modalAlltime" style="display:none">
-    <div class="modal-title">∞ Alltime-Performance aktualisieren</div>
-    <div class="form-row"><label class="form-label">Mitglied</label><select class="form-input" id="aMitglied"></select></div>
-    <div class="form-row"><label class="form-label">Alltime echt (€)</label><input type="number" class="form-input" id="aWert" step="0.01"></div>
-    <div class="form-row"><label class="form-label">Perf. p.a. (Dezimal, z.B. 0.0489)</label><input type="number" class="form-input" id="aPerfPa" step="0.000001"></div>
-    <div class="modal-footer">
-      <button class="btn btn-outline" onclick="closeModal()">Abbrechen</button>
-      <button class="btn btn-red" onclick="saveAlltime()">Speichern</button>
-    </div>
-  </div>
   <div class="modal" id="modalComdirect" style="display:none">
     <div class="modal-title">€ Comdirect-Gesamtstand eintragen</div>
     <div class="info-box">Trägt den aktuellen Gesamtkontostand von Comdirect ein. Dient als Referenz für den Puffer aus Dividenden/Gebühren, der noch nicht auf die Mitglieder verteilt wurde.</div>
@@ -479,7 +465,7 @@ const TICKER_MAP = {
 };
 
 
-let db = { mitglieder:[], positionen:[], cash:[], alltime:[], buchungen:[] };
+let db = { mitglieder:[], positionen:[], cash:[], buchungen:[] };
 let liveKurse = {};
 let fxRates = {};
 let activeMitglied = 1;
@@ -687,14 +673,13 @@ async function init() {
     }
   } catch(e) { /* Fallback auf REF_FALLBACK */ }
 
-  const [mitglieder, positionen, cash, alltime, buchungen] = await Promise.all([
+  const [mitglieder, positionen, cash, buchungen] = await Promise.all([
     sbGet('mitglieder','order=sortierung'),
     sbGet('positionen','order=mitglied_id,id'),
     sbGet('cash','order=mitglied_id'),
-    sbGet('alltime','order=mitglied_id'),
     sbGet('buchungen','order=datum.desc&limit=200')
   ]);
-  db = { mitglieder, positionen, cash, alltime, buchungen };
+  db = { mitglieder, positionen, cash, buchungen };
   populateSelects();
   setStatus('loading','Lade Kurse & Wechselkurse…');
   await loadFX();
@@ -721,8 +706,7 @@ function setStatus(state, txt) {
   document.getElementById('sdot').className = 'sdot'+(state==='live'?' live':' loading');
   document.getElementById('sTxt').textContent = txt;
 }
-function getMitglied(id) { return db.mitglieder.find(m=>m.id===id); }
-function getAlltime(id) { return db.alltime.find(a=>a.mitglied_id===id); }
+function getMitglied(id) { return db.mitglieder.find(m=>m.id===id); } 
 function getCash(id) { return db.cash.find(c=>c.mitglied_id===id)?.betrag || 0; }
 
 // XIRR (Newton-Raphson, robust — mehrere Startpunkte, Clamping)
@@ -889,7 +873,7 @@ function getDepotwert(id) {
 
 function populateSelects() {
   const opts = db.mitglieder.map(m=>`<option value="${m.id}">${m.name}</option>`).join('');
-  ['fMitglied','aMitglied'].forEach(id=>{ const el=document.getElementById(id); if(el) el.innerHTML=opts; });
+  ['fMitglied'].forEach(id=>{ const el=document.getElementById(id); if(el) el.innerHTML=opts; });
 }
 
 // TAB
@@ -914,7 +898,12 @@ function renderAll() {
 
 // ÜBERSICHT
 function renderUebersicht() {
-  const gesamt = db.mitglieder.reduce((s,m)=>s+getDepotwert(m.id),0);
+  const gesamtOhnePuffer = db.mitglieder.reduce((s,m)=>s+getDepotwert(m.id),0);
+  const cdBuchung = db.buchungen.find(b=>b.bezeichnung&&b.bezeichnung.includes('Comdirect-Gesamtstand'));
+  const cdBetrag = typeof cdBuchung?.betrag === 'number' ? cdBuchung.betrag : null;
+  const sumCash = db.mitglieder.reduce((s,m)=>s+getCash(m.id),0);
+  const puffer = cdBetrag!=null ? cdBetrag - sumCash : 0;
+  const gesamt = gesamtOhnePuffer + puffer;
   const ref2025 = Object.values(REF).reduce((s,r)=>s+r.total,0);
   const ytdPct = (gesamt-ref2025)/ref2025;
   const ytdAbs = gesamt-ref2025;
@@ -1329,8 +1318,8 @@ function renderEhrungen() {
 // MODALS
 function openModal(type) {
   document.getElementById('modalOverlay').style.display='flex';
-  ['modalKauf','modalFreigabe','modalReise','modalComdirect','modalAlltime'].forEach(id=>document.getElementById(id).style.display='none');
-  const map={kauf:'modalKauf',freigabe:'modalFreigabe',reise:'modalReise',comdirect:'modalComdirect',alltime:'modalAlltime'};
+  ['modalKauf','modalFreigabe','modalReise','modalComdirect'].forEach(id=>document.getElementById(id).style.display='none');
+  const map={kauf:'modalKauf',freigabe:'modalFreigabe',reise:'modalReise',comdirect:'modalComdirect'};
   document.getElementById(map[type]).style.display='';
   const today=new Date().toISOString().split('T')[0];
   if(type==='kauf'){ document.getElementById('fDatum').value=today; document.getElementById('fBetragVorschau').textContent=''; }
@@ -1370,7 +1359,7 @@ async function saveKauf() {
 
   if(typ==='KAUF') {
     const okB = await sbPost('buchungen',{datum,typ,mitglied_id:mid,bezeichnung:bez,wkn,stueck,kurs,betrag:-betrag,notiz});
-    const okP = await sbPost('positionen',{mitglied_id:mid,bezeichnung:bez,wkn,art,stueck,kaufkurs:kurs,kaufwert:betrag,kauf_datum:datum,verkauft:false});
+    const okP = await sbPost('positionen',{mitglied_id:mid,bezeichnung:bez,wkn,art,stueck,kaufkurs:kurs,kaufwert:betrag,kurs_ref:kurs,wert_ref:betrag,kauf_datum:datum,verkauft:false});
     const c=db.cash.find(x=>x.mitglied_id===mid);
     const okC = await sbPatch('cash',`mitglied_id=eq.${mid}`,{betrag:(c?.betrag||0)-betrag,updated_at:new Date().toISOString()});
     if(!okB||!okP||!okC){ alert('Kauf konnte nicht vollständig gespeichert werden.'); return; }
@@ -1519,14 +1508,6 @@ async function saveReise() {
   alert(`✓ Reise "${name}" gebucht.\n\nWichtig: Bitte die Projektdoku (WAX_PROJEKT.md) mit den neuen REISE_HISTORY-Daten aktualisieren, damit der neue Eintrag beim nächsten App-Start erhalten bleibt:\n\n{ name:'${name}', datum:'${datum}', gesamt:${gesamtBetrag.toFixed(2)}, anteile:{${reiseVorschauData.map(r=>r.m.id+':'+r.gutschrift.toFixed(2)).join(', ')}} }`);
 }
 
-async function saveAlltime() {
-  const mid=parseInt(document.getElementById('aMitglied').value);
-  const wert_echt=parseFloat(document.getElementById('aWert').value);
-  const perf_pa=parseFloat(document.getElementById('aPerfPa').value);
-  if(!wert_echt||isNaN(perf_pa)){alert('Bitte alle Felder ausfüllen.');return;}
-  await sbPatch('alltime',`mitglied_id=eq.${mid}`,{wert_echt,perf_pa});
-  closeModal(); await init();
-}
 async function saveComdirect() {
   const betrag = parseFloat(document.getElementById('cdBetrag').value);
   const datum = document.getElementById('cdDatum').value;
