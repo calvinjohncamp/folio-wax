@@ -95,6 +95,10 @@ td:nth-child(2) { text-align: left; }
 .bench-v { font-size: 18px; font-weight: 700; }
 .fx-note { font-size: 9px; color: #888; font-weight: 400; margin-left: 3px; }
 .kurs-loading { color: #bbb; font-style: italic; }
+
+.rank-icon{height:20px;vertical-align:middle;margin-left:6px;display:inline-block}
+.kpi-v.rank-pos{display:flex;align-items:center;gap:6px}
+
 @media (max-width: 640px) {
   .content, .hd, .nav, .statusbar { padding-left: 14px; padding-right: 14px; }
   .kpi-grid { grid-template-columns: repeat(2,1fr); }
@@ -261,7 +265,8 @@ if ('serviceWorker' in navigator) {
   <div class="sec-t" style="margin-top:24px"><span class="sec-n">3.4 ·</span> Formeln — automatische Herleitung je Mitglied</div>
   <div style="font-size:11px;color:#666;margin-bottom:10px">
     Dieser Bereich zeigt die aktuelle Herleitung der Alltime-Werte je Mitglied in Anlehnung an Excel-Spalte O.<br>
-    Die Werte aktualisieren sich automatisch aus Depotwert + Reisekorrekturen.
+    Die Werte aktualisieren sich automatisch aus Depotwert + Reisekorrekturen.<br>
+    Der Korrekturwert am Ende der Formel zeigt, in welcher Größenordnung der jeweilige Matador zu dem jeweiligen Zeitpunkt der Entnahme das Ganze aus der Stärke seines Spieldepots mit subventioniert hat.
   </div>
   <div id="alltimeFormelnBody"></div>
 </div>
@@ -304,10 +309,7 @@ if ('serviceWorker' in navigator) {
     <thead><tr><th>Position</th><th>Betrag</th><th>Info</th></tr></thead>
     <tbody id="comdirectInfo"></tbody>
   </table></div>
-  <div class="sec-t" style="margin-top:24px"><span class="sec-n">5.3 ·</span> Jahresehrungen — Bulle, Bär &amp; Alltime-Bulle</div>
-  <div id="ehrungBody"></div>
-
-  <div class="sec-t" style="margin-top:24px"><span class="sec-n">5.4 ·</span> Jahresabschluss — Vorjahreswerte einfrieren</div>
+<div class="sec-t" style="margin-top:24px"><span class="sec-n">5.3 ·</span> Jahresabschluss — Vorjahreswerte einfrieren</div>
   <div class="info-box" style="margin-bottom:12px">
     Am <strong>31. Dezember</strong> einmalig ausführen. Friert für alle 6 Mitglieder ein:<br>
     Gesamtwert, Cash, Invest-Wert, sowie <strong>Kurs und Wert jeder aktiven Position</strong> (werden als neue kurs_ref / wert_ref gesetzt).<br>
@@ -488,7 +490,7 @@ const TICKER_MAP = {
 let db = { mitglieder:[], positionen:[], cash:[], alltime:[], buchungen:[] };
 let liveKurse = {};
 let fxRates = {};
-let activeMitglied = 1;
+let activeMitglied = 0;
 let activeTab = 'uebersicht';
 let reiseVorschauData = null;
 
@@ -906,14 +908,14 @@ function showTab(tab) {
   ['uebersicht','depots','kapital','log','pflege'].forEach(t=>{
     document.getElementById('view-'+t).style.display = t===tab?'':'none';
   });
-  if (tab==='depots') renderDepot(activeMitglied);
+  if (tab==='depots') selectMitglied(0);
   if (tab==='log') renderLog();
   if (tab==='pflege') renderPflege();
 }
 
 function renderAll() {
   renderUebersicht();
-  if (activeTab==='depots') renderDepot(activeMitglied);
+  if (activeTab==='depots') { if (activeMitglied===0) renderEhrungenDepot(); else renderDepot(activeMitglied); }
   if (activeTab==='pflege') renderPflege();
   renderPerf();
 }
@@ -1008,14 +1010,71 @@ function renderUebersicht() {
 
 // EINZELDEPOTS
 function setupMitgliedBtns() {
-  document.getElementById('mitgliedBtns').innerHTML = db.mitglieder.map(m=>
+  const firstBtn = `<button class="btn ${activeMitglied===0?'btn-red':'btn-outline'}" id="mbtn-0" onclick="selectMitglied(0)">Jahresehrungen</button>`;
+  document.getElementById('mitgliedBtns').innerHTML = firstBtn + db.mitglieder.map(m=>
     `<button class="btn ${m.id===activeMitglied?'btn-red':'btn-outline'}" id="mbtn-${m.id}" onclick="selectMitglied(${m.id})">${m.name.split(',')[0]}</button>`
   ).join('');
 }
 function selectMitglied(id) {
   activeMitglied=id;
+  const b0=document.getElementById('mbtn-0'); if(b0) b0.className='btn '+(id===0?'btn-red':'btn-outline');
   db.mitglieder.forEach(m=>{const b=document.getElementById('mbtn-'+m.id);if(b)b.className='btn '+(m.id===id?'btn-red':'btn-outline');});
+  if (id===0) { renderEhrungenDepot(); return; }
   renderDepot(id);
+}
+
+
+function getDepotRankings() {
+  const rows = db.mitglieder.map(m=>{
+    const akt = getDepotwert(m.id);
+    const ref = REF[m.id]?.total || 0;
+    const ytd = ref>0 ? (akt-ref)/ref : 0;
+    const at = calcAlltimeLive(m.id);
+    return { id:m.id, ytd, perf_pa: at?.perf_pa || 0 };
+  });
+  const byYtd=[...rows].sort((a,b)=>b.ytd-a.ytd);
+  const byAt=[...rows].sort((a,b)=>b.perf_pa-a.perf_pa);
+  const ytdPos={}, atPos={};
+  byYtd.forEach((r,i)=>ytdPos[r.id]=i+1);
+  byAt.forEach((r,i)=>atPos[r.id]=i+1);
+  return {ytdPos, atPos};
+}
+function rankDisplay(pos) {
+  const icon = pos===1 ? '<img src="bull_icon.png" class="rank-icon" alt="Bulle">' : (pos===6 ? '<img src="bear_icon.png" class="rank-icon" alt="Bär">' : '');
+  return '<span>'+pos+'</span>'+icon;
+}
+function renderEhrungenDepot() {
+  const box = document.getElementById('depotContent');
+  if (!box) return;
+  const rows = db.mitglieder.map(m=>{
+    const akt = getDepotwert(m.id);
+    const ref = REF[m.id]?.total || 0;
+    const ytd = ref>0 ? (akt-ref)/ref : 0;
+    const at = calcAlltimeLive(m.id);
+    return { m, akt, ytd, at };
+  });
+  const byYtd = [...rows].sort((a,b)=>b.ytd-a.ytd);
+  const byAt  = [...rows].sort((a,b)=>(b.at?.perf_pa||0)-(a.at?.perf_pa||0));
+  const bulle   = byYtd[0];
+  const baer    = byYtd[byYtd.length-1];
+  const atBulle = byAt[0];
+  const jahr = new Date().getFullYear();
+  function ehrungCard(icon, titel, person, wert, farbe) {
+    return '<div style="background:#fff;border:1px solid #e8e4de;border-radius:6px;padding:16px;text-align:center">'
+      +'<div style="font-size:0;margin-bottom:10px"><img src="'+icon+'" style="height:56px;width:auto"></div>'
+      +'<div style="font-size:9px;font-weight:700;letter-spacing:.15em;text-transform:uppercase;color:#999;margin-bottom:4px">'+titel+' '+jahr+'</div>'
+      +'<div style="font-size:18px;font-weight:700;margin-bottom:4px">'+person+'</div>'
+      +'<div style="font-size:14px;font-weight:700;color:'+farbe+'">'+wert+'</div>'
+      +'</div>';
+  }
+  let html = '<div class="sec-t" style="margin-top:0"><span class="sec-n">2.1 ·</span> Jahresehrungen — Bulle, Bär & Alltime-Bulle</div>';
+  html += '<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin-top:4px">';
+  html += ehrungCard('bull_icon.png', 'Bulle des Jahres', bulle.m.name.split(',')[0], fp(bulle.ytd)+' YTD', '#1a6e3a');
+  html += ehrungCard('bear_icon.png', 'Bär des Jahres', baer.m.name.split(',')[0], fp(baer.ytd)+' YTD', '#c8441a');
+  html += ehrungCard('bull_icon.png', 'Alltime-Bulle', atBulle.m.name.split(',')[0], atBulle.at?fp(atBulle.at.perf_pa)+' p.a.':'—', '#c8441a');
+  html += '</div>';
+  html += '<div style="font-size:10px;color:#999;margin-top:8px">Basierend auf aktuellen Live-Daten. Bulle = höchste YTD-Performance, Bär = niedrigste YTD-Performance, Alltime-Bulle = höchster interner Zinsfuß seit 2000.</div>';
+  box.innerHTML = html;
 }
 
 function renderDepot(id) {
@@ -1025,6 +1084,7 @@ function renderDepot(id) {
   const cash = getCash(id);
   const atData = calcAlltimeLive(id);
   const ref = REF[id] || {};
+  const rankings = getDepotRankings();
 
   // Invest aktuell
   let investAkt=0, kaufwertSum=0;
@@ -1065,12 +1125,12 @@ function renderDepot(id) {
   const posAlltime = alltimeRanks.findIndex(r=>r.id===id) + 1;
 
   let html=`<div class="kpi-grid" style="margin-bottom:16px">
-    <div class="kpi"><div class="kpi-l">Position YTD</div><div class="kpi-v bold">${posYtd}</div><div class="kpi-s">Rang nach YTD %</div></div>
+    <div class="kpi"><div class="kpi-l">Position YTD</div><div class="kpi-v bold rank-pos">${rankDisplay(rankings.ytdPos[id])}</div><div class="kpi-s">Bulle / Bär des Jahres</div></div>
     <div class="kpi"><div class="kpi-l">Aktueller Wert</div><div class="kpi-v bold">${f(gesamtAkt)} €</div><div class="kpi-s">Invest + Cash</div></div>
     <div class="kpi"><div class="kpi-l">YTD %</div><div class="kpi-v ${cl(ytd)}">${fp(ytd)}</div><div class="kpi-s">seit 31.12.${REF_JAHR}</div></div>
     <div class="kpi"><div class="kpi-l">YTD absolut</div><div class="kpi-v ${cl(ytdAbs)}">${fc(ytdAbs)}</div><div class="kpi-s">Gewinn/Verlust</div></div>
     <div class="kpi"><div class="kpi-l">Cash aktuell</div><div class="kpi-v">${f(cash)} €</div><div class="kpi-s">${f(cash/Math.max(gesamtAkt,1)*100,1)}% des Depots</div></div>
-    <div class="kpi"><div class="kpi-l">Position Alltime</div><div class="kpi-v bold">${posAlltime}</div><div class="kpi-s">Rang nach Perf. p.a.</div></div>
+    <div class="kpi"><div class="kpi-l">Position Alltime</div><div class="kpi-v bold rank-pos">${rankDisplay(rankings.atPos[id])}</div><div class="kpi-s">Alltime-Bulle</div></div>
     <div class="kpi"><div class="kpi-l">Alltime echt</div><div class="kpi-v">${atData?f(atData.wert_echt)+' €':'—'}</div><div class="kpi-s">neutralisiert</div></div>
     <div class="kpi"><div class="kpi-l">Gewinn seit Start</div><div class="kpi-v ${gewinnStart!=null?cl(gewinnStart):''}">  ${gewinnStart!=null?fc(gewinnStart):'—'}</div><div class="kpi-s">Alltime minus Einsatz</div></div>
     <div class="kpi"><div class="kpi-l">Perf. p.a.</div><div class="kpi-v ${atData&&atData.perf_pa>=0?'pos':'neg'}">${atData?fp(atData.perf_pa):'—'}</div><div class="kpi-s">interner Zinsfuß</div></div>
@@ -1369,41 +1429,7 @@ function renderAlltimeFormeln() {
 }
 
 function renderEhrungen() {
-  // YTD-Ranking für Bulle (bester YTD) und Bär (schlechtester YTD) des laufenden Jahres
-  const rows = db.mitglieder.map(m=>{
-    const akt = getDepotwert(m.id);
-    const ref = REF[m.id]?.total || 0;
-    const ytd = ref>0 ? (akt-ref)/ref : 0;
-    const at = calcAlltimeLive(m.id);
-    return { m, akt, ytd, at };
-  });
-
-  const byYtd = [...rows].sort((a,b)=>b.ytd-a.ytd);
-  const byAt  = [...rows].sort((a,b)=>(b.at?.perf_pa||0)-(a.at?.perf_pa||0));
-
-  const bulle   = byYtd[0];
-  const baer    = byYtd[byYtd.length-1];
-  const atBulle = byAt[0];
-
-  const jahr = new Date().getFullYear();
-  let html = '<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin-top:4px">';
-
-  function ehrungCard(emoji, titel, person, wert, farbe) {
-    return '<div style="background:#fff;border:1px solid #e8e4de;border-radius:6px;padding:16px;text-align:center">'
-      +'<div style="font-size:32px;margin-bottom:8px">'+emoji+'</div>'
-      +'<div style="font-size:9px;font-weight:700;letter-spacing:.15em;text-transform:uppercase;color:#999;margin-bottom:4px">'+titel+' '+jahr+'</div>'
-      +'<div style="font-size:18px;font-weight:700;margin-bottom:4px">'+person+'</div>'
-      +'<div style="font-size:14px;font-weight:700;color:'+farbe+'">'+wert+'</div>'
-      +'</div>';
-  }
-
-  html += ehrungCard('🐂', 'Bulle des Jahres', bulle.m.name.split(',')[0], fp(bulle.ytd)+' YTD', '#1a6e3a');
-  html += ehrungCard('🐻', 'Bär des Jahres',   baer.m.name.split(',')[0],  fp(baer.ytd)+' YTD',  '#c8441a');
-  html += ehrungCard('🏆', 'Alltime-Bulle',    atBulle.m.name.split(',')[0], atBulle.at?fp(atBulle.at.perf_pa)+' p.a.':'—', '#c8441a');
-  html += '</div>';
-  html += '<div style="font-size:10px;color:#999;margin-top:8px">Basierend auf aktuellen Live-Daten. Bulle = höchste YTD-Performance, Bär = niedrigste YTD-Performance, Alltime-Bulle = höchster interner Zinsfuß seit 2000.</div>';
-
-  document.getElementById('ehrungBody').innerHTML = html;
+  renderEhrungenDepot();
 }
 
 // MODALS
