@@ -107,7 +107,7 @@ footer { margin-top: 28px; padding-top: 14px; border-top: 1px solid #d8d4ce; fon
 
 <script>
 // Service Worker für automatischen Cache-Bust
-const WAX_BUILD = '1775497863';
+const WAX_BUILD = '1775602001';
 if ('serviceWorker' in navigator) {
   // SW-Code als Blob registrieren (kein extra sw.js File nötig)
   const swCode = `
@@ -1350,6 +1350,11 @@ function updateKaufVorschau() {
   document.getElementById('fBetragVorschau').textContent = (s&&k)?`Gesamtwert: ${f(s*k)} €`:'';
 }
 
+async function getOpenLots(mid, wkn) {
+  const lots = await sbGet('positionen', `mitglied_id=eq.${mid}&wkn=eq.${encodeURIComponent(wkn)}&verkauft=eq.false&order=kauf_datum.asc,id.asc`);
+  return Array.isArray(lots) ? lots : [];
+}
+
 async function saveKauf() {
   const typ=document.getElementById('fTyp').value;
   const mid=parseInt(document.getElementById('fMitglied').value);
@@ -1363,16 +1368,65 @@ async function saveKauf() {
   const betrag=stueck*kurs;
   if(!datum||!wkn||!bez||!stueck||!kurs){alert('Bitte alle Felder ausfüllen.');return;}
 
-  await sbPost('buchungen',{datum,typ,mitglied_id:mid,bezeichnung:bez,wkn,stueck,kurs,betrag:typ==='VERKAUF'?betrag:-betrag,notiz});
   if(typ==='KAUF') {
-    await sbPost('positionen',{mitglied_id:mid,bezeichnung:bez,wkn,art,stueck,kaufkurs:kurs,kaufwert:betrag,kauf_datum:datum,verkauft:false});
+    const okB = await sbPost('buchungen',{datum,typ,mitglied_id:mid,bezeichnung:bez,wkn,stueck,kurs,betrag:-betrag,notiz});
+    const okP = await sbPost('positionen',{mitglied_id:mid,bezeichnung:bez,wkn,art,stueck,kaufkurs:kurs,kaufwert:betrag,kauf_datum:datum,verkauft:false});
     const c=db.cash.find(x=>x.mitglied_id===mid);
-    await sbPatch('cash',`mitglied_id=eq.${mid}`,{betrag:(c?.betrag||0)-betrag,updated_at:new Date().toISOString()});
-  } else {
-    await sbPatch('positionen',`mitglied_id=eq.${mid}&wkn=eq.${wkn}&verkauft=eq.false`,{verkauft:true,verkauf_datum:datum});
-    const c=db.cash.find(x=>x.mitglied_id===mid);
-    await sbPatch('cash',`mitglied_id=eq.${mid}`,{betrag:(c?.betrag||0)+betrag,updated_at:new Date().toISOString()});
+    const okC = await sbPatch('cash',`mitglied_id=eq.${mid}`,{betrag:(c?.betrag||0)-betrag,updated_at:new Date().toISOString()});
+    if(!okB||!okP||!okC){ alert('Kauf konnte nicht vollständig gespeichert werden.'); return; }
+    closeModal(); await init(); return;
   }
+
+  const lots = await getOpenLots(mid, wkn);
+  const available = lots.reduce((s,l)=>s+(parseFloat(l.stueck)||0),0);
+  if(!lots.length || available + 1e-9 < stueck){
+    alert(`Nicht genug offene Stücke vorhanden. Verfügbar: ${available}`);
+    return;
+  }
+
+  let rest = stueck;
+  for(const lot of lots){
+    if(rest <= 0) break;
+    const lotSt = parseFloat(lot.stueck)||0;
+    if(lotSt <= 0) continue;
+
+    if(lotSt <= rest + 1e-9){
+      const ok = await sbPatch('positionen', `id=eq.${lot.id}`, {
+        verkauft:true,
+        verkauf_datum:datum
+      });
+      if(!ok){ alert('Verkauf konnte nicht vollständig gespeichert werden.'); return; }
+      rest -= lotSt;
+    } else {
+      const soldSt = rest;
+      const remainSt = lotSt - soldSt;
+
+      const okReduce = await sbPatch('positionen', `id=eq.${lot.id}`, {
+        stueck:remainSt,
+        kaufwert:remainSt * (parseFloat(lot.kaufkurs)||0)
+      });
+      const okSold = await sbPost('positionen', {
+        mitglied_id:lot.mitglied_id,
+        bezeichnung:lot.bezeichnung,
+        wkn:lot.wkn,
+        art:lot.art,
+        stueck:soldSt,
+        kaufkurs:lot.kaufkurs,
+        kaufwert:soldSt * (parseFloat(lot.kaufkurs)||0),
+        kauf_datum:lot.kauf_datum,
+        verkauft:true,
+        verkauf_datum:datum
+      });
+      if(!okReduce||!okSold){ alert('Teilverkauf konnte nicht vollständig gespeichert werden.'); return; }
+      rest = 0;
+    }
+  }
+
+  const okB = await sbPost('buchungen',{datum,typ,mitglied_id:mid,bezeichnung:bez,wkn,stueck,kurs,betrag:betrag,notiz});
+  const c=db.cash.find(x=>x.mitglied_id===mid);
+  const okC = await sbPatch('cash',`mitglied_id=eq.${mid}`,{betrag:(c?.betrag||0)+betrag,updated_at:new Date().toISOString()});
+  if(!okB||!okC){ alert('Verkauf wurde nicht vollständig verbucht.'); return; }
+
   closeModal(); await init();
 }
 
