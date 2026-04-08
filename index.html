@@ -1,7 +1,6 @@
 <!DOCTYPE html>
 <html lang="de">
 <head>
-<meta http-equiv="Cache-Control" content="no-store" />
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
 <meta name="apple-mobile-web-app-capable" content="yes">
@@ -145,29 +144,8 @@ if (window.caches && caches.keys) {
   caches.keys().then(keys => Promise.all(keys.map(k => caches.delete(k)))).catch(()=>{});
 }
 </script>
-
-<style>
-select {
-  padding-right: 36px !important;
-  background-position: right 12px center !important;
-}
-</style>
-
 </head>
 <body>
-
-<script>
-localStorage.removeItem("wax_user");
-
-if ('serviceWorker' in navigator) {
-  navigator.serviceWorker.getRegistrations().then(function(registrations) {
-    for(let registration of registrations) {
-      registration.unregister();
-    }
-  });
-}
-</script>
-
 
 
 <div id="pinOverlay">
@@ -2210,6 +2188,19 @@ document.addEventListener('DOMContentLoaded', () => {
     document.getElementById('pinOverlay').style.display='flex';
   }
 });
+</script>
+
+
+<script>
+function controlScroll(){
+  const login = document.querySelector('[class*="login"], #login, .login-screen');
+  if(login){
+    document.body.style.overflow = 'hidden';
+  } else {
+    document.body.style.overflow = 'auto';
+  }
+}
+document.addEventListener("DOMContentLoaded", controlScroll);
 </script>
 
 </body>
