@@ -336,6 +336,33 @@ if (window.caches && caches.keys) {
       <tr class="total-row"><td colspan="2">Gesamt Entnahmen</td><td style="text-align:right">10.910,44 €</td><td style="text-align:right">65.462,64 €</td></tr>
     </tbody>
   </table></div>
+
+  <div class="sec-t" style="margin-top:24px"><span class="sec-n">3.3 ·</span> Erläuterungen</div>
+  <div class="tw rules-box">
+    <div class="rules-title">Alltime-Wert &amp; Performance seit Start p.a.</div>
+    <div class="rules-columns" style="column-count:1;column-gap:0">
+      <div class="rule-item">
+        <div class="rule-text">Die Alltime-Werte zeigen die Entwicklung jedes Einzeldepots seit Start des Aktienclubs. Grundlage ist ein vollständiger Zahlungsstrom aus monatlichen Einzahlungen, Entnahmen und dem aktuellen Depotwert.</div>
+      </div>
+      <div class="rule-item">
+        <div class="rule-text">Monatliche Einzahlungen werden automatisch berücksichtigt und erhöhen den persönlichen Kapitaleinsatz jedes Teilnehmers.</div>
+      </div>
+      <div class="rule-item">
+        <div class="rule-text">Entnahmen (z. B. Reisen) werden operativ nach dem aktuellen Depotanteil zum Zeitpunkt der Entnahme auf die sechs Einzeldepots verteilt und reduzieren die Cash-Bestände entsprechend unterschiedlich.</div>
+      </div>
+      <div class="rule-item">
+        <div class="rule-text">Für die Alltime-Betrachtung ist jedoch nicht entscheidend, aus welchem Einzeldepot die Liquidität tatsächlich geflossen ist, sondern wie sich die Entnahme wirtschaftlich auf den jeweiligen Teilnehmer auswirkt. Die Entnahme jedes Teilnehmers wird gemeinsam mit dem Monatsbeitrag als Netto-Cashflow des jeweiligen Monats berücksichtigt. Der interne Zinsfuß (IRR) sorgt dafür, dass die unterschiedlichen Beiträge der Teilnehmer – Einzahlungen und Entnahmen über die Zeit – bei der Berechnung der Alltime-Performance korrekt berücksichtigt werden. Er ermittelt daraus die persönliche jährliche Rendite („Performance seit Start p.a.“) jedes Einzeldepots.</div>
+      </div>
+      <div class="rule-item">
+        <div class="rule-head">Das bedeutet:</div>
+        <div class="rule-text">• Unterschiede in den Cash-Beständen der Einzeldepots durch die operative Verteilung haben keinen Einfluss auf die Alltime-Performance<br>• jeder Teilnehmer wird wirtschaftlich genau nach seinem tatsächlichen Anteil am Gesamtdepot behandelt<br>• die Berechnung bleibt damit fair, vergleichbar und stabil</div>
+      </div>
+      <div class="rule-item" style="margin-bottom:0">
+        <div class="rule-text">Aus diesem Zahlungsstrom berechnet die App die Kennzahl „Performance seit Start p.a.“ – also die durchschnittliche jährliche Rendite seit Clubbeginn unter Berücksichtigung aller Ein- und Auszahlungen.</div>
+      </div>
+    </div>
+  </div>
+
 </div>
 
 <div id="view-log" style="display:none">
@@ -973,7 +1000,7 @@ function calcXIRR(cashflows) {
 // Historische Reisen für Alltime-Neutralisierung
 // Jede Reise: { name, datum, gesamt (Gesamtkosten alle 6), anteile: {id: gutschrift} }
 // Gutschrift = damaliger Alltime-Anteil × Gesamtkosten; Abzug = gesamt für alle gleich
-const REISE_HISTORY = [
+const HIST_REISE_HISTORY = [
   { name:'Ablöse Bladdy',    datum:'Sep 2003', gesamt: 722.50,   anteile:{1:328.16, 2:609.93, 3:1017.42, 4:425.70,  5:1046.47, 6:907.75}  },
   { name:'USA',              datum:'Jan 2008', gesamt: 2927.26,  anteile:{1:1198.62,2:2166.59,3:4517.12, 4:1893.36, 5:4646.97, 6:3140.91} },
   { name:'Mauritius',        datum:'Dez 2017', gesamt: 2500.00,  anteile:{1:1087.40,2:2171.54,3:4442.31, 4:1877.50, 5:3390.26, 6:2030.98} },
@@ -982,21 +1009,116 @@ const REISE_HISTORY = [
   { name:'Lappland',         datum:'Sep 2022', gesamt: 1639.23,  anteile:{1:921.57, 2:1864.78,3:3197.47, 4:1252.04, 5:1592.34, 6:1007.14} },
 ];
 
+const MONTHLY_CONTRIBUTION_RULES = [
+  { from: '2000-01-01', to: '2007-08-01', betrag: -51.13 },
+  { from: '2007-09-01', to: '2015-02-01', betrag: -70.00 },
+  { from: '2015-03-01', to: '9999-01-01', betrag: -100.00 },
+];
+const DYNAMIC_XIRR_START = '2023-03-01';
+
+function parseISODate(value) {
+  if (!value) return null;
+  if (value instanceof Date) return new Date(value.getFullYear(), value.getMonth(), value.getDate());
+  const s = String(value).slice(0,10);
+  const m = s.match(/^(\d{4})-(\d{2})-(\d{2})$/);
+  if (!m) return null;
+  return new Date(Number(m[1]), Number(m[2]) - 1, Number(m[3]));
+}
+function monthKeyFromDate(value) {
+  const d = parseISODate(value);
+  return d ? `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-01` : '';
+}
+function isDateOnOrAfter(value, minIso = DYNAMIC_XIRR_START) {
+  const d = parseISODate(value);
+  const min = parseISODate(minIso);
+  return !!(d && min && d >= min);
+}
+function getMonthlyContributionForDate(value) {
+  const key = monthKeyFromDate(value);
+  const rule = MONTHLY_CONTRIBUTION_RULES.find(r => key >= r.from && key <= r.to);
+  return rule ? rule.betrag : null;
+}
+function isAlltimeNeutralizableBooking(b) {
+  if (!b || !isDateOnOrAfter(b.datum)) return false;
+
+  // REISE wird bereits über buildDynamicTravelHistory() berücksichtigt
+  // → hier NICHT nochmal, sonst doppelte Neutralisierung
+  if (b.typ !== 'ENTNAHME') return false;
+
+  if (/Comdirect-Gesamtstand/i.test(String(b.bezeichnung || ''))) return false;
+  return true;
+}
+function buildDynamicTravelHistory() {
+  const groups = new Map();
+  (db?.buchungen || []).forEach(b => {
+    if (b?.typ !== 'REISE' || !isDateOnOrAfter(b.datum)) return;
+    const key = `${String(b.datum||'').slice(0,10)}|${b.bezeichnung||''}`;
+    if (!groups.has(key)) groups.set(key, { name:b.bezeichnung||'Reise', datum:String(b.datum||'').slice(0,10), gesamt:0, modus:'operativ', anteile:{} });
+    const g = groups.get(key);
+    const betrag = Math.abs(num(b.betrag));
+    g.gesamt += betrag;
+    g.anteile[b.mitglied_id] = (g.anteile[b.mitglied_id] || 0) + betrag;
+  });
+  return [...groups.values()].sort((a,b)=>String(a.datum).localeCompare(String(b.datum)));
+}
+function getTravelHistoryAlltime() {
+  return [...HIST_REISE_HISTORY, ...buildDynamicTravelHistory()];
+}
+function getDynamicAlltimeKorr(id) {
+  return (db?.buchungen || []).reduce((sum, b) => {
+    if (!isAlltimeNeutralizableBooking(b)) return sum;
+    if (Number(b.mitglied_id) !== Number(id)) return sum;
+    return sum + Math.abs(num(b.betrag));
+  }, 0);
+}
+function buildDynamicSpecialBookingMap() {
+  const map = new Map();
+  (db?.buchungen || []).forEach(b => {
+    if (!isDateOnOrAfter(b?.datum)) return;
+    if (!['REISE','ENTNAHME','EINZAHLUNG'].includes(b?.typ)) return;
+    if ((b.typ === 'REISE' || b.typ === 'ENTNAHME') && /Comdirect-Gesamtstand/i.test(String(b.bezeichnung || ''))) return;
+    const key = monthKeyFromDate(b.datum);
+    if (!key) return;
+    const mid = Number(b.mitglied_id);
+    if (!mid) return;
+    const monthly = getMonthlyContributionForDate(b.datum);
+    if (monthly === null) return;
+    if (!map.has(key)) map.set(key, { __monthly: monthly });
+    const row = map.get(key);
+    let delta = 0;
+    if (b.typ === 'REISE' || b.typ === 'ENTNAHME') delta = Math.abs(num(b.betrag));
+    if (b.typ === 'EINZAHLUNG') delta = -Math.abs(num(b.betrag));
+    if (!delta) return;
+    row[mid] = (row[mid] != null ? row[mid] : monthly) + delta;
+  });
+  return map;
+}
+function getHistoricalSonderRow(year, month) {
+  const key = `${year}-${String(month+1).padStart(2,'0')}-01`;
+  return HIST_XIRR_SONDER.find(x => x.d === key) || null;
+}
+function getDynamicSonderRow(year, month) {
+  const key = `${year}-${String(month+1).padStart(2,'0')}-01`;
+  return buildDynamicSpecialBookingMap().get(key) || null;
+}
+
 // Korrektursummen berechnen (sum(anteile) - gesamt für jedes Mitglied)
 function getAltimeKorr(id) {
-  return REISE_HISTORY.reduce((s, r) => {
+  const hist = getTravelHistoryAlltime().reduce((s, r) => {
     if (r && r.modus === 'operativ') return s + (r.anteile?.[id] || 0);
     if (r && r.abzuege) return s + (r.anteile?.[id] || 0) - (r.abzuege?.[id] || 0);
     return s + (r.anteile?.[id] || 0) - (r.gesamt || 0);
   }, 0);
+  return hist + getDynamicAlltimeKorr(id);
 }
 
 // Sonderzahlungen im XIRR-Zahlungsstrom (individuell pro Mitglied, aus Excel)
 // Format: { datum: 'YYYY-MM-DD', vals: {mitglied_id: netto_betrag} }
-// Netto = normaler Monatsbeitrag ERSETZT durch diesen Wert
-// Reise-Erstattungen sind positiv (Gutschrift nach Alltime-Anteil)
-// Bei neuer Reise: neuen Eintrag hinzufügen mit individuellen Netto-Beträgen
-const XIRR_SONDER = [
+// Netto = kompletter Monats-Cashflow des Monats
+// Historische Reisen/Entnahmen bleiben fest verdrahtet.
+// Neue Fälle werden dynamisch aus den Buchungen aufgebaut:
+// Standardbeitrag des Monats + zusätzliche Einzahlungen/Entnahmen/Reisen.
+const HIST_XIRR_SONDER = [
   { d:'2003-09-01', v:{1:-201.13, 2:-201.13, 3:-201.13, 4:-201.13, 5:-201.13, 6:-201.13} }, // Sep 2003: -51.13 normal + -150 Ablöse Bladdy
   { d:'2008-01-01', v:{1:590.47,  2:590.47,  3:590.47,  4:590.47,  5:590.47,  6:590.47} },  // Jan 2008: USA-Reise +660.47 vs. -70 normal
   { d:'2017-12-01', v:{1:228.16,  2:509.93,  3:917.42,  4:325.70,  5:946.47,  6:807.75} },  // Dez 2017: Mauritius Teil 1
@@ -1009,9 +1131,16 @@ const XIRR_SONDER = [
 
 // Hilfsfunktion: ist ein Datum ein Sonderdatum?
 function getSonderBetrag(id, year, month) {
-  const key = `${year}-${String(month+1).padStart(2,'0')}-01`;
-  const s = XIRR_SONDER.find(x => x.d === key);
-  return s ? s.v[id] : null;
+  const dyn = getDynamicSonderRow(year, month);
+  if (dyn && dyn[id] != null) return dyn[id];
+  const hist = getHistoricalSonderRow(year, month);
+  return hist ? hist.v[id] : null;
+}
+function getClubSonderBetrag(year, month) {
+  const dyn = getDynamicSonderRow(year, month);
+  if (dyn) return Object.values(dyn).reduce((s,v)=>s+num(v),0);
+  const hist = getHistoricalSonderRow(year, month);
+  return hist ? Object.values(hist.v).reduce((s,v)=>s+num(v),0) : null;
 }
 
 // Live-Alltime fuer ein Mitglied berechnen: { wert_echt, perf_pa }
@@ -1026,11 +1155,11 @@ function calcAlltimeLive(id) {
 
   // Monatliche Beiträge von Jan 2000 bis heute
   const today = new Date();
-  const steps = [
-    { from: new Date(2000, 0, 1), to: new Date(2007, 7, 1), betrag: -51.13 },
-    { from: new Date(2007, 8, 1), to: new Date(2015, 1, 1), betrag: -70.00 },
-    { from: new Date(2015, 2, 1), to: new Date(9999, 0, 1), betrag: -100.00 },
-  ];
+  const steps = MONTHLY_CONTRIBUTION_RULES.map(r => ({
+    from: parseISODate(r.from),
+    to: parseISODate(r.to),
+    betrag: r.betrag
+  }));
   for (const step of steps) {
     let d = new Date(step.from);
     while (d <= step.to && d <= today) {
@@ -1055,18 +1184,17 @@ function calcClubXIRR() {
   // Startkapital × 6
   cashflows.push({ date: new Date(2000, 0, 1), amount: -511.29 * 6 });
   // Monatsbeiträge × 6
-  const steps = [
-    { from: new Date(2000, 0, 1), to: new Date(2007, 7, 1), betrag: -51.13 * 6 },
-    { from: new Date(2007, 8, 1), to: new Date(2015, 1, 1), betrag: -70.00 * 6 },
-    { from: new Date(2015, 2, 1), to: new Date(9999, 0, 1), betrag: -100.00 * 6 },
-  ];
+  const steps = MONTHLY_CONTRIBUTION_RULES.map(r => ({
+    from: parseISODate(r.from),
+    to: parseISODate(r.to),
+    betrag: r.betrag * 6
+  }));
   for (const step of steps) {
     let d = new Date(step.from);
     while (d <= step.to && d <= heute) {
       // Sondermonat? → Summe aller 6 individuellen Werte
-      const key = d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-01';
-      const sonder = XIRR_SONDER.find(x => x.d === key);
-      const betrag = sonder ? Object.values(sonder.v).reduce((s,v)=>s+v,0) : step.betrag;
+      const sonder = getClubSonderBetrag(d.getFullYear(), d.getMonth());
+      const betrag = sonder !== null ? sonder : step.betrag;
       cashflows.push({ date: new Date(d), amount: betrag });
       d = new Date(d.getFullYear(), d.getMonth() + 1, 1);
     }
@@ -1821,7 +1949,7 @@ function showReiseBestätigung() {
     </tr>`;
   });
   html+=`</table></div>`;
-  html+=`<div style="font-size:11px;color:#666;margin-top:8px">Die Reise wird operativ <strong>anteilig nach den aktuellen virtuellen Depots</strong> verbucht. Die Alltime-Betrachtung wird für neue Reisen automatisch neutralisiert.</div>`;
+  html+=`<div style="font-size:11px;color:#666;margin-top:8px">Die Reise wird operativ <strong>anteilig nach den aktuellen virtuellen Depots</strong> verbucht. Für die Performance seit Start p.a. wird im betreffenden Monat automatisch der <strong>Standardbeitrag von 100 €</strong> je Mitglied mit dem individuellen Reiseanteil zum <strong>Netto-Cashflow des Monats</strong> verrechnet.</div>`;
   document.getElementById('reiseBestätigungDetail').innerHTML=html;
   document.getElementById('reiseStep1').style.display='none';
   document.getElementById('reiseStep2').style.display='block';
@@ -1847,14 +1975,12 @@ async function saveReise() {
     await sbPatch('cash',`mitglied_id=eq.${r.m.id}`,{betrag:(c?.betrag||0)-r.betrag,updated_at:new Date().toISOString()});
   }
 
-  const neueAnteile={};
-  reiseVorschauData.forEach(r=>{ neueAnteile[r.m.id]=parseFloat(r.betrag.toFixed(2)); });
-  REISE_HISTORY.push({ name, datum, gesamt:parseFloat(gesamtBetrag.toFixed(2)), modus:'operativ', anteile:neueAnteile });
-
   closeModal(); await init();
   alert(`✓ Reise "${name}" gebucht.
 
-Die Cash-Bestände der 6 virtuellen Depots wurden anteilig nach aktuellem Depotwert reduziert. Negative Cash-Stände sind zulässig und können später durch Verkäufe ausgeglichen werden.`);
+Die Cash-Bestände der 6 virtuellen Depots wurden anteilig nach aktuellem Depotwert reduziert. Negative Cash-Stände sind zulässig und können später durch Verkäufe ausgeglichen werden.
+
+Alltime-Werte und Performance seit Start p.a. werden dafür künftig automatisch aus den Buchungen fortgeführt – inklusive Verrechnung mit dem monatlichen Standardbeitrag von 100 € im jeweiligen Monat.`);
 }
 
 
