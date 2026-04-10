@@ -40,6 +40,13 @@ body { background: #f0ede8; color: #111; font-family: 'DM Sans', sans-serif; fon
 .sec-t.mode-row { display:flex; align-items:center; justify-content:space-between; gap:12px; }
 .mode-toggle { border:1px solid #d8d4ce; background:#fff; color:#444; font-size:11px; font-weight:700; letter-spacing:.08em; text-transform:uppercase; padding:6px 10px; cursor:pointer; border-radius:999px; }
 .mode-toggle:hover { background:#f6f3ef; }
+.mode-tools{display:flex;align-items:center;gap:8px;flex-wrap:wrap;justify-content:flex-end}
+.icon-btn{width:34px;height:34px;border:1px solid #d8d4ce;background:#fff;color:#444;border-radius:999px;display:inline-flex;align-items:center;justify-content:center;cursor:pointer;transition:transform .2s, background .15s, border-color .15s, opacity .15s;font-size:15px;line-height:1}
+.refresh-btn{width:30px;height:30px;margin-right:12px;font-size:22px;font-weight:600}
+.icon-btn:hover{background:#f6f3ef;border-color:#c8441a}
+.icon-btn:disabled{opacity:.55;cursor:default}
+.icon-btn.refreshing{animation:spin 1s linear infinite}
+@keyframes spin{from{transform:rotate(0deg)}to{transform:rotate(360deg)}}
 .sec-n { color: #1a1814; }
 .kpi-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px,1fr)); gap: 1px; background: #d8d4ce; border: 1px solid #d8d4ce; margin-bottom: 24px; }
 .kpi { background: #fff; padding: 14px 16px; }
@@ -67,6 +74,10 @@ td:nth-child(2) { text-align: left; }
 #rankingBody td { vertical-align: middle; }
 .animal-cell { display: flex; align-items: center; }
 .animal-img { mix-blend-mode: multiply; height: 2.2em; vertical-align: middle; flex-shrink: 0; }
+.at-rank-cell { min-width: 92px; text-align: center !important; }
+.at-rank-wrap { display:inline-flex; align-items:center; justify-content:flex-start; min-width:44px; gap:8px; }
+.at-rank-num { display:inline-block; width:12px; text-align:right; }
+.at-rank-icon { display:inline-flex; align-items:center; justify-content:center; min-width:22px; }
 .pos { color: #1a6e3a; } .neg { color: #c8441a; } .dim { color: #666; }
 .bold { font-weight: 700; }
 .badge { display: inline-block; font-size: 8px; font-weight: 700; padding: 2px 5px; border-radius: 2px; margin-left: 4px; vertical-align: middle; }
@@ -205,6 +216,7 @@ if (window.caches && caches.keys) {
 <div class="nav">
   <button class="nav-btn active" onclick="showTab('uebersicht')" id="tab-uebersicht">▣ Übersicht</button>
   <button class="nav-btn" onclick="showTab('depots')" id="tab-depots">◎ Einzeldepots</button>
+  <button class="nav-btn" onclick="showTab('investments')" id="tab-investments">◈ Investments</button>
   <button class="nav-btn" onclick="showTab('kapital')" id="tab-kapital">⊕ Kapital & Performance</button>
   <button class="nav-btn" onclick="showTab('log')" id="tab-log">≡ Transaktionen</button>
   <button class="nav-btn" onclick="showTab('pflege')" id="tab-pflege" style="color:#c8441a">✎ Pflege</button>
@@ -219,20 +231,21 @@ if (window.caches && caches.keys) {
 <div class="content">
 
 <div id="view-uebersicht">
-  <div class="sec-t mode-row" style="margin-top:4px"><span><span class="sec-n">1 ·</span> Gesamtübersicht — WAX Aktienclub 2026</span><button id="overviewToggleBtn" class="mode-toggle" onclick="toggleOverviewMode()">Heute</button></div>
+  <div class="sec-t mode-row" style="margin-top:4px"><span><span class="sec-n">1 ·</span> Gesamtübersicht — WAX Aktienclub 2026</span><div class="mode-tools"><button id="overviewRefreshBtn" class="icon-btn refresh-btn" type="button" title="Kurse aktualisieren" aria-label="Kurse aktualisieren" onclick="refreshMarketData()">↻</button><button id="overviewToggleBtn" class="mode-toggle" onclick="toggleOverviewMode()">Heute</button></div></div>
   <div class="kpi-grid">
     <div class="kpi"><div class="kpi-l">Gesamtwert</div><div class="kpi-v" id="kGesamt">—</div><div class="kpi-s">inkl. Anpassung Cash-Puffer</div></div>
     <div class="kpi"><div class="kpi-l">Ø pro Person</div><div class="kpi-v" id="kProPerson">—</div><div class="kpi-s">inkl. Puffer</div></div>
     <div class="kpi"><div class="kpi-l" id="kModeLabelPct">YTD Performance</div><div class="kpi-v" id="kYtd">—</div><div class="kpi-s" id="kModeSubPct">seit 31.12. des Vorjahres</div></div>
     <div class="kpi"><div class="kpi-l" id="kModeLabelAbs">Gewinn ytd</div><div class="kpi-v" id="kYtdAbs">—</div><div class="kpi-s" id="kModeSubAbs">Gewinn/Verlust</div></div>
     <div class="kpi"><div class="kpi-l">Perf. p.a.</div><div class="kpi-v" id="kPerfPa">—</div><div class="kpi-s">interner Zinsfuß seit Start</div></div>
+    <div class="kpi"><div class="kpi-l">Cashanteil</div><div class="kpi-v" id="kCashAnteil">—</div><div class="kpi-s" id="kCashAnteilSub">echter Comdirect-Cash</div></div>
     <div class="kpi"><div class="kpi-l">Gewinn Alltime</div><div class="kpi-v" id="kGewinnAlltime">—</div><div class="kpi-s">neutralisiert seit Start</div></div>
   </div>
   <div class="sec-t"><span class="sec-n">2 ·</span> Ranking — aktuell & Alltime</div>
   <div class="tw"><table>
     <thead><tr>
       <th>Pos.</th><th>Mitglied</th>
-      <th id="rankPctHead">YTD %</th><th id="rankAbsHead">YTD €</th><th>Akt. Wert</th><th>Anteil %</th>
+      <th id="rankPctHead">YTD %</th><th id="rankAbsHead">YTD €</th><th>Akt. Wert</th><th>Anteil %</th><th>Cashanteil</th>
       <th>Pos. AT</th><th>Alltime echt</th><th>Anteil AT %</th>
       <th>Gewinn Alltime</th><th>Perf. p.a. Alltime</th>
     </tr></thead>
@@ -300,13 +313,18 @@ if (window.caches && caches.keys) {
   </div></div>
 
 <div id="view-depots" style="display:none">
-  <div class="sec-t mode-row" style="margin-top:4px"><span><span class="sec-n">2 ·</span> Einzeldepots — <span id="depotModeTitle">YTD</span> &amp; Alltime</span><button id="depotToggleBtn" class="mode-toggle" onclick="toggleDepotMode()">Heute</button></div>
+  <div class="sec-t mode-row" style="margin-top:4px"><span><span class="sec-n">2 ·</span> Einzeldepots — <span id="depotModeTitle">YTD</span> &amp; Alltime</span><div class="mode-tools"><button id="depotRefreshBtn" class="icon-btn refresh-btn" type="button" title="Kurse aktualisieren" aria-label="Kurse aktualisieren" onclick="refreshMarketData()">↻</button><button id="depotToggleBtn" class="mode-toggle" onclick="toggleDepotMode()">Heute</button></div></div>
   <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:16px;" id="mitgliedBtns"></div>
   <div id="depotContent"></div>
 </div>
 
+<div id="view-investments" style="display:none">
+  <div class="sec-t mode-row" style="margin-top:4px"><span><span class="sec-n">3 ·</span> Investments — WAX gesamt</span><div class="mode-tools"><button id="investmentsRefreshBtn" class="icon-btn refresh-btn" type="button" title="Kurse aktualisieren" aria-label="Kurse aktualisieren" onclick="refreshMarketData()">↻</button></div></div>
+  <div id="investmentsContent"></div>
+</div>
+
 <div id="view-kapital" style="display:none">
-  <div class="sec-t" style="margin-top:4px"><span class="sec-n">3 ·</span> Kapital &amp; Performance</div>
+  <div class="sec-t" style="margin-top:4px"><span class="sec-n">4 ·</span> Kapital &amp; Performance</div>
   <div class="kpi-grid" style="margin-bottom:24px">
     <div class="kpi"><div class="kpi-l">Startkapital p.P.</div><div class="kpi-v">511,29 €</div><div class="kpi-s">Jan 2000</div></div>
     <div class="kpi"><div class="kpi-l">Monatsbeitrag</div><div class="kpi-v">100,00 €</div><div class="kpi-s">seit März 2015</div></div>
@@ -628,12 +646,15 @@ function sanitizeDatabase(data) {
 let db = { mitglieder:[], positionen:[], cash:[], alltime:[], buchungen:[] };
 let liveKurse = {};
 let prevKurse = {};
+let marketRefreshRunning = false;
 let benchQuotes = {};
 let fxRates = {};
 let overviewMode = 'ytd';
 let depotMode = 'ytd';
 let activeMitglied = 0;
 let activeTab = 'uebersicht';
+let investmentsSortRules = [];
+const investmentsDefaultSortRules = [{ key:'aktWert', dir:'desc' }];
 const PROD_SICHERHEIT_AKTIV = true; // Undo/Freigabe-Reverts in Produktivsystem sperren
 let reiseVorschauData = null;
 
@@ -932,6 +953,41 @@ async function loadKurse() {
   }));
 }
 
+
+function setRefreshButtonsLoading(isLoading) {
+  marketRefreshRunning = isLoading;
+  ['overviewRefreshBtn','depotRefreshBtn'].forEach(id => {
+    const btn = document.getElementById(id);
+    if (!btn) return;
+    btn.disabled = isLoading;
+    btn.classList.toggle('refreshing', isLoading);
+  });
+}
+
+async function refreshMarketData() {
+  if (marketRefreshRunning) return;
+  setRefreshButtonsLoading(true);
+  setStatus('loading','Aktualisiere Kurse & Wechselkurse…');
+  try {
+    await loadFX();
+    await Promise.all([loadKurse(), loadBenchmarks()]);
+    const loaded = Object.keys(liveKurse).length;
+    const total = [...new Set(db.positionen.filter(p=>!p.verkauft&&num(p.stueck)>0).map(p=>repairKnownWkn(p.wkn)))].length;
+    const fxLoaded = Object.keys(fxRates).length;
+    const now = new Date().toLocaleTimeString('de-DE');
+    setStatus('live', `Aktualisiert — ${loaded}/${total} Kurse geladen, ${fxLoaded} Währungen`);
+    document.getElementById('sTime').textContent = 'Stand: '+now;
+    document.getElementById('footTime').textContent = 'Datenstand: '+now;
+    investmentsSortRules = [];
+    renderAll();
+  } catch (e) {
+    console.error('Refresh fehlgeschlagen', e);
+    setStatus('loading','Aktualisierung fehlgeschlagen');
+  } finally {
+    setRefreshButtonsLoading(false);
+  }
+}
+
 async function loadBenchmarks() {
   const benchmarks = ['^IXIC','^GSPC','^GDAXI','^HSI'];
   await Promise.all(benchmarks.map(async ticker => {
@@ -1019,6 +1075,7 @@ async function init() {
   ]);
   db = sanitizeDatabase({ mitglieder, positionen, cash, alltime, buchungen });
   populateSelects();
+  setRefreshButtonsLoading(false);
   setStatus('loading','Lade Kurse & Wechselkurse…');
   await loadFX();
   await Promise.all([loadKurse(), loadBenchmarks()]);
@@ -1367,10 +1424,11 @@ function showTab(tab) {
   activeTab = tab;
   document.querySelectorAll('.nav-btn').forEach(b=>b.classList.remove('active'));
   document.getElementById('tab-'+tab).classList.add('active');
-  ['uebersicht','depots','kapital','log','pflege'].forEach(t=>{
+  ['uebersicht','depots','investments','kapital','log','pflege'].forEach(t=>{
     document.getElementById('view-'+t).style.display = t===tab?'':'none';
   });
   if (tab==='depots') selectMitglied(0);
+  if (tab==='investments') renderInvestments();
   if (tab==='log') renderLog();
   if (tab==='pflege') renderPflege();
 }
@@ -1378,6 +1436,7 @@ function showTab(tab) {
 function renderAll() {
   renderUebersicht();
   if (activeTab==='depots') { if (activeMitglied===0) renderEhrungenDepot(); else renderDepot(activeMitglied); }
+  if (activeTab==='investments') renderInvestments();
   if (activeTab==='log') renderLog();
   if (activeTab==='pflege') renderPflege();
   renderPerf();
@@ -1394,6 +1453,11 @@ function getLatestComdirectBooking() {
       return da < dbb ? 1 : da > dbb ? -1 : 0;
     });
   return rows[0] || null;
+}
+function getComdirectCashTotal() {
+  const cd = getLatestComdirectBooking();
+  if (cd && cd.betrag != null && !isNaN(Number(cd.betrag))) return Number(cd.betrag);
+  return db.mitglieder.reduce((s,m)=>s+(db.cash.find(c=>c.mitglied_id===m.id)?.betrag||0),0);
 }
 function getComdirectPuffer() {
   const cd = getLatestComdirectBooking();
@@ -1474,8 +1538,10 @@ function renderUebersicht() {
   const gesamtOhnePuffer = db.mitglieder.reduce((s,m)=>s+getDepotwert(m.id),0);
   const gesamtOhnePufferPrev = db.mitglieder.reduce((s,m)=>s+getDepotwert(m.id, prevKurse, liveKurse),0);
   const puffer = getComdirectPuffer();
+  const comdirectCashTotal = getComdirectCashTotal();
   const gesamt = gesamtOhnePuffer + puffer;
   const gesamtPrev = gesamtOhnePufferPrev + puffer;
+  const cashPctGesamt = gesamt>0 ? comdirectCashTotal/gesamt : 0;
   const ref2025 = Object.values(REF).reduce((s,r)=>s+r.total,0);
   const ytdPct = ref2025>0 ? (gesamt-ref2025)/ref2025 : 0;
   const ytdAbs = gesamt-ref2025;
@@ -1498,6 +1564,13 @@ function renderUebersicht() {
   const perfPaEl = document.getElementById('kPerfPa');
   perfPaEl.textContent = fp(perfPaLive);
   perfPaEl.className = 'kpi-v '+(perfPaLive>=0?'pos':'neg');
+  const cashAnteilEl = document.getElementById('kCashAnteil');
+  const cashAnteilSubEl = document.getElementById('kCashAnteilSub');
+  if (cashAnteilEl) {
+    cashAnteilEl.textContent = f(cashPctGesamt*100,1)+'%';
+    cashAnteilEl.className = 'kpi-v';
+  }
+  if (cashAnteilSubEl) cashAnteilSubEl.textContent = f(comdirectCashTotal)+' € echter Comdirect-Cash';
   const gewinnAlltime = totalAlltime - (EINSATZ_PP * 6);
   const gewAllEl = document.getElementById('kGewinnAlltime');
   if (gewAllEl) {
@@ -1512,7 +1585,9 @@ function renderUebersicht() {
     const today = prev>0 ? (akt-prev)/prev : 0;
     const at = calcAlltimeLive(m.id);
     const gewinn = at ? at.wert_echt-EINSATZ_PP : null;
-    return { m, akt, prev, ref, ytd, ytdAbs:akt-ref, today, todayAbs:akt-prev, at, anteilAkt:akt/gesamt, anteilAt:at?at.wert_echt/totalAlltime:0, gewinn };
+    const cash = getCash(m.id);
+    const cashPct = akt>0 ? cash/akt : 0;
+    return { m, akt, prev, ref, ytd, ytdAbs:akt-ref, today, todayAbs:akt-prev, at, anteilAkt:akt/gesamt, anteilAt:at?at.wert_echt/totalAlltime:0, gewinn, cash, cashPct };
   }).sort((a,b)=>(overviewMode==='today' ? b.today-a.today : b.ytd-a.ytd));
 
   const atSorted = [...rows].sort((a,b)=>(b.at?.wert_echt||0)-(a.at?.wert_echt||0));
@@ -1534,10 +1609,9 @@ function renderUebersicht() {
       <td class="${cl(overviewMode==='today'?r.todayAbs:r.ytdAbs)}">${fc(overviewMode==='today'?r.todayAbs:r.ytdAbs)}</td>
       <td class="bold">${f(r.akt)} €</td>
       <td class="dim">${f(r.anteilAkt*100,1)}%</td>
-      <td class="dim" style="position:relative;overflow:visible;min-width:64px">
-        <div style="display:flex;align-items:center;gap:10px">
-          ${atRank}${atRank===1?bullImg:atRank===rows.length?bearImg:''}
-        </div>
+      <td class="dim">${f(r.cashPct*100,1)}%</td>
+      <td class="dim at-rank-cell">
+        <span class="at-rank-wrap"><span class="at-rank-num">${atRank}</span><span class="at-rank-icon">${atRank===1?bullImg:atRank===rows.length?bearImg:''}</span></span>
       </td>
       <td>${r.at?f(r.at.wert_echt)+' €':'—'}</td>
       <td class="dim">${f(r.anteilAt*100,1)}%</td>
@@ -1546,9 +1620,11 @@ function renderUebersicht() {
     </tr>`;
   });
   const tg = rows.reduce((s,r)=>s+(r.gewinn||0),0);
+  const totalCashWax = comdirectCashTotal;
+  const totalCashPctWax = gesamt>0 ? totalCashWax/gesamt : 0;
   html+=`<tr class="total-row"><td></td><td>Gesamt / Ø</td>
     <td class="${cl(modePct)}">${fp(modePct)}</td><td class="${cl(modeAbs)}">${fc(modeAbs)}</td>
-    <td>${f(gesamt)} €</td><td>100%</td>
+    <td>${f(gesamt)} €</td><td>100%</td><td>${f(totalCashPctWax*100,1)}%</td>
     <td></td><td>${f(totalAlltime)} €</td><td>100%</td>
     <td class="${cl(tg)}">${fc(tg)}</td>
     <td class="${perfPaLive>=0?'pos':'neg'}">${fp(perfPaLive)}</td>
@@ -1573,6 +1649,140 @@ function renderUebersicht() {
   document.getElementById('topHoldingsBody').innerHTML = hhtml||'<tr><td colspan="6" style="text-align:center;color:#888">Lade…</td></tr>';
   renderBenchmarks();
 }
+
+
+function getInvestmentsSortRules() {
+  return investmentsSortRules.length ? investmentsSortRules : investmentsDefaultSortRules;
+}
+
+function investmentsSortMeta(key) {
+  const rule = getInvestmentsSortRules()[0];
+  if (!rule || rule.key !== key) return '↕';
+  return rule.dir === 'asc' ? '↑' : '↓';
+}
+
+function toggleInvestmentsSort(key) {
+  const current = getInvestmentsSortRules()[0];
+  if (!current || current.key !== key) {
+    investmentsSortRules = [{ key, dir:'asc' }];
+  } else {
+    investmentsSortRules = [{ key, dir: current.dir === 'asc' ? 'desc' : 'asc' }];
+  }
+  renderInvestments();
+}
+
+function compareInvestmentRows(a, b, rule) {
+  const dir = rule.dir === 'asc' ? 1 : -1;
+  const collator = new Intl.Collator('de', { numeric:true, sensitivity:'base' });
+  const stringKeys = new Set(['bezeichnung','wkn','art']);
+  const av = a[rule.key];
+  const bv = b[rule.key];
+  if (stringKeys.has(rule.key)) return collator.compare(String(av||''), String(bv||'')) * dir;
+  const an = Number(av ?? 0);
+  const bn = Number(bv ?? 0);
+  if (an === bn) return 0;
+  return (an - bn) * dir;
+}
+
+function sortInvestmentRows(rows) {
+  const rules = getInvestmentsSortRules();
+  const sorted = [...rows];
+  sorted.sort((a,b) => {
+    for (const rule of rules) {
+      const cmp = compareInvestmentRows(a,b,rule);
+      if (cmp !== 0) return cmp;
+    }
+    return b.aktWert - a.aktWert;
+  });
+  return sorted;
+}
+
+function renderInvestments() {
+  const active = db.positionen.filter(p=>!p.verkauft && num(p.stueck)>0);
+  const map = {};
+  active.forEach(p => {
+    const key = p.wkn || p.bezeichnung;
+    if (!map[key]) {
+      map[key] = { bezeichnung:p.bezeichnung, wkn:p.wkn, art:p.art, stueck:0, kaufwert:0, refWert:0 };
+    }
+    map[key].stueck += num(p.stueck);
+    map[key].kaufwert += num(p.kaufwert);
+    map[key].refWert += (p.wert_ref != null && !isNaN(Number(p.wert_ref))) ? Number(p.wert_ref) : num(p.kaufwert);
+  });
+
+  const rowsRaw = Object.values(map).map(r => {
+    const aktKurs = liveKurse[r.wkn];
+    const aktWert = aktKurs != null ? aktKurs * r.stueck : r.refWert;
+    const kaufkurs = r.stueck > 0 ? r.kaufwert / r.stueck : null;
+    const refKurs = r.stueck > 0 ? r.refWert / r.stueck : null;
+    const diffAbs = aktWert - r.refWert;
+    const diffPct = r.refWert > 0 ? diffAbs / r.refWert : null;
+    const anteilDepot = 0;
+    return { ...r, aktKurs, aktWert, kaufkurs, refKurs, diffAbs, diffPct, anteilDepot };
+  });
+
+  const totalInvest = rowsRaw.reduce((s,r)=>s+r.aktWert,0);
+  rowsRaw.forEach(r => { r.anteilDepot = totalInvest>0 ? r.aktWert/totalInvest : 0; });
+  const rows = sortInvestmentRows(rowsRaw);
+  const comdirectCashTotal = getComdirectCashTotal();
+  const gesamt = totalInvest + comdirectCashTotal;
+  const sortBtn = (key, label) => `<button type="button" onclick="toggleInvestmentsSort('${key}')" style="display:inline-flex;align-items:center;gap:5px;border:none;background:none;padding:0;font:inherit;font-weight:700;color:inherit;cursor:pointer">${label}<span style="display:inline-flex;align-items:center;justify-content:center;min-width:18px;height:18px;padding:0 4px;border:1px solid #d7d0c8;border-radius:10px;font-size:11px;line-height:1;color:#6f675e;background:#f6f2ed">${investmentsSortMeta(key)}</span></button>`;
+
+  let html = `<div class="kpi-grid" style="margin-bottom:16px">
+    <div class="kpi"><div class="kpi-l">Investments</div><div class="kpi-v">${rows.length}</div><div class="kpi-s">aggregierte Wertpapierpositionen</div></div>
+    <div class="kpi"><div class="kpi-l">Wertpapiere aktuell</div><div class="kpi-v">${f(totalInvest)} €</div><div class="kpi-s">ohne Cash</div></div>
+    <div class="kpi"><div class="kpi-l">Cash</div><div class="kpi-v">${f(comdirectCashTotal)} €</div><div class="kpi-s">aktueller Gesamt-Cash</div></div>
+    <div class="kpi"><div class="kpi-l">Gesamtwert WAX</div><div class="kpi-v">${f(gesamt)} €</div><div class="kpi-s">Wertpapiere + Cash</div></div>
+    <div class="kpi"><div class="kpi-l">Cashanteil</div><div class="kpi-v">${gesamt>0?f(comdirectCashTotal/gesamt*100,1):'0,0'}%</div><div class="kpi-s">am Gesamtwert WAX</div></div>
+  </div>`;
+
+  html += `<div class="tw"><table><thead><tr>
+    <th>${sortBtn('stueck','Stück')}</th><th>${sortBtn('bezeichnung','Bezeichnung')}</th><th>${sortBtn('wkn','WKN')}</th><th>${sortBtn('art','Art')}</th>
+    <th>Kaufkurs</th><th>${sortBtn('kaufwert','Kaufwert')}</th><th>Kurs 31.12.25</th><th>Wert 31.12.25</th>
+    <th>Akt. Kurs</th><th>${sortBtn('aktWert','Akt. Wert')}</th><th>${sortBtn('anteilDepot','Anteil Depot')}</th><th>${sortBtn('diffPct','Diff. %')}</th><th>${sortBtn('diffAbs','Diff. €')}</th>
+  </tr></thead><tbody>`;
+
+  if (rows.length) {
+    rows.forEach(r => {
+      const kursDisplay = r.aktKurs != null ? f(r.aktKurs,4) : `<span class="kurs-loading">lädt…</span>`;
+      html += `<tr>
+        <td>${f(r.stueck,0)}</td><td>${r.bezeichnung}</td><td class="dim">${r.wkn||'—'}</td><td class="dim">${r.art||'—'}</td>
+        <td class="dim">${r.kaufkurs!=null?f(r.kaufkurs,4):'—'}</td><td class="dim">${f(r.kaufwert)}</td>
+        <td class="dim">${r.refKurs!=null?f(r.refKurs,4):'—'}</td><td class="dim">${f(r.refWert)}</td>
+        <td class="bold">${kursDisplay}</td><td class="bold">${f(r.aktWert)}</td>
+        <td class="dim">${f(r.anteilDepot*100,1)}%</td>
+        <td class="${cl(r.diffPct)}">${r.diffPct!=null?fp(r.diffPct):'—'}</td><td class="${cl(r.diffAbs)}">${fc(r.diffAbs)}</td>
+      </tr>`;
+    });
+  } else {
+    html += `<tr><td colspan="13" style="text-align:center;color:#888;padding:20px">Keine aktiven Wertpapierpositionen</td></tr>`;
+  }
+
+  const refTotal = rowsRaw.reduce((s,r)=>s+r.refWert,0);
+  const diffTotal = totalInvest - refTotal;
+  html += `<tr class="total-row">
+    <td colspan="5" style="text-align:right">Summe Wertpapiere</td>
+    <td style="text-align:right">${f(rowsRaw.reduce((s,r)=>s+r.kaufwert,0))}</td>
+    <td></td><td style="text-align:right">${f(refTotal)}</td><td></td>
+    <td class="bold">${f(totalInvest)}</td><td>100%</td>
+    <td class="${cl(refTotal>0?diffTotal/refTotal:null)}">${refTotal>0?fp(diffTotal/refTotal):'—'}</td>
+    <td class="${cl(diffTotal)}">${fc(diffTotal)}</td>
+  </tr>`;
+
+  html += `<tr class="cash-row">
+    <td></td><td class="bold">Cash</td><td colspan="7" class="dim" style="text-align:left">aktueller Gesamt-Cash</td>
+    <td class="bold">${f(comdirectCashTotal)}</td><td></td><td></td><td></td>
+  </tr>`;
+
+  html += `<tr class="sum-row">
+    <td colspan="9" style="text-align:right">Gesamtwert WAX</td>
+    <td class="bold" style="text-align:right">${f(gesamt)} €</td><td></td><td></td><td></td>
+  </tr>`;
+
+  html += `</tbody></table></div>`;
+  document.getElementById('investmentsContent').innerHTML = html;
+}
+
 
 // EINZELDEPOTS
 function setupMitgliedBtns() {
@@ -1707,7 +1917,8 @@ function renderDepot(id) {
     <div class="kpi"><div class="kpi-l">Perf. p.a. Alltime</div><div class="kpi-v ${atData&&atData.perf_pa>=0?'pos':'neg'}">${atData?fp(atData.perf_pa):'—'}</div><div class="kpi-s">interner Zinsfuß seit Start</div></div>
     <div class="kpi"><div class="kpi-l">Gewinn Alltime</div><div class="kpi-v ${gewinnStart!=null?cl(gewinnStart):''}">${gewinnStart!=null?fc(gewinnStart):'—'}</div><div class="kpi-s">Alltime minus Einsatz</div></div>
     <div class="kpi"><div class="kpi-l">Anteil WAX Alltime</div><div class="kpi-v">${atData?f(atData.wert_echt/totalAlltime*100,1):'—'}%</div><div class="kpi-s">neutralisiert</div></div>
-    <div class="kpi"><div class="kpi-l">Cash aktuell</div><div class="kpi-v">${f(cash)} €</div><div class="kpi-s">${f(cash/Math.max(gesamtAkt,1)*100,1)}% des Depots</div></div>
+    <div class="kpi"><div class="kpi-l">Cash aktuell</div><div class="kpi-v">${f(cash)} €</div><div class="kpi-s">echter Cash-Bestand</div></div>
+    <div class="kpi"><div class="kpi-l">Cashanteil</div><div class="kpi-v">${f(cash/Math.max(gesamtAkt,1)*100,1)}%</div><div class="kpi-s">${f(cash)} € aktuell</div></div>
   </div>`;
 
   html+=`<div class="tw"><table><thead><tr>
@@ -1731,6 +1942,8 @@ function renderDepot(id) {
       const ka=liveKurse[a.wkn],kb=liveKurse[b.wkn];
       return (kb!=null?kb*b.stueck:(b.wert_ref||b.kaufwert))-(ka!=null?ka*a.stueck:(a.wert_ref||a.kaufwert));
     });
+    let sumBaseVisible = 0;
+    let sumAktVisible = 0;
     sortedPos.forEach(p=>{
       const k=liveKurse[p.wkn];
       const prevK=(prevKurse[p.wkn] != null && !isNaN(prevKurse[p.wkn])) ? prevKurse[p.wkn] : k;
@@ -1738,6 +1951,8 @@ function renderDepot(id) {
       const baseK = isToday ? prevK : (p.kurs_ref ?? (isNewCurrentYear ? p.kaufkurs : p.kaufkurs));
       const wAkt=k!=null?k*p.stueck:(p.wert_ref||p.kaufwert);
       const wBase=isToday ? ((prevK!=null?prevK:k)*p.stueck) : ((p.wert_ref!=null && !isNaN(p.wert_ref)) ? p.wert_ref : p.kaufwert);
+      sumAktVisible += (wAkt || 0);
+      sumBaseVisible += (wBase || 0);
       const dp=(k!=null&&wBase)?(wAkt-wBase)/wBase:null;
       const de=(k!=null&&wBase!=null)?wAkt-wBase:null;
       const dateBadge=p.kauf_datum?`<span class="badge b-new">NEU ${fdate(p.kauf_datum)}</span>`:'';
@@ -1751,19 +1966,19 @@ function renderDepot(id) {
         <td class="${cl(dp)}">${dp!=null?fp(dp):'—'}</td><td class="${cl(de)}">${de!=null?fc(de):'—'}</td>
       </tr>`;
     });
-    const sumBase = isToday ? investPrev : investRef;
-    const sumDiff = investAkt - sumBase;
+    const sumBase = sumBaseVisible;
+    const sumDiff = sumAktVisible - sumBase;
     html+=`<tr class="total-row">
       <td colspan="5" style="text-align:right">Summe Wertpapiere</td>
       <td style="text-align:right">${f(kaufwertSum)}</td><td></td><td style="text-align:right">${f(sumBase)}</td><td></td>
-      <td class="bold">${f(investAkt)}</td>
+      <td class="bold">${f(sumAktVisible)}</td>
       <td class="${cl(sumDiff)}">${sumBase>0?fp(sumDiff/sumBase):'—'}</td>
       <td class="${cl(sumDiff)}">${fc(sumDiff)}</td>
     </tr>`;
   } else {
     html+=`<tr class="gr"><td colspan="12">Aktive Positionen</td></tr>`;
-    const sumBase = isToday ? 0 : investRef;
-    const sumDiff = 0 - sumBase;
+    const sumBase = 0;
+    const sumDiff = 0;
     html+=`<tr style="visibility:hidden;height:0"><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td></tr>`;
     html+=`<tr><td colspan="5" style="text-align:left;color:#888;padding:9px 10px">Alle Positionen 2026 verkauft</td>
       <td style="text-align:right" class="dim">—</td><td style="text-align:right" class="dim">—</td><td style="text-align:right" class="dim">${f(sumBase)}</td><td style="text-align:right" class="dim">—</td><td class="bold">0,00</td>
@@ -1776,12 +1991,13 @@ function renderDepot(id) {
 
   const cashBase = isToday ? cash : cashRef;
   const cashDiff = cash - cashBase;
+  const cashPct = gesamtAkt>0 ? cash/gesamtAkt : 0;
   html+=`<tr class="cash-row">
-    <td></td><td class="bold">Cash (Comdirect)</td>
+    <td></td><td class="bold">Cash</td>
     <td colspan="5" class="dim" style="text-align:left">Kontoguthaben</td>
     <td class="bold">${f(cashBase)}</td><td></td><td class="bold">${f(cash)}</td>
-    <td class="${cl(cashDiff)}">${Math.abs(cashDiff)>0.01?fp(cashDiff/Math.max(cashBase||0,1)):'—'}</td>
-    <td class="${cl(cashDiff)}">${Math.abs(cashDiff)>0.01?fc(cashDiff):'—'}</td>
+    <td></td>
+    <td></td>
   </tr>`;
 
   const gesamtBase = isToday ? gesamtPrev : gesamtRef;
@@ -1795,50 +2011,45 @@ function renderDepot(id) {
 
   html+=`</tbody></table></div>`;
 
-  if (verkauftPos.length>0) {
+  if (!isToday && verkauftPos.length>0) {
     html+=`<div class="tw" style="margin-top:18px"><table><thead><tr>
       <th>Stück</th><th>Bezeichnung</th><th>WKN</th><th>Art</th>
       <th>Kaufkurs</th><th>Kaufwert</th>
       <th>Kurs 31.12.25</th><th>Wert 31.12.25</th>
       <th>Verkaufskurs</th><th>Verkaufswert</th><th>Kursgew. %</th><th>Kursgew. €</th>
     </tr></thead><tbody>`;
-    html+=`<tr class="gr"><td colspan="12">Verkaufte Positionen</td></tr>`;
+    html+=`<tr class="gr"><td colspan="12">Verkaufte Wertpapiere</td></tr>`;
     let soldKaufwert = 0, soldRef = 0, soldWert = 0, soldDiff = 0;
     verkauftPos.forEach(p=>{
-      const refK = (p.kurs_ref != null && !isNaN(p.kurs_ref)) ? p.kurs_ref : p.kaufkurs;
-      const refV = (p.wert_ref != null && !isNaN(p.wert_ref)) ? p.wert_ref : p.kaufwert;
+      const refK = (p.kurs_ref != null && !isNaN(p.kurs_ref)) ? Number(p.kurs_ref) : Number(p.kaufkurs||0);
+      const refV = (p.wert_ref != null && !isNaN(p.wert_ref)) ? Number(p.wert_ref) : Number(p.kaufwert||0);
       const bookingFb = getSoldBookingFallback(p);
       const fb = bookingFb || getSoldExcelFallback(p);
       const sellK = (p.verkaufskurs != null && !isNaN(p.verkaufskurs)) ? Number(p.verkaufskurs) : (fb?.verkaufskurs != null ? Number(fb.verkaufskurs) : refK);
       const sellV = (p.verkaufswert != null && !isNaN(p.verkaufswert)) ? Number(p.verkaufswert) : (fb?.verkaufswert != null ? Number(fb.verkaufswert) : refV);
       const diffPct = (sellV!=null && refV) ? (sellV-refV)/refV : null;
-      const diffAbs = (sellV!=null && refV!=null) ? (sellV - refV) : null;
+      const diffAbs = (sellV!=null && refV!=null) ? (sellV-refV) : null;
       soldKaufwert += Number(p.kaufwert||0);
       soldRef += Number(refV||0);
       soldWert += Number(sellV||0);
       soldDiff += Number(diffAbs||0);
       const dateBadge=p.verkauf_datum?`<span class="badge b-out">RAUS ${fdate(p.verkauf_datum)}</span>`:'';
-      html+=`<tr style="opacity:.7">
-        <td class="sold">${f(p.stueck,0)}</td><td class="sold">${p.bezeichnung}${dateBadge}</td>
+      html+=`<tr style="opacity:.97">
+        <td>${f(p.stueck,0)}</td><td class="sold">${p.bezeichnung}${dateBadge}</td>
         <td class="dim">${p.wkn}</td><td class="dim">${p.art}</td>
         <td class="dim">${f(p.kaufkurs,4)}</td><td class="dim">${f(p.kaufwert)}</td>
-        <td class="dim">${refK!=null?f(refK,4):'—'}</td><td class="dim">${refV!=null?f(refV):'—'}</td>
+        <td class="dim">${refK?f(refK,4):'—'}</td><td class="dim">${refV!=null?f(refV):'—'}</td>
         <td class="bold">${sellK!=null?f(sellK,4):'—'}</td><td class="bold">${sellV!=null?f(sellV):'—'}</td>
         <td class="${cl(diffPct)}">${diffPct!=null?fp(diffPct):'—'}</td><td class="${cl(diffAbs)}">${diffAbs!=null?fc(diffAbs):'—'}</td>
       </tr>`;
     });
     html+=`<tr class="total-row">
-      <td colspan="5" style="text-align:right">Summe Verkäufe</td>
+      <td colspan="5" style="text-align:right">Summe verkaufte Wertpapiere</td>
       <td style="text-align:right">${f(soldKaufwert)}</td><td></td><td style="text-align:right">${f(soldRef)}</td><td></td>
       <td class="bold">${f(soldWert)}</td>
-      <td class="${cl(soldDiff)}">${soldRef>0?fp(soldDiff/soldRef):'—'}</td>
+      <td class="${cl(soldRef>0?soldDiff/soldRef:null)}">${soldRef>0?fp(soldDiff/soldRef):'—'}</td>
       <td class="${cl(soldDiff)}">${fc(soldDiff)}</td>
-    </tr>`;
-    const ytdBaseWertpapiere = (isToday ? investPrev : investRef) + soldRef;
-    const ytdAktuellWertpapiere = investAkt + soldWert;
-    const ytdDiffWertpapiere = ytdAktuellWertpapiere - ytdBaseWertpapiere;
-    html+=``;
-    html+=`</tbody></table></div>`;
+    </tr></tbody></table></div>`;
   }
 
   document.getElementById('depotContent').innerHTML = html;
@@ -1863,7 +2074,8 @@ function renderPerf() {
     </tr>`;
   });
   const tg=sorted.reduce((s,a)=>s+(a.wert_echt-EINSATZ_PP),0);
-  const avg = calcClubXIRR() || 0;
+  const perfKpiText = (document.querySelector('#view-kapital .kpi-grid .kpi:nth-child(4) .kpi-v')?.textContent || '').replace(/\s/g,'');
+  const avg = perfKpiText ? num(perfKpiText.replace('%',''))/100 : (calcClubXIRR() || 0);
   html+=`<tr class="total-row"><td>Gesamt / Ø</td><td>${f(totalAt)} €</td>
     <td class="${cl(tg)}">${fc(tg)}</td><td></td>
     <td class="${cl(avg)}">${fp(avg)}</td><td>100%</td><td></td></tr>`;
