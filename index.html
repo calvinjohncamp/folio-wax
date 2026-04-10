@@ -391,9 +391,10 @@ if (window.caches && caches.keys) {
     </div>
   </div>
   <div style="display:grid;grid-template-columns:repeat(4,minmax(180px,1fr));gap:12px;margin:-4px 0 20px">
-    <button class="btn btn-outline" style="width:100%;text-align:left;padding-left:16px" onclick="deleteLastBookingByGroup('transaktion')"><span style="font-size:20px;line-height:1;display:inline-block;vertical-align:-2px;margin-right:8px">×</span>Letzte Transaktion löschen</button>
-    <button class="btn btn-outline" style="width:100%;text-align:left;padding-left:16px" onclick="deleteLastBookingByGroup('freigabe')"><span style="font-size:20px;line-height:1;display:inline-block;vertical-align:-2px;margin-right:8px">×</span>Letzte Freigabe löschen</button>
-    <button class="btn btn-outline" style="width:100%;text-align:left;padding-left:16px" onclick="deleteLastBookingByGroup('reise')"><span style="font-size:20px;line-height:1;display:inline-block;vertical-align:-2px;margin-right:8px">×</span>Letzte Reise löschen</button>
+    <button class="btn btn-outline" style="text-align:left;padding-left:16px;opacity:.45;cursor:not-allowed" onclick="deleteLastBookingByGroup('transaktion')"><span style="font-size:20px;line-height:1;display:inline-block;vertical-align:-2px;margin-right:8px">×</span>Letzte Transaktion löschen (gesperrt)</button>
+    <button class="btn btn-outline" style="text-align:left;padding-left:16px;opacity:.45;cursor:not-allowed" onclick="deleteLastBookingByGroup('freigabe')"><span style="font-size:20px;line-height:1;display:inline-block;vertical-align:-2px;margin-right:8px">×</span>Letzte Freigabe löschen (gesperrt)</button>
+    <button class="btn btn-outline" style="text-align:left;padding-left:16px;opacity:.45;cursor:not-allowed" onclick="deleteLastBookingByGroup('reise')"><span style="font-size:20px;line-height:1;display:inline-block;vertical-align:-2px;margin-right:8px">×</span>Letzte Reise löschen (gesperrt)</button>
+    <div style="margin-top:8px;font-size:12px;color:#a35a00;line-height:1.45">Produktivschutz aktiv: Undo-Löschungen sind in dieser Datei bewusst gesperrt. Erst nach sauberem Neuaufbau und Tests in einer separaten Testumgebung wieder freigeben.</div>
     <div></div>
   </div>
   <div class="sec-t"><span class="sec-n">5.1 ·</span> Cash-Bestände der Mitglieder</div>
@@ -407,15 +408,37 @@ if (window.caches && caches.keys) {
     <thead><tr><th>Position</th><th>Betrag</th><th>Info</th></tr></thead>
     <tbody id="comdirectInfo"></tbody>
   </table></div>
-<div class="sec-t" style="margin-top:24px"><span class="sec-n">5.3 ·</span> Jahresabschluss — Vorjahreswerte einfrieren</div>
+<div class="sec-t" style="margin-top:24px"><span class="sec-n">5.3 ·</span> Time Machine — Monats-Snapshot</div>
+  <div class="info-box" style="margin-bottom:12px">
+    Snapshot bewusst <strong>manuell</strong> ausführen. Erstellt eine echte <strong>JSON-Sicherungsdatei</strong> und zusätzlich eine <strong>HTML-Arbeitskopie</strong>.
+    Wiederherstellen lädt eine Snapshot-Datei, prüft sie, erzeugt vorher automatisch eine Sicherheitskopie und spielt dann den gespeicherten Datenstand zurück.
+  </div>
+  <div style="display:grid;grid-template-columns:repeat(4,minmax(180px,1fr));gap:12px;margin:-2px 0 18px">
+    <div class="kpi" style="cursor:pointer;border:1px solid #d8d4ce" onclick="timeMachineSnapshotErzeugen()">
+      <div class="kpi-l">Time Machine</div><div class="kpi-v" style="font-size:14px">📸 Snapshot erzeugen</div><div class="kpi-s">aktuellen Monatsstand sichern</div>
+    </div>
+    <div class="kpi" style="cursor:pointer;border:1px solid #d8d4ce" onclick="timeMachineSnapshotRestore()">
+      <div class="kpi-l">Time Machine</div><div class="kpi-v" style="font-size:14px">↩ Snapshot wiederherstellen</div><div class="kpi-s">früheren Stand zurückholen</div>
+    </div>
+  </div>
+  <div id="timeMachineInfo" style="font-size:12px;color:#666;margin-bottom:18px"></div>
+
+  <div class="sec-t" style="margin-top:8px"><span class="sec-n">5.4 ·</span> Jahresabschluss</div>
   <div class="info-box" style="margin-bottom:12px">
     Am <strong>31. Dezember</strong> einmalig ausführen. Friert für alle 6 Mitglieder ein:<br>
     Gesamtwert, Cash, Invest-Wert, sowie <strong>Kurs und Wert jeder aktiven Position</strong> (werden als neue kurs_ref / wert_ref gesetzt).<br>
     Ab 01. Januar vergleicht die App automatisch gegen diese Werte.
   </div>
   <div id="jahresabschlussInfo" style="font-size:12px;color:#666;margin-bottom:12px"></div>
-  <button class="btn btn-outline" onclick="vorschauJahresabschluss()" style="margin-right:8px">📋 Vorschau anzeigen</button>
-  <div id="jahresabschlussVorschau" style="margin:12px 0"></div>
+  <div style="display:grid;grid-template-columns:repeat(4,minmax(180px,1fr));gap:12px;margin:-2px 0 0">
+    <div class="kpi" style="cursor:pointer;border:1px solid #d8d4ce" onclick="vorschauJahresabschluss()">
+      <div class="kpi-l">Jahresabschluss</div><div class="kpi-v" style="font-size:14px">📋 Vorschau anzeigen</div><div class="kpi-s">Werte vor dem Einfrieren prüfen</div>
+    </div>
+    <div class="kpi" style="cursor:pointer;border:1px solid #d8d4ce" onclick="saveJahresabschluss(new Date().getFullYear())">
+      <div class="kpi-l">Jahresabschluss</div><div class="kpi-v" style="font-size:14px">🧊 Jahresabschluss ausführen</div><div class="kpi-s">Vorjahreswerte verbindlich setzen</div>
+    </div>
+  </div>
+  <div id="jahresabschlussVorschau" style="margin:12px 0 0"></div>
 </div>
 
 <footer>
@@ -575,6 +598,33 @@ const TICKER_MAP = {
 };
 
 
+
+function normalizeWkn(wkn) {
+  return String(wkn ?? '').trim().toUpperCase().replace(/\s+/g, '');
+}
+function repairKnownWkn(wkn) {
+  const raw = normalizeWkn(wkn);
+  const map = {
+    'A2ATOZ': 'A2AT0Z',
+    'A2ATOZ': 'A2AT0Z',
+    'A12DG6': 'A12GD6',
+    'A2PXSN': 'A2PX5N'
+  };
+  return map[raw] || raw;
+}
+function sanitizePositionRow(p) {
+  const row = { ...p };
+  row.wkn = repairKnownWkn(row.wkn);
+  if (row.bezeichnung === 'Crispr Therapeut. SF') row.bezeichnung = 'Crispr Therapeutics';
+  return row;
+}
+function sanitizeDatabase(data) {
+  return {
+    ...data,
+    positionen: Array.isArray(data.positionen) ? data.positionen.map(sanitizePositionRow) : []
+  };
+}
+
 let db = { mitglieder:[], positionen:[], cash:[], alltime:[], buchungen:[] };
 let liveKurse = {};
 let prevKurse = {};
@@ -584,6 +634,7 @@ let overviewMode = 'ytd';
 let depotMode = 'ytd';
 let activeMitglied = 0;
 let activeTab = 'uebersicht';
+const PROD_SICHERHEIT_AKTIV = true; // Undo/Freigabe-Reverts in Produktivsystem sperren
 let reiseVorschauData = null;
 
 // PIN
@@ -618,6 +669,17 @@ async function sbPost(table, data) {
     return r.ok;
   } catch { return false; }
 }
+async function sbPostRow(table, data) {
+  try {
+    const r = await fetch(`${SB_URL}/rest/v1/${table}`, {
+      method:'POST', headers:{'apikey':SB_KEY,'Authorization':'Bearer '+SB_KEY,'Content-Type':'application/json','Prefer':'return=representation'},
+      body: JSON.stringify(data)
+    });
+    if (!r.ok) return { ok:false, error: await r.text() };
+    const rows = await r.json();
+    return { ok:true, row:Array.isArray(rows) ? (rows[0] || null) : rows };
+  } catch (e) { return { ok:false, error:String(e) }; }
+}
 async function sbPatch(table, filter, data) {
   try {
     const r = await fetch(`${SB_URL}/rest/v1/${table}?${filter}`, {
@@ -626,6 +688,17 @@ async function sbPatch(table, filter, data) {
     });
     return r.ok;
   } catch { return false; }
+}
+async function sbPatchDetailed(table, filter, data) {
+  try {
+    const r = await fetch(`${SB_URL}/rest/v1/${table}?${filter}`, {
+      method:'PATCH', headers:{'apikey':SB_KEY,'Authorization':'Bearer '+SB_KEY,'Content-Type':'application/json','Prefer':'return=representation'},
+      body: JSON.stringify(data)
+    });
+    if (!r.ok) return { ok:false, error: await r.text() };
+    const rows = await r.json();
+    return { ok:true, rows };
+  } catch (e) { return { ok:false, error:String(e) }; }
 }
 
 async function sbDelete(table, filter) {
@@ -637,7 +710,6 @@ async function sbDelete(table, filter) {
   } catch { return false; }
 }
 function num(v){ const n = Number(v); return isNaN(n) ? 0 : n; }
-function nearlyEqual(a,b,eps=1e-9){ return Math.abs(num(a)-num(b)) <= eps; }
 function sortLotsForSale(lots){
   return [...lots].sort((a,b)=>{
     const da = String(a.kauf_datum||'');
@@ -648,6 +720,18 @@ function sortLotsForSale(lots){
     return num(a.kaufkurs)-num(b.kaufkurs);
   });
 }
+async function rollbackVerkaufOps(ops) {
+  for (let i = ops.length - 1; i >= 0; i--) {
+    const op = ops[i];
+    try {
+      if (op.kind === 'patch') {
+        await sbPatch(op.table, op.filter, op.before);
+      } else if (op.kind === 'delete') {
+        await sbDelete(op.table, op.filter);
+      }
+    } catch {}
+  }
+}
 async function applyVerkaufToLots({ mid, datum, wkn, kurs, stueck }) {
   let remaining = num(stueck);
   const openLots = sortLotsForSale(db.positionen.filter(p => p.mitglied_id===mid && p.wkn===wkn && !p.verkauft && num(p.stueck)>0));
@@ -656,52 +740,64 @@ async function applyVerkaufToLots({ mid, datum, wkn, kurs, stueck }) {
   if(totalOpen + 1e-9 < remaining) {
     throw new Error(`Nicht genug offene Stücke für ${wkn}. Offen: ${f(totalOpen,4)} Stk., Verkauf: ${f(remaining,4)} Stk.`);
   }
-  for(const lot of openLots){
-    if(remaining<=1e-9) break;
-    const lotSt = num(lot.stueck);
-    if(lotSt<=0) continue;
-    const sellSt = Math.min(lotSt, remaining);
-    const restSt = lotSt - sellSt;
-    const lotKaufkurs = num(lot.kaufkurs);
-    const common = {
-      mitglied_id: lot.mitglied_id,
-      bezeichnung: lot.bezeichnung,
-      wkn: lot.wkn,
-      art: lot.art,
-      kaufkurs: lotKaufkurs,
-      kauf_datum: lot.kauf_datum
-    };
-    if(restSt<=1e-9){
-      const ok = await sbPatch('positionen', `id=eq.${lot.id}`, {
+
+  const ops = [];
+  try {
+    for(const lot of openLots){
+      if(remaining<=1e-9) break;
+      const lotSt = num(lot.stueck);
+      if(lotSt<=0) continue;
+      const sellSt = Math.min(lotSt, remaining);
+      const restSt = lotSt - sellSt;
+      const lotKaufkurs = num(lot.kaufkurs);
+      const lotKaufwert = num(lot.kaufwert) || (lotSt * lotKaufkurs);
+
+      const lotRefK = (lot.kurs_ref != null && !isNaN(lot.kurs_ref)) ? Number(lot.kurs_ref) : null;
+      const lotRefW = (lot.wert_ref != null && !isNaN(lot.wert_ref)) ? Number(lot.wert_ref) : null;
+      const soldRes = await sbPostRow('positionen', {
+        mitglied_id: lot.mitglied_id,
+        bezeichnung: lot.bezeichnung,
+        wkn: lot.wkn,
+        art: lot.art,
         stueck: sellSt,
+        kaufkurs: lotKaufkurs,
         kaufwert: sellSt * lotKaufkurs,
+        kauf_datum: lot.kauf_datum,
         verkauft: true,
         verkauf_datum: datum,
-        verkaufskurs: kurs,
-        verkaufswert: sellSt * kurs
+        kurs_ref: lotRefK,
+        wert_ref: lotRefK != null
+          ? lotRefK * sellSt
+          : (lotRefW != null && lotSt > 0 ? lotRefW * (sellSt / lotSt) : null)
       });
-      if(!ok) throw new Error(`Verkauf konnte Lot ${lot.id} nicht aktualisieren.`);
-    } else {
-      const okOpen = await sbPatch('positionen', `id=eq.${lot.id}`, {
-        stueck: restSt,
-        kaufwert: restSt * lotKaufkurs
-      });
-      if(!okOpen) throw new Error(`Restbestand von Lot ${lot.id} konnte nicht angepasst werden.`);
-      const okSold = await sbPost('positionen', {
-        ...common,
-        stueck: sellSt,
-        kaufwert: sellSt * lotKaufkurs,
-        verkauft: true,
-        verkauf_datum: datum,
-        verkaufskurs: kurs,
-        verkaufswert: sellSt * kurs
-      });
-      if(!okSold) throw new Error(`Verkaufs-Lot für ${wkn} konnte nicht angelegt werden.`);
+      if(!soldRes.ok || !soldRes.row || !soldRes.row.id) {
+        throw new Error(`Verkaufs-Lot für ${wkn} konnte nicht angelegt werden.${soldRes.error ? ' ' + soldRes.error : ''}`);
+      }
+      ops.push({ kind:'delete', table:'positionen', filter:`id=eq.${soldRes.row.id}` });
+
+      const before = {
+        stueck: lotSt,
+        kaufwert: lotKaufwert,
+        verkauft: !!lot.verkauft,
+        verkauf_datum: lot.verkauf_datum || null
+      };
+      const patchData = restSt <= 1e-9
+        ? { stueck: 0, kaufwert: 0, verkauft: true, verkauf_datum: null }
+        : { stueck: restSt, kaufwert: restSt * lotKaufkurs };
+      const patchRes = await sbPatchDetailed('positionen', `id=eq.${lot.id}`, patchData);
+      if(!patchRes.ok) {
+        throw new Error(`Lot ${lot.id} konnte nicht aktualisiert werden.${patchRes.error ? ' ' + patchRes.error : ''}`);
+      }
+      ops.push({ kind:'patch', table:'positionen', filter:`id=eq.${lot.id}`, before });
+
+      remaining -= sellSt;
     }
-    remaining -= sellSt;
+    if(remaining>1e-6) throw new Error(`Verkauf für ${wkn} konnte nicht vollständig zugeordnet werden.`);
+    return true;
+  } catch(err) {
+    await rollbackVerkaufOps(ops);
+    throw err;
   }
-  if(remaining>1e-6) throw new Error(`Verkauf für ${wkn} konnte nicht vollständig zugeordnet werden.`);
-  return true;
 }
 
 // Cloudflare Worker als Yahoo-Proxy — zuverlässig, kein CORS-Problem
@@ -824,7 +920,7 @@ function toEUR(priceLocal, ccy) {
 
 // Kurse laden via Cloudflare Worker
 async function loadKurse() {
-  const aktiveWkns = [...new Set(db.positionen.filter(p=>!p.verkauft).map(p=>p.wkn))];
+  const aktiveWkns = [...new Set(db.positionen.filter(p=>!p.verkauft&&num(p.stueck)>0).map(p=>repairKnownWkn(p.wkn)))];
   await Promise.all(aktiveWkns.map(async wkn => {
     const info = TICKER_MAP[wkn];
     if (!info) return;
@@ -921,13 +1017,13 @@ async function init() {
     sbGet('alltime','order=mitglied_id'),
     sbGet('buchungen','order=datum.desc&limit=200')
   ]);
-  db = { mitglieder, positionen, cash, alltime, buchungen };
+  db = sanitizeDatabase({ mitglieder, positionen, cash, alltime, buchungen });
   populateSelects();
   setStatus('loading','Lade Kurse & Wechselkurse…');
   await loadFX();
   await Promise.all([loadKurse(), loadBenchmarks()]);
   const loaded = Object.keys(liveKurse).length;
-  const total = [...new Set(db.positionen.filter(p=>!p.verkauft).map(p=>p.wkn))].length;
+  const total = [...new Set(db.positionen.filter(p=>!p.verkauft&&num(p.stueck)>0).map(p=>repairKnownWkn(p.wkn)))].length;
   const fxLoaded = Object.keys(fxRates).length;
   const now = new Date().toLocaleTimeString('de-DE');
   setStatus('live', `Bereit — ${loaded}/${total} Kurse geladen, ${fxLoaded} Währungen`);
@@ -1234,9 +1330,24 @@ function soldExcelKey(p){
 function getSoldExcelFallback(p){
   return SOLD_EXCEL_FALLBACK[soldExcelKey(p)] || null;
 }
+function getSoldBookingFallback(p){
+  const mid = Number(p?.mitglied_id || 0);
+  const wkn = String(p?.wkn ?? '').trim();
+  const datum = String(p?.verkauf_datum ?? '').trim();
+  if(!mid || !wkn || !datum) return null;
+  const rows = (db?.buchungen || []).filter(b =>
+    b && b.typ==='VERKAUF' && Number(b.mitglied_id||0)===mid && String(b.wkn??'').trim()===wkn && String(b.datum??'').trim()===datum
+  );
+  if(!rows.length) return null;
+  const exact = rows.find(b => Math.abs(Number(b.stueck||0) - Number(p.stueck||0)) < 1e-9);
+  const pick = exact || rows[0];
+  const kurs = Number(pick.kurs);
+  if(isNaN(kurs)) return null;
+  return { verkaufskurs: kurs, verkaufswert: kurs * Number(p.stueck||0) };
+}
 
 function getDepotwert(id, kursMap = liveKurse, fallbackMap = null) {
-  const pos = db.positionen.filter(p=>p.mitglied_id===id&&!p.verkauft);
+  const pos = db.positionen.filter(p=>p.mitglied_id===id&&!p.verkauft&&num(p.stueck)>0);
   let invest = 0;
   pos.forEach(p => {
     let k = kursMap ? kursMap[p.wkn] : null;
@@ -1309,7 +1420,7 @@ function toggleDepotMode() {
 }
 
 function getDepotTodayStats(id) {
-  const pos = db.positionen.filter(p=>p.mitglied_id===id && !p.verkauft);
+  const pos = db.positionen.filter(p=>p.mitglied_id===id && !p.verkauft && num(p.stueck)>0);
   let todayAbs = 0, prevInvest = 0, currInvest = 0;
   pos.forEach(p => {
     const curr = (liveKurse[p.wkn] != null && !isNaN(liveKurse[p.wkn])) ? liveKurse[p.wkn] : null;
@@ -1537,8 +1648,8 @@ function renderEhrungenDepot() {
 
 function renderDepot(id) {
   const pos = db.positionen.filter(p=>p.mitglied_id===id);
-  const aktivPos = pos.filter(p=>!p.verkauft);
-  const verkauftPos = pos.filter(p=>p.verkauft);
+  const aktivPos = pos.filter(p=>!p.verkauft && num(p.stueck)>0);
+  const verkauftPos = pos.filter(p=>p.verkauft && num(p.stueck)>0);
   const cash = getCash(id);
   const atData = calcAlltimeLive(id);
   const ref = REF[id] || {};
@@ -1623,9 +1734,10 @@ function renderDepot(id) {
     sortedPos.forEach(p=>{
       const k=liveKurse[p.wkn];
       const prevK=(prevKurse[p.wkn] != null && !isNaN(prevKurse[p.wkn])) ? prevKurse[p.wkn] : k;
-      const baseK = isToday ? prevK : p.kurs_ref;
+      const isNewCurrentYear = !isToday && p.kauf_datum && String(p.kauf_datum).slice(0,4) > String(REF_JAHR);
+      const baseK = isToday ? prevK : (p.kurs_ref ?? (isNewCurrentYear ? p.kaufkurs : p.kaufkurs));
       const wAkt=k!=null?k*p.stueck:(p.wert_ref||p.kaufwert);
-      const wBase=isToday ? ((prevK!=null?prevK:k)*p.stueck) : (p.wert_ref||p.kaufwert);
+      const wBase=isToday ? ((prevK!=null?prevK:k)*p.stueck) : ((p.wert_ref!=null && !isNaN(p.wert_ref)) ? p.wert_ref : p.kaufwert);
       const dp=(k!=null&&wBase)?(wAkt-wBase)/wBase:null;
       const de=(k!=null&&wBase!=null)?wAkt-wBase:null;
       const dateBadge=p.kauf_datum?`<span class="badge b-new">NEU ${fdate(p.kauf_datum)}</span>`:'';
@@ -1675,7 +1787,7 @@ function renderDepot(id) {
   const gesamtBase = isToday ? gesamtPrev : gesamtRef;
   html+=`<tr class="sum-row">
     <td colspan="7" style="text-align:right">Gesamtdepot</td>
-    <td>${f(gesamtBase)} €</td><td></td>
+    <td style="text-align:right">${f(gesamtBase)} €</td><td></td>
     <td class="bold">${f(gesamtAkt)} €</td>
     <td class="${cl(modePct)}">${fp(modePct)}</td>
     <td class="${cl(modeAbs)}">${fc(modeAbs)}</td>
@@ -1695,7 +1807,8 @@ function renderDepot(id) {
     verkauftPos.forEach(p=>{
       const refK = (p.kurs_ref != null && !isNaN(p.kurs_ref)) ? p.kurs_ref : p.kaufkurs;
       const refV = (p.wert_ref != null && !isNaN(p.wert_ref)) ? p.wert_ref : p.kaufwert;
-      const fb = getSoldExcelFallback(p);
+      const bookingFb = getSoldBookingFallback(p);
+      const fb = bookingFb || getSoldExcelFallback(p);
       const sellK = (p.verkaufskurs != null && !isNaN(p.verkaufskurs)) ? Number(p.verkaufskurs) : (fb?.verkaufskurs != null ? Number(fb.verkaufskurs) : refK);
       const sellV = (p.verkaufswert != null && !isNaN(p.verkaufswert)) ? Number(p.verkaufswert) : (fb?.verkaufswert != null ? Number(fb.verkaufswert) : refV);
       const diffPct = (sellV!=null && refV) ? (sellV-refV)/refV : null;
@@ -1857,10 +1970,9 @@ async function saveKauf() {
   if(!datum||!wkn||!bez||!stueck||!kurs){alert('Bitte alle Felder ausfüllen.');return;}
 
   try {
-    const okBuchung = await sbPost('buchungen',{datum,typ,mitglied_id:mid,bezeichnung:bez,wkn,stueck,kurs,betrag:typ==='VERKAUF'?betrag:-betrag,notiz});
-    if(!okBuchung) throw new Error('Buchung konnte nicht gespeichert werden.');
-
     if(typ==='KAUF') {
+      const okBuchung = await sbPost('buchungen',{datum,typ,mitglied_id:mid,bezeichnung:bez,wkn,stueck,kurs,betrag:-betrag,notiz});
+      if(!okBuchung) throw new Error('Buchung konnte nicht gespeichert werden.');
       const okPos = await sbPost('positionen',{mitglied_id:mid,bezeichnung:bez,wkn,art,stueck,kaufkurs:kurs,kaufwert:betrag,kauf_datum:datum,verkauft:false});
       if(!okPos) throw new Error('Kaufposition konnte nicht gespeichert werden.');
       const c=db.cash.find(x=>x.mitglied_id===mid);
@@ -1871,6 +1983,8 @@ async function saveKauf() {
       const c=db.cash.find(x=>x.mitglied_id===mid);
       const okCash = await sbPatch('cash',`mitglied_id=eq.${mid}`,{betrag:(c?.betrag||0)+betrag,updated_at:new Date().toISOString()});
       if(!okCash) throw new Error('Cash-Bestand konnte nicht aktualisiert werden.');
+      const okBuchung = await sbPost('buchungen',{datum,typ,mitglied_id:mid,bezeichnung:bez,wkn,stueck,kurs,betrag:betrag,notiz});
+      if(!okBuchung) throw new Error('Buchung konnte nicht gespeichert werden.');
     }
 
     closeModal(); await init();
@@ -1916,7 +2030,7 @@ function calcReise() {
     return {m:x.m, anteil, depotwert:x.depotwert||0, betrag:reiseAnteil, cashVor:x.cashVor||0, cashNach};
   });
 
-  let html='<table style="width:100%;font-size:11px;border-collapse:collapse"><tr style="border-bottom:1px solid #e8e4de"><th style="text-align:left;padding:4px 6px">Mitglied</th><th style="text-align:right;padding:4px 6px">Anteil virt. Depot</th><th style="text-align:right;padding:4px 6px">Reiseanteil</th><th style="text-align:right;padding:4px 6px">Cash nachher</th></tr>';
+  let html='<table style="font-size:11px;border-collapse:collapse"><tr style="border-bottom:1px solid #e8e4de"><th style="text-align:left;padding:4px 6px">Mitglied</th><th style="text-align:right;padding:4px 6px">Anteil virt. Depot</th><th style="text-align:right;padding:4px 6px">Reiseanteil</th><th style="text-align:right;padding:4px 6px">Cash nachher</th></tr>';
   reiseVorschauData.forEach(r=>{html+=`<tr style="border-bottom:1px solid #f5f5f5"><td style="padding:4px 6px">${r.m.name.split(',')[0]}</td><td style="text-align:right;padding:4px 6px">${f(r.anteil*100,2)}%</td><td style="text-align:right;padding:4px 6px;font-weight:700;color:#c8441a">−${f(r.betrag)} €</td><td style="text-align:right;padding:4px 6px;color:${r.cashNach>=0?'#333':'#c8441a'}">${r.cashNach<0?'−':''}${f(Math.abs(r.cashNach))} €</td></tr>`;});
   html+=`<tr style="font-weight:700;border-top:2px solid #ddd"><td style="padding:4px 6px">Gesamt</td><td></td><td style="text-align:right;padding:4px 6px;color:#c8441a">−${f(betrag)} €</td><td></td></tr></table>`;
   document.getElementById('reiseVorschau').innerHTML=html;
@@ -1933,7 +2047,7 @@ function showReiseBestätigung() {
     <div style="font-weight:700;margin-bottom:6px">✈️ ${name} — ${datum}</div>
     <div>Gesamtkosten: <strong>${f(betrag)} €</strong></div>
   </div>`;
-  html+=`<div style="overflow-x:auto"><table style="width:100%;font-size:11px;border-collapse:collapse"><tr style="border-bottom:1px solid #e8e4de">
+  html+=`<div style="overflow-x:auto"><table style="font-size:11px;border-collapse:collapse"><tr style="border-bottom:1px solid #e8e4de">
     <td style="text-align:left;padding:3px 6px">Mitglied</td>
     <td style="text-align:right;padding:3px 6px">Anteil virt. Depot</td>
     <td style="text-align:right;padding:3px 6px">Cash vorher</td>
@@ -2006,6 +2120,10 @@ function buildDeleteSummary(group, last) {
   return parts.join(' | ');
 }
 async function deleteLastBookingByGroup(group) {
+  if (PROD_SICHERHEIT_AKTIV) {
+    alert('Produktivschutz aktiv: Undo/Löschen ist in dieser Index-Datei gesperrt. Bitte erst in einer Testumgebung wieder freigeben.');
+    return;
+  }
   const last = getLastBookingByGroup(group);
   if(!last){ alert('Keine passende Buchung vorhanden.'); return; }
   const labelMap = {transaktion:'letzte Transaktion', freigabe:'letzte Cash-Freigabe', reise:'letzte Reise'};
@@ -2050,7 +2168,7 @@ async function undoLastVerkauf(b) {
         const okPos = await sbDelete('positionen', `id=eq.${lot.id}`);
         if(!okPos) return false;
       } else {
-        const okPos = await sbPatch('positionen', `id=eq.${lot.id}`, {verkauft:false, verkauf_datum:null, verkaufskurs:null, verkaufswert:null});
+        const okPos = await sbPatch('positionen', `id=eq.${lot.id}`, {verkauft:false, verkauf_datum:null, verkaufswert:null});
         if(!okPos) return false;
       }
       remaining -= lotSt;
@@ -2095,19 +2213,249 @@ async function saveComdirect() {
   await init();
 }
 
+// ── TIME MACHINE (STUFE 2: JSON + RESTORE) ─────────────────────────────────
+const TIME_MACHINE_VERSION = 'WAX_TIME_MACHINE_v2';
+const TM_TABLES_EXPORT = ['mitglieder','positionen','cash','alltime','buchungen','jahresabschluss'];
+const TM_TABLES_RESTORE = ['jahresabschluss','buchungen','positionen','cash','alltime']; // mitglieder bewusst nicht überschreiben
+
+function tmPad(n){ return String(n).padStart(2,'0'); }
+function tmNowStamp(d = new Date()){
+  return d.getFullYear() + '-' + tmPad(d.getMonth()+1) + '-' + tmPad(d.getDate()) + '_' + tmPad(d.getHours()) + tmPad(d.getMinutes()) + tmPad(d.getSeconds());
+}
+function tmMonthLabel(d = new Date()){
+  return d.getFullYear() + '-' + tmPad(d.getMonth()+1);
+}
+function tmDownload(filename, content, mime='application/octet-stream'){
+  const blob = content instanceof Blob ? content : new Blob([content], {type:mime});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = filename;
+  document.body.appendChild(a);
+  a.click();
+  setTimeout(() => {
+    URL.revokeObjectURL(url);
+    a.remove();
+  }, 500);
+}
+async function tmFetchAll(table, order=''){
+  const out = [];
+  const pageSize = 1000;
+  let offset = 0;
+  while(true){
+    const parts = [];
+    if(order) parts.push(order);
+    parts.push(`limit=${pageSize}`);
+    parts.push(`offset=${offset}`);
+    const rows = await sbGet(table, parts.join('&'));
+    if(!Array.isArray(rows) || !rows.length) break;
+    out.push(...rows);
+    if(rows.length < pageSize) break;
+    offset += pageSize;
+  }
+  return out;
+}
+function tmSanitizeHtmlForExport(htmlText){
+  return String(htmlText)
+    .replace(/<script id="tm-file-input-script"[\s\S]*?<\/script>/g,'')
+    .replace(/<input type="file" id="tmRestoreFileInput"[\s\S]*?>/g,'');
+}
+async function tmBuildSnapshot(){
+  const [mitglieder, positionen, cash, alltime, buchungen, jahresabschluss] = await Promise.all([
+    tmFetchAll('mitglieder','order=sortierung'),
+    tmFetchAll('positionen','order=mitglied_id,id'),
+    tmFetchAll('cash','order=mitglied_id'),
+    tmFetchAll('alltime','order=mitglied_id'),
+    tmFetchAll('buchungen','order=datum.desc,id.desc'),
+    tmFetchAll('jahresabschluss','order=jahr.desc,mitglied_id')
+  ]);
+
+  const snapshot = {
+    format: TIME_MACHINE_VERSION,
+    created_at: new Date().toISOString(),
+    created_by: currentUser ? currentUser.name : 'Unbekannt',
+    created_by_key: currentUserKey || null,
+    source: {
+      app: 'Folio.wax',
+      href: location.href,
+      title: document.title || 'Folio.wax · Aktienclub'
+    },
+    state: {
+      ref_jahr: REF_JAHR,
+      bench_jahr: typeof BENCH_JAHR !== 'undefined' ? BENCH_JAHR : null,
+      status_text: (document.getElementById('sTxt')||{}).textContent || '',
+      time_label: (document.getElementById('sTime')||{}).textContent || ''
+    },
+    counts: {
+      mitglieder: mitglieder.length,
+      positionen: positionen.length,
+      cash: cash.length,
+      alltime: alltime.length,
+      buchungen: buchungen.length,
+      jahresabschluss: jahresabschluss.length
+    },
+    tables: { mitglieder, positionen, cash, alltime, buchungen, jahresabschluss }
+  };
+  return snapshot;
+}
+function tmRenderSnapshotInfo(snapshot, prefix=''){
+  const counts = snapshot.counts || {};
+  const created = snapshot.created_at ? new Date(snapshot.created_at).toLocaleString('de-DE') : '—';
+  return `${prefix}<strong>${created}</strong> · ${snapshot.created_by || '—'} · `
+    + `${counts.positionen||0} Positionen · ${counts.buchungen||0} Buchungen · ${counts.cash||0} Cash`;
+}
+async function timeMachineSnapshotErzeugen() {
+  if(!isAdmin()){ alert('Time Machine ist nur für den Admin freigeschaltet.'); return; }
+  const info = document.getElementById('timeMachineInfo');
+  try {
+    if(info){ info.innerHTML = 'Erstelle Snapshot…'; info.style.color = '#666'; }
+    const snapshot = await tmBuildSnapshot();
+    const stamp = tmNowStamp();
+    const month = tmMonthLabel();
+    const jsonName = `${month}_WAX_SNAPSHOT_${stamp}.json`;
+    const htmlName = `${month}_WAX_APP_${stamp}.html`;
+
+    tmDownload(jsonName, JSON.stringify(snapshot, null, 2), 'application/json;charset=utf-8');
+    const htmlCopy = '<!DOCTYPE html>\n' + tmSanitizeHtmlForExport(document.documentElement.outerHTML);
+    setTimeout(() => tmDownload(htmlName, htmlCopy, 'text/html;charset=utf-8'), 250);
+
+    if(info){
+      info.innerHTML = `✓ Snapshot erzeugt. ${tmRenderSnapshotInfo(snapshot,'')}`
+        + `<br><span style="color:#666">Downloads: <code>${jsonName}</code> und <code>${htmlName}</code></span>`;
+      info.style.color = '#1a6e3a';
+    }
+  } catch(e) {
+    if(info){ info.textContent = 'Fehler beim Snapshot: ' + e.message; info.style.color = '#c8441a'; }
+    alert('Snapshot konnte nicht erzeugt werden.\n\n' + e.message);
+  }
+}
+function tmEnsureRestoreInput(){
+  let input = document.getElementById('tmRestoreFileInput');
+  if(input) return input;
+  input = document.createElement('input');
+  input.type = 'file';
+  input.id = 'tmRestoreFileInput';
+  input.accept = '.json,application/json';
+  input.style.display = 'none';
+  input.addEventListener('change', async (ev) => {
+    const file = ev.target.files && ev.target.files[0];
+    if(file) await tmHandleRestoreFile(file);
+    ev.target.value = '';
+  });
+  document.body.appendChild(input);
+  return input;
+}
+async function timeMachineSnapshotRestore() {
+  if(!isAdmin()){ alert('Time Machine ist nur für den Admin freigeschaltet.'); return; }
+  const info = document.getElementById('timeMachineInfo');
+  if(info){
+    info.innerHTML = 'Bitte Snapshot-Datei auswählen…';
+    info.style.color = '#666';
+  }
+  tmEnsureRestoreInput().click();
+}
+function tmValidateSnapshot(snapshot){
+  if(!snapshot || typeof snapshot !== 'object') throw new Error('Datei ist kein gültiges JSON-Objekt.');
+  if(snapshot.format !== TIME_MACHINE_VERSION) throw new Error(`Falsches Snapshot-Format (${snapshot.format || 'unbekannt'}).`);
+  if(!snapshot.tables || typeof snapshot.tables !== 'object') throw new Error('Snapshot enthält keine Tabellen.');
+  ['positionen','cash','alltime','buchungen'].forEach(key => {
+    if(!Array.isArray(snapshot.tables[key])) throw new Error(`Snapshot-Tabelle fehlt: ${key}`);
+  });
+  return true;
+}
+async function tmReadJsonFile(file){
+  const text = await file.text();
+  return JSON.parse(text);
+}
+async function tmAutoBackupBeforeRestore(){
+  const snapshot = await tmBuildSnapshot();
+  const backupName = `AUTO_BEFORE_RESTORE_${tmMonthLabel()}_${tmNowStamp()}.json`;
+  tmDownload(backupName, JSON.stringify(snapshot, null, 2), 'application/json;charset=utf-8');
+  return { snapshot, backupName };
+}
+async function tmDeleteAllForRestore(){
+  const steps = [
+    ['buchungen', 'id=gt.0'],
+    ['positionen', 'id=gt.0'],
+    ['jahresabschluss', 'jahr=gte.1900'],
+    ['cash', 'mitglied_id=gt.0'],
+    ['alltime', 'mitglied_id=gt.0']
+  ];
+  for(const [table, filter] of steps){
+    const ok = await sbDelete(table, filter);
+    if(!ok) throw new Error(`Leeren von Tabelle ${table} fehlgeschlagen.`);
+  }
+}
+async function tmInsertRows(table, rows){
+  if(!rows || !rows.length) return;
+  const chunkSize = 100;
+  for(let i=0; i<rows.length; i += chunkSize){
+    const chunk = rows.slice(i, i + chunkSize);
+    const ok = await sbPost(table, chunk);
+    if(!ok) throw new Error(`Schreiben in Tabelle ${table} fehlgeschlagen (Block ${i+1}-${Math.min(i+chunkSize, rows.length)}).`);
+  }
+}
+async function tmRestoreSnapshotData(snapshot){
+  await tmDeleteAllForRestore();
+  await tmInsertRows('cash', snapshot.tables.cash || []);
+  await tmInsertRows('alltime', snapshot.tables.alltime || []);
+  await tmInsertRows('positionen', snapshot.tables.positionen || []);
+  await tmInsertRows('buchungen', snapshot.tables.buchungen || []);
+  await tmInsertRows('jahresabschluss', snapshot.tables.jahresabschluss || []);
+}
+async function tmHandleRestoreFile(file){
+  const info = document.getElementById('timeMachineInfo');
+  try {
+    if(info){ info.innerHTML = 'Prüfe Snapshot-Datei…'; info.style.color = '#666'; }
+    const snapshot = await tmReadJsonFile(file);
+    tmValidateSnapshot(snapshot);
+
+    const counts = snapshot.counts || {};
+    const created = snapshot.created_at ? new Date(snapshot.created_at).toLocaleString('de-DE') : '—';
+    const summary = `Snapshot vom ${created}\nErstellt von: ${snapshot.created_by || '—'}\n`
+      + `Positionen: ${counts.positionen||0}\nBuchungen: ${counts.buchungen||0}\nCash-Sätze: ${counts.cash||0}\nAlltime-Sätze: ${counts.alltime||0}\n`
+      + `\nVor dem Restore wird automatisch eine Sicherheitskopie des aktuellen Stands heruntergeladen.\n\nDiesen Stand jetzt wirklich wiederherstellen?`;
+    if(info){
+      info.innerHTML = `Snapshot geprüft: <strong>${created}</strong> · ${snapshot.created_by || '—'}`
+        + `<br><span style="color:#666">${counts.positionen||0} Positionen · ${counts.buchungen||0} Buchungen · ${counts.cash||0} Cash-Sätze</span>`;
+    }
+    if(!confirm(summary)){
+      if(info){ info.innerHTML += '<br><span style="color:#666">Wiederherstellung abgebrochen.</span>'; }
+      return;
+    }
+
+    if(info){ info.innerHTML = 'Erzeuge Sicherheitskopie vor Restore…'; info.style.color = '#666'; }
+    const backup = await tmAutoBackupBeforeRestore();
+
+    if(info){ info.innerHTML = `Sicherheitskopie geladen: <code>${backup.backupName}</code><br>Spiele Snapshot jetzt zurück…`; info.style.color = '#666'; }
+    await tmRestoreSnapshotData(snapshot);
+
+    if(info){
+      info.innerHTML = `✓ Snapshot erfolgreich wiederhergestellt.<br>`
+        + `${tmRenderSnapshotInfo(snapshot,'Wiederhergestellt: ')}`
+        + `<br><span style="color:#666">Vorheriger Stand gesichert als <code>${backup.backupName}</code>. Seite wird neu geladen…</span>`;
+      info.style.color = '#1a6e3a';
+    }
+    setTimeout(() => init(), 1200);
+  } catch(e) {
+    if(info){ info.textContent = 'Restore-Fehler: ' + e.message; info.style.color = '#c8441a'; }
+    alert('Snapshot konnte nicht wiederhergestellt werden.\n\n' + e.message);
+  }
+}
+
 // ── JAHRESABSCHLUSS ──────────────────────────────────────────────────────────
 function vorschauJahresabschluss() {
   const jahr = new Date().getFullYear();
   const heute = new Date().toLocaleDateString('de-DE');
   let html = `<div style="background:#f8f6f2;border-radius:4px;padding:14px;font-size:12px">`;
   html += `<div style="font-weight:700;font-size:13px;margin-bottom:10px">📋 Jahresabschluss ${jahr} — Vorschau (Stand: ${heute})</div>`;
-  html += `<table style="width:100%;border-collapse:collapse;font-size:11px">`;
+  html += `<table style="border-collapse:collapse;font-size:11px">`;
   html += `<tr style="border-bottom:2px solid #ddd;font-weight:700"><td style="padding:4px 8px">Mitglied</td><td style="text-align:right;padding:4px 8px">Gesamtwert</td><td style="text-align:right;padding:4px 8px">Cash</td><td style="text-align:right;padding:4px 8px">Invest</td><td style="text-align:right;padding:4px 8px">Akt. Pos.</td></tr>`;
   
   let gesamt = 0;
   db.mitglieder.forEach(m => {
     const cash = getCash(m.id);
-    const pos = db.positionen.filter(p=>p.mitglied_id===m.id&&!p.verkauft);
+    const pos = db.positionen.filter(p=>p.mitglied_id===m.id&&!p.verkauft&&num(p.stueck)>0);
     let invest = 0;
     pos.forEach(p => {
       const k = liveKurse[p.wkn];
@@ -2131,7 +2479,7 @@ function vorschauJahresabschluss() {
   </tr>`;
   html += `</table>`;
   
-  const aktivePos = db.positionen.filter(p=>!p.verkauft).length;
+  const aktivePos = db.positionen.filter(p=>!p.verkauft&&num(p.stueck)>0).length;
   html += `<div style="margin-top:10px;color:#666">Es werden <strong>${aktivePos} aktive Positionen</strong> mit aktuellem Kurs und Wert als neue kurs_ref / wert_ref eingefroren.</div>`;
   html += `<div style="margin-top:12px">`;
   html += `<button class="btn btn-red" onclick="saveJahresabschluss(${new Date().getFullYear()})">✓ Jahresabschluss ${new Date().getFullYear()} jetzt einfrieren</button>`;
@@ -2148,7 +2496,7 @@ async function saveJahresabschluss(jahr) {
   
   try {
     // 1. kurs_ref + wert_ref für alle aktiven Positionen setzen
-    const aktivePos = db.positionen.filter(p=>!p.verkauft);
+    const aktivePos = db.positionen.filter(p=>!p.verkauft&&num(p.stueck)>0);
     for(const p of aktivePos) {
       const k = liveKurse[p.wkn];
       if(k != null) {
@@ -2166,7 +2514,7 @@ async function saveJahresabschluss(jahr) {
     // 3. jahresabschluss-Tabelle befüllen
     for(const m of db.mitglieder) {
       const cash = getCash(m.id);
-      const pos = db.positionen.filter(p=>p.mitglied_id===m.id&&!p.verkauft);
+      const pos = db.positionen.filter(p=>p.mitglied_id===m.id&&!p.verkauft&&num(p.stueck)>0);
       let invest = 0;
       pos.forEach(p => {
         const k = liveKurse[p.wkn];
@@ -2318,6 +2666,29 @@ init = async function(){
   applyPflegeAccess();
 }
 
+
+
+document.addEventListener('keydown', (e) => {
+  const overlay = document.getElementById('pinOverlay');
+  if(!overlay || overlay.style.display === 'none') return;
+  const activeTag = (document.activeElement && document.activeElement.tagName) ? document.activeElement.tagName.toLowerCase() : '';
+  if(activeTag === 'input' || activeTag === 'textarea') return;
+  if (/^[0-9]$/.test(e.key)) {
+    e.preventDefault();
+    pinKey(e.key);
+    return;
+  }
+  if (e.key === 'Backspace' || e.key === 'Delete') {
+    e.preventDefault();
+    pinDel();
+    return;
+  }
+  if (e.key === 'Escape') {
+    e.preventDefault();
+    logoutUser();
+    return;
+  }
+});
 document.addEventListener('DOMContentLoaded', () => {
   const saved = sessionStorage.getItem('wax_user');
   if(saved && USERS[saved]){
