@@ -111,6 +111,36 @@ td:nth-child(2) { text-align: left; }
 .fx-note { font-size: 9px; color: #888; font-weight: 400; margin-left: 3px; }
 .kurs-loading { color: #bbb; font-style: italic; }
 
+.structure-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:16px;margin-bottom:24px}
+.structure-card{background:#fff;border:1px solid #d8d4ce;padding:14px 14px 12px}
+.structure-head{display:flex;align-items:flex-start;justify-content:space-between;gap:12px;margin-bottom:10px}
+.structure-title{font-size:10px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:#777}
+.structure-sub{font-size:10px;color:#888;margin-top:3px}
+.structure-total{font-size:18px;font-weight:700;color:#111;white-space:nowrap}
+.donut-wrap{display:flex;align-items:center;gap:14px}
+.donut{width:112px;height:112px;border-radius:50%;flex:0 0 112px;position:relative;background:#eee}
+.donut::after{content:'';position:absolute;inset:22px;background:#fff;border-radius:50%;box-shadow:inset 0 0 0 1px #ece7df}
+.donut-center{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:1;text-align:center;padding:0 20px}
+.donut-center strong{font-size:18px;line-height:1;color:#111}
+.donut-center span{font-size:9px;letter-spacing:.1em;text-transform:uppercase;color:#888;margin-top:4px}
+.legend{display:flex;flex-direction:column;gap:7px;min-width:0;flex:1}
+.legend-item{display:grid;grid-template-columns:12px 1fr auto;gap:9px;align-items:center;font-size:11px;color:#444}
+.legend-swatch{width:12px;height:12px;border-radius:50%;box-shadow:0 0 0 1px rgba(0,0,0,.08) inset}
+.legend-name{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.legend-val{font-weight:700;color:#111}
+.bar-list{display:flex;flex-direction:column;gap:8px}
+.bar-item{display:grid;grid-template-columns:minmax(66px,96px) 1fr auto;gap:10px;align-items:center}
+.bar-label{font-size:11px;color:#444;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.bar-track{height:10px;background:#f1eee8;border-radius:999px;overflow:hidden;position:relative}
+.bar-fill{height:100%;border-radius:999px}
+.bar-value{font-size:11px;font-weight:700;color:#111;white-space:nowrap}
+.meta-panel{background:#faf8f4;border:1px dashed #d8d4ce;padding:10px 12px;margin:10px 0 14px 0;font-size:11px;color:#555;line-height:1.5}
+.meta-panel strong{color:#111}
+.meta-panel .ok{color:#1a6e3a;font-weight:700}
+.meta-panel .warn{color:#c8441a;font-weight:700}
+.meta-grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px}
+@media (max-width: 720px){.meta-grid{grid-template-columns:1fr}.donut-wrap{flex-direction:column;align-items:flex-start}.donut{width:104px;height:104px;flex-basis:104px}}
+
 .rank-icon{height:28px;width:40px;vertical-align:middle;display:inline-block;object-fit:contain;image-rendering:-webkit-optimize-contrast;image-rendering:high-quality;flex-shrink:0;margin-left:6px}
 .kpi-v.rank-pos{display:flex;align-items:center;gap:6px;white-space:nowrap}
 
@@ -251,7 +281,9 @@ if (window.caches && caches.keys) {
     </tr></thead>
     <tbody id="rankingBody"></tbody>
   </table></div>
-  <div class="sec-t"><span class="sec-n">3 ·</span> <span id="benchTitle">Benchmarks YTD</span></div>
+  <div class="sec-t"><span class="sec-n">3 ·</span> Depotstruktur — Kategorien · Länder · Börsen</div>
+  <div id="overviewStructure"></div>
+  <div class="sec-t"><span class="sec-n">4 ·</span> <span id="benchTitle">Benchmarks YTD</span></div>
   <div class="bench-grid">
     <div class="bench-item"><div class="bench-l">WAX</div><div class="bench-v" id="bWax">—</div></div>
     <div class="bench-item"><div class="bench-l">Nasdaq</div><div class="bench-v" id="bNasdaq">lädt…</div></div>
@@ -260,13 +292,13 @@ if (window.caches && caches.keys) {
     <div class="bench-item"><div class="bench-l">Hang Seng</div><div class="bench-v" id="bHsi">lädt…</div></div>
     <div class="bench-item"><div class="bench-l">Durchschnitt Benchmarks</div><div class="bench-v" id="bTop4">lädt…</div></div>
   </div>
-  <div class="sec-t"><span class="sec-n">4 ·</span> Top Holdings (aktuell)</div>
+  <div class="sec-t"><span class="sec-n">5 ·</span> Top Holdings (aktuell)</div>
   <div class="tw"><table>
     <thead><tr><th>Rang</th><th>Titel</th><th>WKN</th><th>Wert (€)</th><th>Anteil</th><th>Kumuliert</th></tr></thead>
     <tbody id="topHoldingsBody"></tbody>
   </table></div>
 
-  <div class="sec-t" style="margin-top:24px"><span class="sec-n">5 ·</span> Spielregeln WAX 2026</div>
+  <div class="sec-t" style="margin-top:24px"><span class="sec-n">6 ·</span> Spielregeln WAX 2026</div>
   <div class="tw rules-box">
     <div class="rules-title">WAX-Spielregeln 2026</div>
     <div class="rules-columns">
@@ -319,7 +351,7 @@ if (window.caches && caches.keys) {
 </div>
 
 <div id="view-investments" style="display:none">
-  <div class="sec-t mode-row" style="margin-top:4px"><span><span class="sec-n">3 ·</span> Investments — WAX gesamt</span><div class="mode-tools"><button id="investmentsRefreshBtn" class="icon-btn refresh-btn" type="button" title="Kurse aktualisieren" aria-label="Kurse aktualisieren" onclick="refreshMarketData()">↻</button></div></div>
+  <div class="sec-t mode-row" style="margin-top:4px"><span><span class="sec-n">3 ·</span> Investments — WAX gesamt</span><div class="mode-tools"><button id="investmentsDetailsBtn" class="mode-toggle" type="button" onclick="toggleInvestmentsView()">Details</button><button id="investmentsRefreshBtn" class="icon-btn refresh-btn" type="button" title="Kurse aktualisieren" aria-label="Kurse aktualisieren" onclick="refreshInvestmentsView()">↻</button></div></div>
   <div id="investmentsContent"></div>
 </div>
 
@@ -329,7 +361,7 @@ if (window.caches && caches.keys) {
     <div class="kpi"><div class="kpi-l">Startkapital p.P.</div><div class="kpi-v">511,29 €</div><div class="kpi-s">Jan 2000</div></div>
     <div class="kpi"><div class="kpi-l">Monatsbeitrag</div><div class="kpi-v">100,00 €</div><div class="kpi-s">seit März 2015</div></div>
     <div class="kpi"><div class="kpi-l">Einsatz p.P.</div><div class="kpi-v">14.304,81 €</div><div class="kpi-s">inkl. Startkapital</div></div>
-    <div class="kpi"><div class="kpi-l">Perf. p.a.</div><div class="kpi-v pos">+4,89%</div><div class="kpi-s">interner Zinsfuß seit Start</div></div>
+    <div class="kpi"><div class="kpi-l">Perf. p.a.</div><div class="kpi-v pos" id="kapPerfPa">+4,89%</div><div class="kpi-s">interner Zinsfuß seit Start</div></div>
     <div class="kpi"><div class="kpi-l">Gewinn Alltime</div><div class="kpi-v pos">+17.576,42 €</div><div class="kpi-s">Depotwert minus Einsatz</div></div>
     <div class="kpi"><div class="kpi-l">Perf. gesamt p.P.</div><div class="kpi-v pos">+122,87%</div><div class="kpi-s">auf Gesamteinsatz</div></div>
   </div>
@@ -484,6 +516,14 @@ if (window.caches && caches.keys) {
       <div class="form-row"><label class="form-label">Kurs (€)</label><input type="number" class="form-input" id="fKurs" step="0.0001" oninput="updateKaufVorschau()"></div>
     </div>
     <div id="fBetragVorschau" style="font-size:12px;color:#666;margin-bottom:8px;font-weight:700"></div>
+    <div id="fMetaInfo" class="meta-panel" style="display:none"></div>
+    <div id="fMetaWrap" style="display:none">
+      <div class="form-row"><label class="form-label">Kategorie</label><select class="form-input" id="fCategory"></select></div>
+      <div class="form-row-2">
+        <div class="form-row"><label class="form-label">Land</label><select class="form-input" id="fCountry"></select></div>
+        <div class="form-row"><label class="form-label">Börse</label><select class="form-input" id="fExchange"></select></div>
+      </div>
+    </div>
     <div class="form-row"><label class="form-label">Notiz</label><input type="text" class="form-input" id="fNotiz"></div>
     <div class="modal-footer">
       <button class="btn btn-outline" onclick="closeModal()">Abbrechen</button>
@@ -639,11 +679,12 @@ function sanitizePositionRow(p) {
 function sanitizeDatabase(data) {
   return {
     ...data,
-    positionen: Array.isArray(data.positionen) ? data.positionen.map(sanitizePositionRow) : []
+    positionen: Array.isArray(data.positionen) ? data.positionen.map(sanitizePositionRow) : [],
+    security_master: Array.isArray(data.security_master) ? data.security_master : []
   };
 }
 
-let db = { mitglieder:[], positionen:[], cash:[], alltime:[], buchungen:[] };
+let db = { mitglieder:[], positionen:[], cash:[], alltime:[], buchungen:[], security_master:[] };
 let liveKurse = {};
 let prevKurse = {};
 let marketRefreshRunning = false;
@@ -654,9 +695,262 @@ let depotMode = 'ytd';
 let activeMitglied = 0;
 let activeTab = 'uebersicht';
 let investmentsSortRules = [];
+let investmentDetailsSortRules = [];
+let investmentsView = 'main';
 const investmentsDefaultSortRules = [{ key:'aktWert', dir:'desc' }];
+const investmentDetailsDefaultSortRules = [{ key:'bezeichnung', dir:'asc' }];
 const PROD_SICHERHEIT_AKTIV = true; // Undo/Freigabe-Reverts in Produktivsystem sperren
 let reiseVorschauData = null;
+
+const META_OPTIONS = {
+  categories:[
+    'Technology & Software','Semiconductors & AI Infrastructure','Healthcare & Biotech','Consumer & Brands',
+    'Industrials & Mobility','Energy & Utilities','Precious Metals','Digital Assets & Crypto','Finance & Assets'
+  ],
+  countries:['USA','Deutschland','Europa','Schweiz','Kanada','Australien','Asien'],
+  exchanges:['NASDAQ','NYSE','Xetra','Tradegate','SIX Swiss Exchange','TSX Venture','ASX','Asia Exchange']
+};
+const STRUCTURE_COLORS = {
+  'Technology & Software':'#2563EB',
+  'Semiconductors & AI Infrastructure':'#DC2626',
+  'Healthcare & Biotech':'#10B981',
+  'Consumer & Brands':'#F59E0B',
+  'Industrials & Mobility':'#6B7280',
+  'Energy & Utilities':'#0EA5A4',
+  'Precious Metals':'#D4AF37',
+  'Digital Assets & Crypto':'#F97316',
+  'Finance & Assets':'#14B8A6',
+
+  'USA':'#2563EB',
+  'Deutschland':'#111827',
+  'Schweiz':'#10B981',
+  'Kanada':'#7C3AED',
+  'Australien':'#F59E0B',
+  'Europa':'#14B8A6',
+  'Asien':'#22C55E',
+
+  'NASDAQ':'#2563EB',
+  'NYSE':'#F59E0B',
+  'Xetra':'#111827',
+  'Tradegate':'#6B7280',
+  'SIX Swiss Exchange':'#10B981',
+  'TSX Venture':'#7C3AED',
+  'ASX':'#DC2626',
+  'Asia Exchange':'#22C55E'
+};
+const SECURITY_MASTER_DEFAULTS = {
+  '716460': { name:'SAP', category:'Technology & Software', country:'Deutschland', exchange:'Xetra' },
+  '766403': { name:'Volkswagen Vz.', category:'Industrials & Mobility', country:'Deutschland', exchange:'Xetra' },
+  'A0D9PT': { name:'MTU Aero Engines', category:'Industrials & Mobility', country:'Deutschland', exchange:'Xetra' },
+  '823212': { name:'Lufthansa', category:'Industrials & Mobility', country:'Deutschland', exchange:'Xetra' },
+  'A0LD6E': { name:'Global X Copper Miners ETF', category:'Precious Metals', country:'Europa', exchange:'Xetra' },
+  'A2TT3D': { name:'21Shares Bitcoin ETP', category:'Digital Assets & Crypto', country:'Europa', exchange:'Xetra' },
+  'A2T0VS': { name:'Xtrackers Silver ETC', category:'Precious Metals', country:'Europa', exchange:'Xetra' },
+  'A1KWPR': { name:'Verallia', category:'Industrials & Mobility', country:'Europa', exchange:'Xetra' },
+  'A0YEDG': { name:'iShares NASDAQ 100 ETF', category:'Semiconductors & AI Infrastructure', country:'Europa', exchange:'Xetra' },
+  'EWG2LD': { name:'WisdomTree Uranium', category:'Energy & Utilities', country:'Europa', exchange:'Xetra' },
+  'A0Q4DC': { name:'Nestlé', category:'Consumer & Brands', country:'Schweiz', exchange:'SIX Swiss Exchange' },
+  '906866': { name:'Amazon', category:'Consumer & Brands', country:'USA', exchange:'NASDAQ' },
+  '850471': { name:'Boeing', category:'Industrials & Mobility', country:'USA', exchange:'NYSE' },
+  'A0NJ38': { name:'American Water Works', category:'Energy & Utilities', country:'USA', exchange:'NYSE' },
+  '932798': { name:'Dominion Energy', category:'Energy & Utilities', country:'USA', exchange:'NYSE' },
+  'A2JG9Z': { name:'Broadcom', category:'Semiconductors & AI Infrastructure', country:'USA', exchange:'NASDAQ' },
+  '870747': { name:'Microsoft', category:'Technology & Software', country:'USA', exchange:'NASDAQ' },
+  'A4A59K': { name:'iShares Bitcoin Trust ETP', category:'Digital Assets & Crypto', country:'Europa', exchange:'Xetra' },
+  'A3CL8W': { name:'AST SpaceMobile', category:'Technology & Software', country:'USA', exchange:'NASDAQ' },
+  'A3CVQC': { name:'Robinhood', category:'Finance & Assets', country:'USA', exchange:'NASDAQ' },
+  'A3DHHB': { name:'Applied Digital', category:'Semiconductors & AI Infrastructure', country:'USA', exchange:'NASDAQ' },
+  'A2APCZ': { name:'Madrigal Pharmaceuticals', category:'Healthcare & Biotech', country:'USA', exchange:'NASDAQ' },
+  'A2QB38': { name:'Snowflake', category:'Technology & Software', country:'USA', exchange:'NYSE' },
+  'A2UBKC': { name:'21Shares Ethereum ETP', category:'Digital Assets & Crypto', country:'Europa', exchange:'Xetra' },
+  'A0YEFE': { name:'Fortinet', category:'Technology & Software', country:'USA', exchange:'NASDAQ' },
+  'A3CND6': { name:'UiPath', category:'Technology & Software', country:'USA', exchange:'NYSE' },
+  'A2AT0Z': { name:'CRISPR Therapeutics', category:'Healthcare & Biotech', country:'USA', exchange:'NASDAQ' },
+  '936386': { name:'Sangamo Therapeutics', category:'Healthcare & Biotech', country:'USA', exchange:'NASDAQ' },
+  '918422': { name:'NVIDIA', category:'Semiconductors & AI Infrastructure', country:'USA', exchange:'NASDAQ' },
+  'A2PK2R': { name:'CrowdStrike', category:'Technology & Software', country:'USA', exchange:'NASDAQ' },
+  'A0YAND': { name:'Kratos Defense', category:'Industrials & Mobility', country:'USA', exchange:'NASDAQ' },
+  'A12GD6': { name:'Viking Therapeutics', category:'Healthcare & Biotech', country:'USA', exchange:'NASDAQ' },
+  'A3DESP': { name:'IPERIONX', category:'Industrials & Mobility', country:'Australien', exchange:'ASX' },
+  'A2PX5N': { name:'Gogold / Gold Silver', category:'Precious Metals', country:'Kanada', exchange:'TSX Venture' }
+};
+function normalizeSecurityText(v){ return String(v||'').trim().toLowerCase(); }
+function getLocalSecurityMaster(){
+  try { return JSON.parse(localStorage.getItem('wax_security_master_local') || '[]'); } catch { return []; }
+}
+function setLocalSecurityMaster(rows){
+  try { localStorage.setItem('wax_security_master_local', JSON.stringify(rows||[])); } catch {}
+}
+function mergeSecurityEntries(base, extra){
+  const map = new Map();
+  [...(base||[]), ...(extra||[])].forEach(row => {
+    if (!row) return;
+    const wkn = repairKnownWkn(row.wkn || row.WKN || '');
+    if (!wkn) return;
+    map.set(wkn, { ...map.get(wkn), ...row, wkn });
+  });
+  return [...map.values()];
+}
+function hydrateSecurityMaster(){
+  const remote = Array.isArray(db.security_master) ? db.security_master : [];
+  const defaults = Object.entries(SECURITY_MASTER_DEFAULTS).map(([wkn,row]) => ({ wkn, ...row }));
+  db.security_master = mergeSecurityEntries(defaults, mergeSecurityEntries(remote, getLocalSecurityMaster()));
+}
+async function syncLocalSecurityMasterToSupabase(){
+  const localRows = getLocalSecurityMaster();
+  if (!Array.isArray(localRows) || !localRows.length) return { synced:0, failed:0 };
+  let synced = 0, failed = 0;
+  for (const row of localRows) {
+    const payload = { ...row, wkn:repairKnownWkn(row?.wkn || ''), updated_at:new Date().toISOString() };
+    if (!payload.wkn) continue;
+    let ok = false;
+    try {
+      ok = await sbPatch('security_master', `wkn=eq.${encodeURIComponent(payload.wkn)}`, payload);
+      if (!ok) ok = await sbPost('security_master', payload);
+    } catch {}
+    if (ok) synced++; else failed++;
+  }
+  if (synced > 0 && failed === 0) setLocalSecurityMaster([]);
+  return { synced, failed };
+}
+function findSecurityMeta({ wkn='', name='' } = {}){
+  const key = repairKnownWkn(wkn);
+  const nameKey = normalizeSecurityText(name);
+  return (db.security_master || []).find(row => {
+    const rowWkn = repairKnownWkn(row.wkn);
+    const rowName = normalizeSecurityText(row.name || row.bezeichnung);
+    return (key && rowWkn === key) || (nameKey && rowName && rowName === nameKey);
+  }) || null;
+}
+function getEffectiveMetaForPosition(p){
+  const found = findSecurityMeta({ wkn:p?.wkn, name:p?.bezeichnung });
+  return {
+    category: found?.category || 'Nicht zugeordnet',
+    country: found?.country || 'Nicht zugeordnet',
+    exchange: found?.exchange || 'Nicht zugeordnet'
+  };
+}
+function upsertSecurityMasterLocal(entry){
+  const merged = mergeSecurityEntries(getLocalSecurityMaster(), [entry]);
+  setLocalSecurityMaster(merged);
+  db.security_master = mergeSecurityEntries(db.security_master, [entry]);
+}
+async function persistSecurityMeta(entry){
+  const payload = { ...entry, wkn:repairKnownWkn(entry.wkn), updated_at:new Date().toISOString() };
+  const existing = findSecurityMeta({ wkn:payload.wkn, name:payload.name });
+  let ok = false;
+  try {
+    ok = existing ? await sbPatch('security_master', `wkn=eq.${encodeURIComponent(payload.wkn)}`, payload) : await sbPost('security_master', payload);
+  } catch {}
+  upsertSecurityMasterLocal(payload);
+  return ok;
+}
+function getStructureColor(label, idx){
+  return STRUCTURE_COLORS[label] || ['#3B82F6','#10B981','#F59E0B','#8B5CF6','#EF4444','#6B7280','#14B8A6','#111827'][idx % 8];
+}
+function aggregateStructure(positions, field){
+  const totals = {};
+  (positions||[]).forEach(p => {
+    const meta = getEffectiveMetaForPosition(p);
+    const key = meta[field] || 'Nicht zugeordnet';
+    const kurs = liveKurse[repairKnownWkn(p.wkn)];
+    const wert = kurs != null ? kurs * num(p.stueck) : num(p.wert_ref || p.kaufwert);
+    totals[key] = (totals[key] || 0) + (isNaN(wert) ? 0 : wert);
+  });
+  return Object.entries(totals).map(([label,value],idx)=>({ label, value, color:getStructureColor(label, idx) })).sort((a,b)=>b.value-a.value);
+}
+function buildDonutStyle(items){
+  const total = items.reduce((s,x)=>s+x.value,0) || 1;
+  let cursor = 0;
+  const stops = items.map(item => {
+    const start = cursor;
+    cursor += (item.value / total) * 100;
+    return `${item.color} ${start.toFixed(2)}% ${cursor.toFixed(2)}%`;
+  });
+  return `background:conic-gradient(${stops.join(',')});`;
+}
+function structureLegend(items, total, topN = null){
+  const visibleItems = topN == null ? items : items.slice(0, topN);
+  return `<div class="legend">${visibleItems.map(item => `<div class="legend-item"><span class="legend-swatch" style="background:${item.color}"></span><span class="legend-name">${item.label}</span><span class="legend-val">${f(total>0 ? (item.value/total)*100 : 0,1)}%</span></div>`).join('')}</div>`;
+}
+function structureBar(items){
+  const max = items[0]?.value || 1;
+  const total = items.reduce((s,x)=>s+x.value,0) || 1;
+  return `<div class="bar-list">${items.slice(0,6).map(item => `<div class="bar-item"><div class="bar-label">${item.label}</div><div class="bar-track"><div class="bar-fill" style="width:${(item.value/max)*100}%;background:${item.color}"></div></div><div class="bar-value">${f((item.value/total)*100,1)}%</div></div>`).join('')}</div>`;
+}
+function renderStructureHtml(positions, subtitle){
+  if (!positions || !positions.length) return `<div class="meta-panel">Für diese Ansicht sind noch keine aktiven Wertpapierpositionen vorhanden.</div>`;
+  const byCategory = aggregateStructure(positions, 'category');
+  const byCountry = aggregateStructure(positions, 'country');
+  const byExchange = aggregateStructure(positions, 'exchange');
+  const total = positions.reduce((s,p)=>{ const k=liveKurse[repairKnownWkn(p.wkn)]; const v=k!=null?k*num(p.stueck):num(p.wert_ref||p.kaufwert); return s+(isNaN(v)?0:v); },0);
+  const donutA = byCategory;
+  const donutB = byExchange.slice(0, Math.min(6, byExchange.length));
+  return `
+    <div class="structure-grid" style="min-height:248px"> 
+      <div class="structure-card"> 
+        <div class="structure-head"><div><div class="structure-title">Kategorien</div><div class="structure-sub">${subtitle}</div></div><div class="structure-total">${f(total)} €</div></div>
+        <div class="donut-wrap"> 
+          <div class="donut" style="${buildDonutStyle(donutA)}"><div class="donut-center"><strong>${byCategory.length}</strong><span>Cluster</span></div></div>
+          ${structureLegend(byCategory, total)}
+        </div>
+      </div>
+      <div class="structure-card">
+        <div class="structure-head"><div><div class="structure-title">Länder</div><div class="structure-sub">Gewichtung nach aktuellem Marktwert</div></div><div class="structure-total">${byCountry.length}</div></div>
+        ${structureBar(byCountry)}
+      </div>
+      <div class="structure-card">
+        <div class="structure-head"><div><div class="structure-title">Börsen</div><div class="structure-sub">Primäre Handelsplätze</div></div><div class="structure-total">${byExchange.length}</div></div>
+        <div class="donut-wrap"> 
+          <div class="donut" style="${buildDonutStyle(donutB)}"><div class="donut-center"><strong>${byExchange.length}</strong><span>Börsen</span></div></div>
+          ${structureLegend(byExchange, total)}
+        </div>
+      </div>
+    </div>`;
+}
+function refreshOverviewStructure(){
+  const el = document.getElementById('overviewStructure');
+  if (!el) return;
+  const positions = db.positionen.filter(p => !p.verkauft && num(p.stueck) > 0);
+  el.innerHTML = renderStructureHtml(positions, 'Gesamtdepot WAX');
+}
+function refreshKaufMetaUI(){
+  const info = document.getElementById('fMetaInfo');
+  const wrap = document.getElementById('fMetaWrap');
+  if (!info || !wrap) return;
+  const typ = document.getElementById('fTyp')?.value;
+  if (typ !== 'KAUF') { info.style.display = 'none'; wrap.style.display = 'none'; return; }
+  const wkn = document.getElementById('fWkn')?.value || '';
+  const bez = document.getElementById('fBez')?.value || '';
+  const meta = findSecurityMeta({ wkn, name:bez });
+  if (meta) {
+    info.style.display = 'block';
+    wrap.style.display = 'none';
+    info.innerHTML = `<span class="ok">Wertpapier bereits erfasst.</span><br><strong>${meta.name || bez || repairKnownWkn(wkn)}</strong><div class="meta-grid"><div><strong>Kategorie</strong><br>${meta.category || '—'}</div><div><strong>Land</strong><br>${meta.country || '—'}</div><div><strong>Börse</strong><br>${meta.exchange || '—'}</div></div>`;
+    ['fCategory','fCountry','fExchange'].forEach(id => { const el = document.getElementById(id); if (el) el.value = meta[id === 'fCategory' ? 'category' : id === 'fCountry' ? 'country' : 'exchange'] || ''; });
+  } else {
+    info.style.display = 'block';
+    wrap.style.display = 'block';
+    info.innerHTML = `<span class="warn">Neues Wertpapier für den WAX.</span><br>Bitte Kategorie, Land und Börse einmalig festlegen. Danach wird die Zuordnung bei künftigen Käufen automatisch wiederverwendet.`;
+  }
+}
+async function ensureSecurityMetaForForm(){
+  const typ = document.getElementById('fTyp').value;
+  if (typ !== 'KAUF') return { ok:true, remote:true };
+  const wkn = repairKnownWkn(document.getElementById('fWkn').value);
+  const name = document.getElementById('fBez').value.trim();
+  const existing = findSecurityMeta({ wkn, name });
+  if (existing) return { ok:true, remote:true, entry:existing, existing:true };
+  const category = document.getElementById('fCategory').value;
+  const country = document.getElementById('fCountry').value;
+  const exchange = document.getElementById('fExchange').value;
+  if (!category || !country || !exchange) return { ok:false, message:'Bitte für neue Wertpapiere zusätzlich Kategorie, Land und Börse auswählen.' };
+  const ticker = TICKER_MAP[wkn]?.t || null;
+  const asset_type = document.getElementById('fArt').value;
+  const entry = { wkn, name, ticker, asset_type, category, country, exchange };
+  const remote = await persistSecurityMeta(entry);
+  return { ok:true, remote, entry };
+}
 
 // PIN
 let pinInput = '';
@@ -665,7 +959,7 @@ function pinKey(k) {
   pinInput += k;
   for (let i=0;i<4;i++) document.getElementById('d'+i).classList.toggle('filled', i<pinInput.length);
   if (pinInput.length === 4) {
-    if (pinInput === PIN) { document.getElementById('pinOverlay').style.display='none'; init(); }
+    if (pinInput === PIN) { document.getElementById('pinOverlay').style.display='none'; initApp(); }
     else {
       document.getElementById('pinErr').textContent = 'Falscher PIN';
       setTimeout(()=>{ pinInput=''; for(let i=0;i<4;i++) document.getElementById('d'+i).classList.remove('filled'); document.getElementById('pinErr').textContent=''; }, 800);
@@ -956,7 +1250,7 @@ async function loadKurse() {
 
 function setRefreshButtonsLoading(isLoading) {
   marketRefreshRunning = isLoading;
-  ['overviewRefreshBtn','depotRefreshBtn'].forEach(id => {
+  ['overviewRefreshBtn','depotRefreshBtn','investmentsRefreshBtn'].forEach(id => {
     const btn = document.getElementById(id);
     if (!btn) return;
     btn.disabled = isLoading;
@@ -1001,6 +1295,7 @@ async function loadBenchmarks() {
     };
   }));
   renderBenchmarks();
+  renderStructureOverviewSection();
 }
 
 function renderBenchmarks() {
@@ -1066,14 +1361,20 @@ async function init() {
     }
   } catch(e) { /* Fallback auf REF_FALLBACK */ }
 
-  const [mitglieder, positionen, cash, alltime, buchungen] = await Promise.all([
+  const [mitglieder, positionen, cash, alltime, buchungen, security_master] = await Promise.all([
     sbGet('mitglieder','order=sortierung'),
     sbGet('positionen','order=mitglied_id,id'),
     sbGet('cash','order=mitglied_id'),
     sbGet('alltime','order=mitglied_id'),
-    sbGet('buchungen','order=datum.desc&limit=200')
+    sbGet('buchungen','order=datum.desc&limit=200'),
+    sbGet('security_master','order=wkn')
   ]);
-  db = sanitizeDatabase({ mitglieder, positionen, cash, alltime, buchungen });
+  db = sanitizeDatabase({ mitglieder, positionen, cash, alltime, buchungen, security_master });
+  const smSync = await syncLocalSecurityMasterToSupabase();
+  if (smSync.synced > 0 && smSync.failed === 0) {
+    db.security_master = await sbGet('security_master','order=wkn');
+  }
+  hydrateSecurityMaster();
   populateSelects();
   setRefreshButtonsLoading(false);
   setStatus('loading','Lade Kurse & Wechselkurse…');
@@ -1417,6 +1718,21 @@ function getDepotwert(id, kursMap = liveKurse, fallbackMap = null) {
 function populateSelects() {
   const opts = db.mitglieder.map(m=>`<option value="${m.id}">${m.name}</option>`).join('');
   ['fMitglied'].forEach(id=>{ const el=document.getElementById(id); if(el) el.innerHTML=opts; });
+  const fill = (id, items, placeholder) => {
+    const el = document.getElementById(id);
+    if (!el) return;
+    el.innerHTML = `<option value="">${placeholder}</option>` + items.map(v=>`<option value="${v}">${v}</option>`).join('');
+  };
+  fill('fCategory', META_OPTIONS.categories, 'Bitte wählen');
+  fill('fCountry', META_OPTIONS.countries, 'Bitte wählen');
+  fill('fExchange', META_OPTIONS.exchanges, 'Bitte wählen');
+  ['fWkn','fBez','fTyp'].forEach(id => {
+    const el = document.getElementById(id);
+    if (!el || el.dataset.metaBound === '1') return;
+    el.addEventListener('input', refreshKaufMetaUI);
+    el.addEventListener('change', refreshKaufMetaUI);
+    el.dataset.metaBound = '1';
+  });
 }
 
 // TAB
@@ -1564,6 +1880,11 @@ function renderUebersicht() {
   const perfPaEl = document.getElementById('kPerfPa');
   perfPaEl.textContent = fp(perfPaLive);
   perfPaEl.className = 'kpi-v '+(perfPaLive>=0?'pos':'neg');
+  const kapPerfPaEl = document.getElementById('kapPerfPa');
+  if (kapPerfPaEl) {
+    kapPerfPaEl.textContent = fp(perfPaLive);
+    kapPerfPaEl.className = 'kpi-v '+(perfPaLive>=0?'pos':'neg');
+  }
   const cashAnteilEl = document.getElementById('kCashAnteil');
   const cashAnteilSubEl = document.getElementById('kCashAnteilSub');
   if (cashAnteilEl) {
@@ -1648,8 +1969,72 @@ function renderUebersicht() {
   });
   document.getElementById('topHoldingsBody').innerHTML = hhtml||'<tr><td colspan="6" style="text-align:center;color:#888">Lade…</td></tr>';
   renderBenchmarks();
+  renderStructureOverviewSection();
 }
 
+
+
+function updateInvestmentsHeaderControls() {
+  const btn = document.getElementById('investmentsDetailsBtn');
+  if (!btn) return;
+  btn.textContent = investmentsView === 'details' ? 'Zurück' : 'Details';
+  btn.title = investmentsView === 'details' ? 'Zur Hauptansicht' : 'Zur Detailansicht';
+  btn.setAttribute('aria-label', btn.title);
+}
+
+function toggleInvestmentsView() {
+  investmentsView = investmentsView === 'details' ? 'main' : 'details';
+  renderInvestments();
+}
+
+function refreshInvestmentsView() {
+  investmentsView = 'main';
+  investmentsSortRules = [];
+  investmentDetailsSortRules = [];
+  refreshMarketData();
+}
+
+function getInvestmentDetailsSortRules() {
+  return investmentDetailsSortRules.length ? investmentDetailsSortRules : investmentDetailsDefaultSortRules;
+}
+
+function investmentDetailsSortMeta(key) {
+  const rule = getInvestmentDetailsSortRules()[0];
+  if (!rule || rule.key !== key) return '↕';
+  return rule.dir === 'asc' ? '↑' : '↓';
+}
+
+function toggleInvestmentDetailsSort(key) {
+  const current = getInvestmentDetailsSortRules()[0];
+  if (!current || current.key !== key) {
+    investmentDetailsSortRules = [{ key, dir:'asc' }];
+  } else if (current.dir === 'asc') {
+    investmentDetailsSortRules = [{ key, dir:'desc' }];
+  } else {
+    investmentDetailsSortRules = [];
+  }
+  renderInvestments();
+}
+
+function sortInvestmentDetailRows(rows) {
+  const rules = getInvestmentDetailsSortRules();
+  const collator = new Intl.Collator('de', { numeric:true, sensitivity:'base' });
+  return [...rows].sort((a,b) => {
+    for (const rule of rules) {
+      const dir = rule.dir === 'asc' ? 1 : -1;
+      if (rule.key === 'bezeichnung') {
+        const cmp = collator.compare(String(a.bezeichnung||''), String(b.bezeichnung||''));
+        if (cmp !== 0) return cmp * dir;
+        continue;
+      }
+      const cmp = collator.compare(String(a[rule.key]||'Nicht zugeordnet'), String(b[rule.key]||'Nicht zugeordnet'));
+      if (cmp !== 0) return cmp * dir;
+      const nameCmp = collator.compare(String(a.bezeichnung||''), String(b.bezeichnung||''));
+      if (nameCmp !== 0) return nameCmp;
+    }
+    return collator.compare(String(a.bezeichnung||''), String(b.bezeichnung||''));
+  });
+}
 
 function getInvestmentsSortRules() {
   return investmentsSortRules.length ? investmentsSortRules : investmentsDefaultSortRules;
@@ -1698,12 +2083,14 @@ function sortInvestmentRows(rows) {
 }
 
 function renderInvestments() {
+  updateInvestmentsHeaderControls();
   const active = db.positionen.filter(p=>!p.verkauft && num(p.stueck)>0);
   const map = {};
   active.forEach(p => {
     const key = p.wkn || p.bezeichnung;
     if (!map[key]) {
-      map[key] = { bezeichnung:p.bezeichnung, wkn:p.wkn, art:p.art, stueck:0, kaufwert:0, refWert:0 };
+      const meta = getEffectiveMetaForPosition(p);
+      map[key] = { bezeichnung:p.bezeichnung, wkn:p.wkn, art:p.art, stueck:0, kaufwert:0, refWert:0, category:meta.category, country:meta.country, exchange:meta.exchange };
     }
     map[key].stueck += num(p.stueck);
     map[key].kaufwert += num(p.kaufwert);
@@ -1724,9 +2111,11 @@ function renderInvestments() {
   const totalInvest = rowsRaw.reduce((s,r)=>s+r.aktWert,0);
   rowsRaw.forEach(r => { r.anteilDepot = totalInvest>0 ? r.aktWert/totalInvest : 0; });
   const rows = sortInvestmentRows(rowsRaw);
+  const detailRows = sortInvestmentDetailRows(rowsRaw);
   const comdirectCashTotal = getComdirectCashTotal();
   const gesamt = totalInvest + comdirectCashTotal;
   const sortBtn = (key, label) => `<button type="button" onclick="toggleInvestmentsSort('${key}')" style="display:inline-flex;align-items:center;gap:5px;border:none;background:none;padding:0;font:inherit;font-weight:700;color:inherit;cursor:pointer">${label}<span style="display:inline-flex;align-items:center;justify-content:center;min-width:18px;height:18px;padding:0 4px;border:1px solid #d7d0c8;border-radius:10px;font-size:11px;line-height:1;color:#6f675e;background:#f6f2ed">${investmentsSortMeta(key)}</span></button>`;
+  const detailSortBtn = (key, label) => `<button type="button" onclick="toggleInvestmentDetailsSort('${key}')" style="display:inline-flex;align-items:center;gap:5px;border:none;background:none;padding:0;font:inherit;font-weight:700;color:inherit;cursor:pointer">${label}<span style="display:inline-flex;align-items:center;justify-content:center;min-width:18px;height:18px;padding:0 4px;border:1px solid #d7d0c8;border-radius:10px;font-size:11px;line-height:1;color:#6f675e;background:#f6f2ed">${investmentDetailsSortMeta(key)}</span></button>`;
 
   let html = `<div class="kpi-grid" style="margin-bottom:16px">
     <div class="kpi"><div class="kpi-l">Investments</div><div class="kpi-v">${rows.length}</div><div class="kpi-s">aggregierte Wertpapierpositionen</div></div>
@@ -1735,6 +2124,27 @@ function renderInvestments() {
     <div class="kpi"><div class="kpi-l">Gesamtwert WAX</div><div class="kpi-v">${f(gesamt)} €</div><div class="kpi-s">Wertpapiere + Cash</div></div>
     <div class="kpi"><div class="kpi-l">Cashanteil</div><div class="kpi-v">${gesamt>0?f(comdirectCashTotal/gesamt*100,1):'0,0'}%</div><div class="kpi-s">am Gesamtwert WAX</div></div>
   </div>`;
+
+  if (investmentsView === 'details') {
+    html += `<div class="tw"><table><thead><tr>
+      <th>Stück</th><th>Bezeichnung</th><th>WKN</th><th>Art</th><th>${detailSortBtn('category','Kategorie')}</th><th>${detailSortBtn('country','Land')}</th><th>${detailSortBtn('exchange','Börse')}</th>
+    </tr></thead><tbody>`;
+
+    if (detailRows.length) {
+      detailRows.forEach(r => {
+        html += `<tr>
+          <td>${f(r.stueck,0)}</td><td>${r.bezeichnung}</td><td class="dim">${r.wkn||'—'}</td><td class="dim">${r.art||'—'}</td>
+          <td class="dim">${r.category||'Nicht zugeordnet'}</td><td class="dim">${r.country||'Nicht zugeordnet'}</td><td class="dim">${r.exchange||'Nicht zugeordnet'}</td>
+        </tr>`;
+      });
+    } else {
+      html += `<tr><td colspan="7" style="text-align:center;color:#888;padding:20px">Keine aktiven Wertpapierpositionen</td></tr>`;
+    }
+
+    html += `</tbody></table></div>`;
+    document.getElementById('investmentsContent').innerHTML = html;
+    return;
+  }
 
   html += `<div class="tw"><table><thead><tr>
     <th>${sortBtn('stueck','Stück')}</th><th>${sortBtn('bezeichnung','Bezeichnung')}</th><th>${sortBtn('wkn','WKN')}</th><th>${sortBtn('art','Art')}</th>
@@ -1783,6 +2193,9 @@ function renderInvestments() {
   document.getElementById('investmentsContent').innerHTML = html;
 }
 
+function renderStructureOverviewSection(){
+  refreshOverviewStructure();
+}
 
 // EINZELDEPOTS
 function setupMitgliedBtns() {
@@ -1857,6 +2270,7 @@ function renderEhrungenDepot() {
 }
 
 function renderDepot(id) {
+  const m = db.mitglieder.find(x => x.id === id) || null;
   const pos = db.positionen.filter(p=>p.mitglied_id===id);
   const aktivPos = pos.filter(p=>!p.verkauft && num(p.stueck)>0);
   const verkauftPos = pos.filter(p=>p.verkauft && num(p.stueck)>0);
@@ -2052,7 +2466,25 @@ function renderDepot(id) {
     </tr></tbody></table></div>`;
   }
 
+  if (!isToday) {
+    html += `<div id="singleDepotStructureMount"></div>`;
+  }
+
   document.getElementById('depotContent').innerHTML = html;
+
+  if (!isToday) {
+    try {
+      const mount = document.getElementById('singleDepotStructureMount');
+      if (mount) {
+        mount.innerHTML = `<div class="sec-t"><span class="sec-n">3 ·</span> Depotstruktur — Kategorien · Länder · Börsen</div>` +
+          renderStructureHtml(aktivPos, `Ansicht: Aktuell - ${(((m && m.name) || '').split(',')[0] || 'Depot')}`);
+      }
+    } catch (err) {
+      console.error('Depotstruktur konnte im Einzeldepot nicht gerendert werden', err);
+      const mount = document.getElementById('singleDepotStructureMount');
+      if (mount) mount.innerHTML = '';
+    }
+  }
 }
 
 // PERFORMANCE
@@ -2074,11 +2506,10 @@ function renderPerf() {
     </tr>`;
   });
   const tg=sorted.reduce((s,a)=>s+(a.wert_echt-EINSATZ_PP),0);
-  const perfKpiText = (document.querySelector('#view-kapital .kpi-grid .kpi:nth-child(4) .kpi-v')?.textContent || '').replace(/\s/g,'');
-  const avg = perfKpiText ? num(perfKpiText.replace('%',''))/100 : (calcClubXIRR() || 0);
+  const clubPerfPa = calcClubXIRR() || 0;
   html+=`<tr class="total-row"><td>Gesamt / Ø</td><td>${f(totalAt)} €</td>
     <td class="${cl(tg)}">${fc(tg)}</td><td></td>
-    <td class="${cl(avg)}">${fp(avg)}</td><td>100%</td><td></td></tr>`;
+    <td class="${cl(clubPerfPa)}">${fp(clubPerfPa)}</td><td>100%</td><td></td></tr>`;
   document.getElementById('perfBody').innerHTML = html;
 }
 
@@ -2151,7 +2582,7 @@ function openModal(type) {
   const map={kauf:'modalKauf',freigabe:'modalFreigabe',reise:'modalReise',comdirect:'modalComdirect'};
   document.getElementById(map[type]).style.display='';
   const today=new Date().toISOString().split('T')[0];
-  if(type==='kauf'){ document.getElementById('fDatum').value=today; document.getElementById('fBetragVorschau').textContent=''; }
+  if(type==='kauf'){ document.getElementById('fDatum').value=today; document.getElementById('fBetragVorschau').textContent=''; refreshKaufMetaUI(); }
   if(type==='reise'){ document.getElementById('rDatum').value=today; document.getElementById('reiseVorschau').innerHTML=''; }
   if(type==='freigabe'){ document.getElementById('frDatum').value=today; document.getElementById('frVorschau').textContent=''; }
   if(type==='comdirect'){
@@ -2172,7 +2603,7 @@ async function saveKauf() {
   const typ=document.getElementById('fTyp').value;
   const mid=parseInt(document.getElementById('fMitglied').value);
   const datum=document.getElementById('fDatum').value;
-  const wkn=document.getElementById('fWkn').value.trim();
+  const wkn=repairKnownWkn(document.getElementById('fWkn').value.trim());
   const bez=document.getElementById('fBez').value.trim();
   const art=document.getElementById('fArt').value;
   const stueck=parseFloat(document.getElementById('fStueck').value);
@@ -2180,6 +2611,9 @@ async function saveKauf() {
   const notiz=document.getElementById('fNotiz').value;
   const betrag=stueck*kurs;
   if(!datum||!wkn||!bez||!stueck||!kurs){alert('Bitte alle Felder ausfüllen.');return;}
+
+  const metaResult = await ensureSecurityMetaForForm();
+  if(!metaResult.ok){ alert(metaResult.message || 'Metadaten fehlen.'); return; }
 
   try {
     if(typ==='KAUF') {
@@ -2199,7 +2633,12 @@ async function saveKauf() {
       if(!okBuchung) throw new Error('Buchung konnte nicht gespeichert werden.');
     }
 
-    closeModal(); await init();
+    closeModal(); await initApp();
+    if (typ==='KAUF' && metaResult && metaResult.remote === true && metaResult.entry && !metaResult.existing) {
+      alert('Kauf gespeichert. Die Wertpapier-Zuordnung wurde in Supabase gespeichert.');
+    } else if (typ==='KAUF' && metaResult && metaResult.remote === false) {
+      alert('Kauf gespeichert. Die Wertpapier-Zuordnung konnte nicht in Supabase gespeichert werden und bleibt vorerst lokal im Browser hinterlegt.');
+    }
   } catch(err) {
     alert(err?.message || 'Speichern fehlgeschlagen.');
   }
@@ -2220,7 +2659,7 @@ async function saveFreigabe() {
     const c=db.cash.find(x=>x.mitglied_id===m.id);
     await sbPatch('cash',`mitglied_id=eq.${m.id}`,{betrag:(c?.betrag||0)+pp,updated_at:new Date().toISOString()});
   }
-  closeModal(); await init();
+  closeModal(); await initApp();
 }
 
 function calcReise() {
@@ -2301,7 +2740,7 @@ async function saveReise() {
     await sbPatch('cash',`mitglied_id=eq.${r.m.id}`,{betrag:(c?.betrag||0)-r.betrag,updated_at:new Date().toISOString()});
   }
 
-  closeModal(); await init();
+  closeModal(); await initApp();
   alert(`✓ Reise "${name}" gebucht.
 
 Die Cash-Bestände der 6 virtuellen Depots wurden anteilig nach aktuellem Depotwert reduziert. Negative Cash-Stände sind zulässig und können später durch Verkäufe ausgeglichen werden.
@@ -2352,7 +2791,7 @@ async function deleteLastBookingByGroup(group) {
     ok = await undoGroupedCashBooking(last, +1);
   }
   if(!ok){ alert('Löschen/Rückgängigmachen fehlgeschlagen.'); return; }
-  await init();
+  await initApp();
   alert(`${labelMap[group] || 'Die Buchung'} wurde gelöscht.`);
 }
 async function undoLastKauf(b) {
@@ -2422,13 +2861,13 @@ async function saveComdirect() {
   await sbPost('buchungen',{datum,typ:'KONTOSTAND',mitglied_id:null,bezeichnung:'Comdirect-Gesamtstand (Info)',betrag,notiz:`Manuell erfasst: ${f(betrag)} €`});
   closeModal();
   alert(`Comdirect-Stand ${f(betrag)} € gespeichert.`);
-  await init();
+  await initApp();
 }
 
 // ── TIME MACHINE (STUFE 2: JSON + RESTORE) ─────────────────────────────────
 const TIME_MACHINE_VERSION = 'WAX_TIME_MACHINE_v2';
-const TM_TABLES_EXPORT = ['mitglieder','positionen','cash','alltime','buchungen','jahresabschluss'];
-const TM_TABLES_RESTORE = ['jahresabschluss','buchungen','positionen','cash','alltime']; // mitglieder bewusst nicht überschreiben
+const TM_TABLES_EXPORT = ['mitglieder','positionen','cash','alltime','buchungen','security_master','jahresabschluss'];
+const TM_TABLES_RESTORE = ['jahresabschluss','security_master','buchungen','positionen','cash','alltime']; // mitglieder bewusst nicht überschreiben
 
 function tmPad(n){ return String(n).padStart(2,'0'); }
 function tmNowStamp(d = new Date()){
@@ -2473,12 +2912,13 @@ function tmSanitizeHtmlForExport(htmlText){
     .replace(/<input type="file" id="tmRestoreFileInput"[\s\S]*?>/g,'');
 }
 async function tmBuildSnapshot(){
-  const [mitglieder, positionen, cash, alltime, buchungen, jahresabschluss] = await Promise.all([
+  const [mitglieder, positionen, cash, alltime, buchungen, security_master, jahresabschluss] = await Promise.all([
     tmFetchAll('mitglieder','order=sortierung'),
     tmFetchAll('positionen','order=mitglied_id,id'),
     tmFetchAll('cash','order=mitglied_id'),
     tmFetchAll('alltime','order=mitglied_id'),
     tmFetchAll('buchungen','order=datum.desc,id.desc'),
+    tmFetchAll('security_master','order=wkn'),
     tmFetchAll('jahresabschluss','order=jahr.desc,mitglied_id')
   ]);
 
@@ -2504,9 +2944,10 @@ async function tmBuildSnapshot(){
       cash: cash.length,
       alltime: alltime.length,
       buchungen: buchungen.length,
+      security_master: security_master.length,
       jahresabschluss: jahresabschluss.length
     },
-    tables: { mitglieder, positionen, cash, alltime, buchungen, jahresabschluss }
+    tables: { mitglieder, positionen, cash, alltime, buchungen, security_master, jahresabschluss }
   };
   return snapshot;
 }
@@ -2514,7 +2955,7 @@ function tmRenderSnapshotInfo(snapshot, prefix=''){
   const counts = snapshot.counts || {};
   const created = snapshot.created_at ? new Date(snapshot.created_at).toLocaleString('de-DE') : '—';
   return `${prefix}<strong>${created}</strong> · ${snapshot.created_by || '—'} · `
-    + `${counts.positionen||0} Positionen · ${counts.buchungen||0} Buchungen · ${counts.cash||0} Cash`;
+    + `${counts.positionen||0} Positionen · ${counts.buchungen||0} Buchungen · ${counts.cash||0} Cash · ${counts.security_master||0} Stammdaten`;
 }
 async function timeMachineSnapshotErzeugen() {
   if(!isAdmin()){ alert('Time Machine ist nur für den Admin freigeschaltet.'); return; }
@@ -2613,6 +3054,7 @@ async function tmRestoreSnapshotData(snapshot){
   await tmInsertRows('alltime', snapshot.tables.alltime || []);
   await tmInsertRows('positionen', snapshot.tables.positionen || []);
   await tmInsertRows('buchungen', snapshot.tables.buchungen || []);
+  await tmInsertRows('security_master', snapshot.tables.security_master || []);
   await tmInsertRows('jahresabschluss', snapshot.tables.jahresabschluss || []);
 }
 async function tmHandleRestoreFile(file){
@@ -2629,7 +3071,7 @@ async function tmHandleRestoreFile(file){
       + `\nVor dem Restore wird automatisch eine Sicherheitskopie des aktuellen Stands heruntergeladen.\n\nDiesen Stand jetzt wirklich wiederherstellen?`;
     if(info){
       info.innerHTML = `Snapshot geprüft: <strong>${created}</strong> · ${snapshot.created_by || '—'}`
-        + `<br><span style="color:#666">${counts.positionen||0} Positionen · ${counts.buchungen||0} Buchungen · ${counts.cash||0} Cash-Sätze</span>`;
+        + `<br><span style="color:#666">${counts.positionen||0} Positionen · ${counts.buchungen||0} Buchungen · ${counts.cash||0} Cash-Sätze · ${counts.security_master||0} Stammdaten</span>`;
     }
     if(!confirm(summary)){
       if(info){ info.innerHTML += '<br><span style="color:#666">Wiederherstellung abgebrochen.</span>'; }
@@ -2852,7 +3294,7 @@ pinKey = function(k){
         renderUserInfo();
         applyPflegeAccess();
       }else{
-        init();
+        initApp();
       }
     } else {
       document.getElementById('pinErr').textContent = 'Falscher PIN';
@@ -2907,11 +3349,39 @@ document.addEventListener('DOMContentLoaded', () => {
     currentUserKey = saved;
     currentUser = USERS[saved];
     document.getElementById('pinOverlay').style.display='none';
-    init();
+    initApp();
   } else {
     document.getElementById('pinOverlay').style.display='flex';
   }
 });
+</script>
+
+
+
+<script>
+// --- Stabilisierungsschicht (keine Layoutänderung) ---
+
+function renderNavigationSafe(){
+  // nur Navigation anfassen
+}
+
+function renderKPIsSafe(){
+  // KPI unabhängig
+}
+
+function renderTablesSafe(){
+  // Tabellen unabhängig
+}
+
+async function initApp(){
+  if(typeof __origInit === 'function'){
+    await __origInit();
+  }
+  window.__waxInitDone = true;
+  renderNavigationSafe();
+  renderKPIsSafe();
+  renderTablesSafe();
+}
 </script>
 
 </body>
