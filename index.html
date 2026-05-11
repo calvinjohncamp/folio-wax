@@ -1033,12 +1033,22 @@ function upsertSecurityMasterLocal(entry){
   db.security_master = mergeSecurityEntries(db.security_master, [entry]);
 }
 async function persistSecurityMeta(entry){
-  const payload = { ...entry, wkn:repairKnownWkn(entry.wkn), updated_at:new Date().toISOString() };
+  const payload = {
+    wkn: repairKnownWkn(entry.wkn),
+    ticker: String(entry.ticker || entry.yahoo_ticker || '').trim().toUpperCase(),
+    name: String(entry.name || entry.bezeichnung || '').trim(),
+    asset_type: String(entry.asset_type || entry.art || '').trim(),
+    category: String(entry.category || '').trim(),
+    country: String(entry.country || '').trim(),
+    exchange: String(entry.exchange || '').trim(),
+    updated_at: new Date().toISOString()
+  };
   if (!payload.wkn) return { ok:false, error:'WKN fehlt' };
   unmarkSecurityMasterDeleted(payload.wkn);
 
-  // Hartes Supabase-Speichern: PATCH gilt nur als Erfolg, wenn wirklich eine Zeile geändert wurde.
-  // Falls keine Zeile existiert, wird sauber per POST neu angelegt.
+  // Supabase-Schema-Fit: security_master besitzt aktuell nur
+  // wkn, ticker, name, asset_type, category, country, exchange, created_at, updated_at.
+  // Währung wird NICHT in Supabase gespeichert, sondern dynamisch aus dem Ticker abgeleitet.
   try {
     const patch = await sbPatchDetailed('security_master', `wkn=eq.${encodeURIComponent(payload.wkn)}`, payload);
     if (patch.ok && Array.isArray(patch.rows) && patch.rows.length > 0) {
@@ -1179,8 +1189,8 @@ function refreshKaufMetaUI(){
     setKnownSecurityFormState(meta);
     info.style.display = 'block';
     wrap.style.display = 'none';
-    const ticker = (meta.yahoo_ticker || meta.ticker || '').trim();
-    const ccy = normalizeCurrency(meta.currency || meta.fx || 'EUR');
+    const ticker = (meta.ticker || meta.yahoo_ticker || '').trim();
+    const ccy = normalizeCurrency(inferCurrencyFromTicker(ticker));
     info.innerHTML = `<span class="ok">Wertpapier bereits erfasst.</span><br><strong>${escapeHtml(meta.name || meta.bezeichnung || wkn)}</strong><div class="meta-grid"><div><strong>Kategorie</strong><br>${escapeHtml(meta.category || '—')}</div><div><strong>Land</strong><br>${escapeHtml(meta.country || '—')}</div><div><strong>Börse</strong><br>${escapeHtml(meta.exchange || '—')}</div></div><div style="margin-top:6px"><strong>Yahoo:</strong> ${escapeHtml(ticker || '—')} / ${escapeHtml(ccy)}</div>`;
     ['fCategory','fCountry','fExchange'].forEach(id => { const el = document.getElementById(id); if (el) el.value = meta[id === 'fCategory' ? 'category' : id === 'fCountry' ? 'country' : 'exchange'] || ''; });
     const tEl = document.getElementById('fTicker'); if (tEl) tEl.value = ticker;
@@ -1221,7 +1231,7 @@ async function ensureSecurityMetaForForm(){
   if (!category || !country || !exchange) return { ok:false, message:'Bitte für neue Wertpapiere Kategorie, Land und Börse auswählen.' };
   if (!ticker) return { ok:false, message:'Bitte für neue Wertpapiere den Yahoo-Ticker eintragen oder bestätigen.' };
   const asset_type = document.getElementById('fArt').value;
-  const entry = { wkn, name, ticker, yahoo_ticker: ticker, currency, fx:currency, asset_type, category, country, exchange };
+  const entry = { wkn, name, ticker, asset_type, category, country, exchange };
   const remote = await persistSecurityMeta(entry);
   return { ok:true, remote, entry, existing:false };
 }
@@ -2943,10 +2953,7 @@ async function saveTickerForWkn(wkn){
     ...existing,
     wkn: key,
     name: existing.name || pos.bezeichnung || key,
-    yahoo_ticker: ticker,
     ticker,
-    currency,
-    fx: currency,
     asset_type: existing.asset_type || pos.art || 'Aktie',
     category: existing.category || 'Nicht zugeordnet',
     country: existing.country || 'Nicht zugeordnet',
@@ -3014,8 +3021,8 @@ function getSecurityMasterScopeRows(){
       category: meta.category || 'Nicht zugeordnet',
       country: meta.country || 'Nicht zugeordnet',
       exchange: meta.exchange || 'Nicht zugeordnet',
-      ticker: meta.yahoo_ticker || meta.ticker || tickerInfo.t || '',
-      currency: normalizeCurrency(meta.currency || meta.fx || tickerInfo.fx || 'EUR')
+      ticker: meta.ticker || meta.yahoo_ticker || tickerInfo.t || '',
+      currency: normalizeCurrency(tickerInfo.fx || inferCurrencyFromTicker(meta.ticker || meta.yahoo_ticker || tickerInfo.t || ''))
     };
     return row;
   }).filter(row => !q || [row.wkn,row.name,row.ticker,row.category,row.country,row.exchange].join(' ').toLowerCase().includes(q));
@@ -3074,10 +3081,8 @@ function readSecurityMasterRowFromUi(wkn){
     category:(document.getElementById('sm_cat_'+key)?.value || '').trim(),
     country:(document.getElementById('sm_country_'+key)?.value || '').trim(),
     exchange:(document.getElementById('sm_exchange_'+key)?.value || '').trim(),
-    yahoo_ticker:(document.getElementById('sm_ticker_'+key)?.value || '').trim().toUpperCase(),
     ticker:(document.getElementById('sm_ticker_'+key)?.value || '').trim().toUpperCase(),
-    currency:normalizeCurrency(document.getElementById('sm_ccy_'+key)?.value || 'EUR'),
-    fx:normalizeCurrency(document.getElementById('sm_ccy_'+key)?.value || 'EUR')
+    currency:normalizeCurrency(document.getElementById('sm_ccy_'+key)?.value || inferCurrencyFromTicker(document.getElementById('sm_ticker_'+key)?.value || ''))
   };
 }
 async function testSecurityMasterTicker(wkn){
