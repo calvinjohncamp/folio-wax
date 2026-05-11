@@ -712,14 +712,17 @@ function getTickerInfoFromMeta(meta){
   const fx = normalizeCurrency(meta.currency || meta.fx || '');
   return ticker ? { t:ticker, fx, source:'security_master' } : null;
 }
-// Ticker-Auflösung: Security Master zuerst, TICKER_MAP als Fallback
+// Ticker-Auflösung: TICKER_MAP hat höchste Priorität (enthält immer EUR-Handelsplätze),
+// Security Master (Supabase/localStorage) nur als Fallback für manuell gepflegte Einträge.
 function resolveTickerByWKN(wkn){
   const key = repairKnownWkn(wkn);
+  // TICKER_MAP gewinnt immer — er enthält die geprüften EUR-Handelsplatz-Ticker.
+  const mapEntry = TICKER_MAP[key];
+  if (mapEntry?.t) return { t:String(mapEntry.t).trim().toUpperCase(), fx:normalizeCurrency(mapEntry.fx), source:'ticker_map' };
+  // Nur für WKNs, die NICHT im TICKER_MAP stehen, Security Master befragen.
   const meta = findSecurityMeta({ wkn:key });
   const metaInfo = getTickerInfoFromMeta(meta);
   if (metaInfo) return metaInfo;
-  const fallback = TICKER_MAP[key];
-  if (fallback?.t) return { t:String(fallback.t).trim().toUpperCase(), fx:normalizeCurrency(fallback.fx), source:'ticker_map' };
   return null;
 }
 function sanitizePositionRow(p) {
