@@ -4,6 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
 <meta name="mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-title" content="Folio.wax">
 <title>Folio.wax · Aktienclub</title>
@@ -183,6 +184,36 @@ body::-webkit-scrollbar {
   display: none !important;
   background: transparent !important;
 }
+
+/* Transparenzmodus Pflegebereich: Mitglieder sehen alles, können aber nichts ändern */
+.pflege-readonly input:disabled,
+.pflege-readonly select:disabled,
+.pflege-readonly textarea:disabled {
+  opacity: 1 !important;
+  color: #333 !important;
+  -webkit-text-fill-color: #333 !important;
+  background: #f7f5f2 !important;
+  border-color: #ddd !important;
+  cursor: default !important;
+}
+.pflege-readonly button:disabled,
+.pflege-readonly .admin-disabled {
+  opacity: .48 !important;
+  cursor: not-allowed !important;
+}
+.pflege-readonly .kpi.admin-disabled {
+  background: #f7f5f2 !important;
+}
+.pflege-access-note {
+  background: #f7f5f2;
+  border: 1px solid #d8d4ce;
+  padding: 10px 12px;
+  margin: -4px 0 14px 0;
+  font-size: 11px;
+  color: #555;
+  line-height: 1.5;
+}
+.pflege-access-note strong { color:#1a1814; }
 
 /* Ticker-Pflege */
 .ticker-warn{display:inline-block;font-size:9px;font-weight:700;padding:2px 6px;border-radius:2px;background:#fde8e8;color:#8a1010;border:1px solid #e8b0b0}
@@ -435,6 +466,7 @@ if (window.caches && caches.keys) {
 
 <div id="view-pflege" style="display:none">
   <div class="sec-t" style="margin-top:4px"><span class="sec-n">5 ·</span> Datenpflege — Administratorfunktionen</div>
+  <div id="pflegeAccessNote" class="pflege-access-note"></div>
   <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:12px;margin-bottom:12px">
     <div class="kpi" style="cursor:pointer;border:1px solid #d8d4ce" onclick="openModal('kauf')">
       <div class="kpi-l">Transaktion</div><div class="kpi-v" style="font-size:14px">+ Kauf / Verkauf</div><div class="kpi-s">Position eintragen</div>
@@ -2790,6 +2822,7 @@ function renderPflege() {
   renderEhrungen();
   renderMissingTickerTable();
   renderSecurityMasterTable();
+  applyPflegeAccess();
 }
 
 function escapeHtml(s){ return String(s||'').replace(/[&<>'"]/g,ch=>({'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#39;','"':'&quot;'}[ch])); }
@@ -3001,6 +3034,7 @@ function renderSecurityMasterTable(){
       if (action==='delete') deleteSecurityMasterRow(wkn);
     });
   });
+  applyPflegeAccess();
 }
 function readSecurityMasterRowFromUi(wkn){
   const key = repairKnownWkn(wkn);
@@ -3054,6 +3088,7 @@ function renderEhrungen() {
 
 // MODALS
 function openModal(type) {
+  if(!isAdmin()){ alert('Transparenzmodus: Nur der Administrator kann im Pflegebereich Änderungen erfassen.'); return; }
   document.getElementById('modalOverlay').style.display='flex';
   ['modalKauf','modalFreigabe','modalReise','modalComdirect'].forEach(id=>document.getElementById(id).style.display='none');
   const map={kauf:'modalKauf',freigabe:'modalFreigabe',reise:'modalReise',comdirect:'modalComdirect'};
@@ -3077,6 +3112,7 @@ function updateKaufVorschau() {
 }
 
 async function saveKauf() {
+  if(!isAdmin()){ alert('Nur für den Administrator.'); return; }
   const typ=document.getElementById('fTyp').value;
   const mid=parseInt(document.getElementById('fMitglied').value);
   const datum=document.getElementById('fDatum').value;
@@ -3131,6 +3167,7 @@ function calcFreigabe() {
 }
 
 async function saveFreigabe() {
+  if(!isAdmin()){ alert('Nur für den Administrator.'); return; }
   const betrag=parseFloat(document.getElementById('frBetrag').value);
   const datum=document.getElementById('frDatum').value;
   if(!betrag||!datum){alert('Bitte Betrag und Datum angeben.');return;}
@@ -3202,6 +3239,7 @@ function showReiseBestätigung() {
 }
 
 async function saveReise() {
+  if(!isAdmin()){ alert('Nur für den Administrator.'); return; }
   if(!reiseVorschauData){calcReise();return;}
   const name=document.getElementById('rName').value.trim();
   const datum=document.getElementById('rDatum').value;
@@ -3335,6 +3373,7 @@ async function undoGroupedCashBooking(last, sign) {
 }
 
 async function saveComdirect() {
+  if(!isAdmin()){ alert('Nur für den Administrator.'); return; }
   const betrag = parseFloat(document.getElementById('cdBetrag').value);
   const datum = document.getElementById('cdDatum').value;
   if(!betrag||!datum){alert('Bitte Betrag und Datum angeben.');return;}
@@ -3624,6 +3663,7 @@ function vorschauJahresabschluss() {
 }
 
 async function saveJahresabschluss(jahr) {
+  if(!isAdmin()){ alert('Nur für den Administrator.'); return; }
   if(!confirm(`Jahresabschluss ${jahr} wirklich einfrieren?\n\nDies setzt:\n• REF-Werte für alle 6 Mitglieder\n• kurs_ref + wert_ref für alle aktiven Positionen\n\nDieser Schritt kann nicht rückgängig gemacht werden.`)) return;
   
   const info = document.getElementById('jahresabschlussInfo');
@@ -3708,27 +3748,37 @@ function renderUserInfo(){
   el.textContent = currentUser.name;
 }
 
-function getPflegeAdminElements(){
+function getPflegeWriteElements(){
   const root = document.getElementById('view-pflege');
   if(!root) return [];
-  return Array.from(root.querySelectorAll('[onclick], button')).filter(el => {
-    if(el.closest('#cashBody') || el.closest('#cashFoot') || el.closest('#comdirectInfo') || el.closest('#jahresabschlussInfo') || el.closest('#jahresabschlussVorschau')) return false;
+  return Array.from(root.querySelectorAll('input, select, textarea, button, [onclick]')).filter(el => {
     if(el.id === 'view-pflege') return false;
+    if(el.id === 'pflegeAccessNote') return false;
     return true;
   });
 }
 
 function applyPflegeAccess(){
+  const root = document.getElementById('view-pflege');
+  const note = document.getElementById('pflegeAccessNote');
   const disabled = !isAdmin();
-  getPflegeAdminElements().forEach(el => {
+  if(root) root.classList.toggle('pflege-readonly', disabled);
+  if(note){
+    note.innerHTML = disabled
+      ? '<strong>Transparenzmodus:</strong> Du siehst die Datenpflege vollständig. Änderungen, Buchungen, Speicher- und Löschfunktionen sind nur für den Administrator freigeschaltet.'
+      : '<strong>Admin-Modus:</strong> Du kannst Buchungen, Stammdaten, Kursdaten, Cash-Bestände, Snapshots und Jahresabschluss-Funktionen bearbeiten.';
+  }
+  getPflegeWriteElements().forEach(el => {
     if(disabled){
       el.classList.add('admin-disabled');
       el.setAttribute('aria-disabled','true');
-      el.title = 'Nur für Administrator';
+      el.title = 'Nur der Administrator kann hier Änderungen vornehmen';
+      if(['INPUT','SELECT','TEXTAREA','BUTTON'].includes(el.tagName)) el.disabled = true;
     }else{
       el.classList.remove('admin-disabled');
       el.removeAttribute('aria-disabled');
       el.removeAttribute('title');
+      if(['INPUT','SELECT','TEXTAREA','BUTTON'].includes(el.tagName)) el.disabled = false;
     }
   });
 }
