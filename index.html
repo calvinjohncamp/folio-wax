@@ -481,11 +481,14 @@ if (window.caches && caches.keys) {
       <div class="kpi-l">Cash-Bestand</div><div class="kpi-v" style="font-size:13px">Comdirect aktuell</div><div class="kpi-s">manuell eintragen</div>
     </div>
   </div>
-  <div style="display:grid;grid-template-columns:repeat(4,minmax(180px,1fr));gap:12px;margin:-4px 0 20px">
-    <button class="btn btn-outline" style="text-align:left;padding-left:16px" onclick="deleteLastBookingByGroup('kauf')"><span style="font-size:20px;line-height:1;display:inline-block;vertical-align:-2px;margin-right:8px">×</span>Letzten Kauf löschen</button>
-    <button class="btn btn-outline" style="text-align:left;padding-left:16px" onclick="deleteLastBookingByGroup('verkauf')"><span style="font-size:20px;line-height:1;display:inline-block;vertical-align:-2px;margin-right:8px">×</span>Letzten Verkauf löschen</button>
+  <div style="display:grid;grid-template-columns:repeat(4,minmax(180px,1fr));gap:12px;margin:-4px 0 20px;align-items:start">
+    <div style="display:flex;flex-direction:column;gap:8px">
+      <button class="btn btn-outline" style="text-align:left;padding-left:16px" onclick="deleteLastBookingByGroup('kauf')"><span style="font-size:20px;line-height:1;display:inline-block;vertical-align:-2px;margin-right:8px">×</span>Letzten Kauf löschen</button>
+      <button class="btn btn-outline" style="text-align:left;padding-left:16px" onclick="deleteLastBookingByGroup('verkauf')"><span style="font-size:20px;line-height:1;display:inline-block;vertical-align:-2px;margin-right:8px">×</span>Letzten Verkauf löschen</button>
+    </div>
     <button class="btn btn-outline" style="text-align:left;padding-left:16px" onclick="deleteLastBookingByGroup('freigabe')"><span style="font-size:20px;line-height:1;display:inline-block;vertical-align:-2px;margin-right:8px">×</span>Letzte Freigabe löschen</button>
     <button class="btn btn-outline" style="text-align:left;padding-left:16px" onclick="deleteLastBookingByGroup('reise')"><span style="font-size:20px;line-height:1;display:inline-block;vertical-align:-2px;margin-right:8px">×</span>Letzte Reise löschen</button>
+    <div></div>
   </div>
   <div class="sec-t"><span class="sec-n">5.1 ·</span> Cash-Bestände der Mitglieder</div>
   <div class="tw"><table>
@@ -3353,23 +3356,30 @@ Alltime-Werte und Performance seit Start p.a. werden dafür künftig automatisch
 }
 
 
-function getLastBookingByGroup(group) {
-  const rows = [...(db.buchungen||[])].sort((a,b)=> {
-    const da = (a.datum||'') + ' ' + String(a.id||'').padStart(10,'0');
-    const dbb = (b.datum||'') + ' ' + String(b.id||'').padStart(10,'0');
-    return dbb.localeCompare(da);
-  });
-  const typOf = b => String(b.typ||'').trim().toUpperCase();
-  if(group==='kauf') return rows.find(b=>typOf(b)==='KAUF') || null;
-  if(group==='verkauf') return rows.find(b=>typOf(b)==='VERKAUF') || null;
-  if(group==='transaktion') return rows.find(b=>typOf(b)==='KAUF' || typOf(b)==='VERKAUF') || null;
-  if(group==='freigabe') return rows.find(b=>typOf(b)==='FREIGABE') || null;
-  if(group==='reise') return rows.find(b=>typOf(b)==='REISE') || null;
-  return null;
+async function getLastBookingByGroup(group) {
+  const typMap = { kauf:'KAUF', verkauf:'VERKAUF', transaktion:null, freigabe:'FREIGABE', reise:'REISE' };
+  const typ = typMap[group];
+
+  // Wichtig: nicht mehr nur aus db.buchungen lesen, weil dort aus Performancegründen
+  // nur die letzten 200 Buchungen geladen werden. Für Undo muss Supabase direkt gefragt werden.
+  let query = 'order=datum.desc,id.desc&limit=1';
+  if (group === 'transaktion') {
+    const buys = await sbGet('buchungen', 'typ=eq.KAUF&order=datum.desc,id.desc&limit=1');
+    const sells = await sbGet('buchungen', 'typ=eq.VERKAUF&order=datum.desc,id.desc&limit=1');
+    const rows = [...(buys||[]), ...(sells||[])].sort((a,b)=> {
+      const da = (a.datum||'') + ' ' + String(a.id||'').padStart(12,'0');
+      const dbb = (b.datum||'') + ' ' + String(b.id||'').padStart(12,'0');
+      return dbb.localeCompare(da);
+    });
+    return rows[0] || null;
+  }
+  if (typ) query = `typ=eq.${encodeURIComponent(typ)}&` + query;
+  const rows = await sbGet('buchungen', query);
+  return rows && rows[0] ? rows[0] : null;
 }
 function buildDeleteSummary(group, last) {
   const parts = [];
-  parts.push(`${formatDate(last.datum)} · ${last.typ}`);
+  parts.push(`${fdate(last.datum)} · ${last.typ}`);
   if(last.bezeichnung) parts.push(last.bezeichnung);
   if(last.wkn) parts.push(last.wkn);
   if(last.stueck) parts.push(`${formatStueckSafe(last.stueck)} Stk.`);
@@ -3407,8 +3417,8 @@ async function deleteLastBookingByGroup(group) {
     alert('Produktivschutz aktiv: Undo/Löschen ist in dieser Index-Datei gesperrt.');
     return;
   }
-  const last = getLastBookingByGroup(group);
   const labelMap = {kauf:'Letzter Kauf', verkauf:'Letzter Verkauf', transaktion:'Letzte Transaktion', freigabe:'Letzte Cash-Freigabe', reise:'Letzte Reise'};
+  const last = await getLastBookingByGroup(group);
   if(!last){ alert(`Keine passende Buchung vorhanden: ${labelMap[group] || group}.`); return; }
   const lastTyp = String(last.typ||'').trim().toUpperCase();
   const summary = buildDeleteSummary(group, last);
