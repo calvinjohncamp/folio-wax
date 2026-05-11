@@ -520,8 +520,11 @@ if (window.caches && caches.keys) {
 
   <div class="sec-t" style="margin-top:28px"><span class="sec-n">5.6 ·</span> Stammdaten bekannte Wertpapiere</div>
   <div class="info-box" style="margin-bottom:12px">
-    Hier werden nur Wertpapiere angezeigt, die <strong>aktuell in einem Einzeldepot liegen</strong> oder im <strong>aktuellen Jahr gekauft/verkauft</strong> wurden.<br>
-    Vorjahres-Positionen, die nicht mehr im Depot sind, bleiben ausgeblendet. Änderungen betreffen den Security Master, nicht die Buchungen.
+    Standard: aktuelle Depotpositionen plus Käufe/Verkäufe im laufenden Jahr. Mit <strong>Alle bekannten Wertpapiere</strong> wird der komplette Security Master sichtbar. Änderungen betreffen Stammdaten, nicht Buchungen.
+  </div>
+  <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-bottom:10px">
+    <button class="btn btn-outline" id="smScopeBtn" onclick="toggleSecurityMasterScope()">Alle bekannten Wertpapiere anzeigen</button>
+    <input class="form-input" id="smSearch" oninput="renderSecurityMasterTable()" placeholder="Suche WKN, Name oder Ticker" style="max-width:320px">
   </div>
   <div id="securityMasterInfo" style="font-size:12px;color:#666;margin-bottom:10px"></div>
   <div class="tw" id="securityMasterWrap">
@@ -574,6 +577,10 @@ if (window.caches && caches.keys) {
       <div class="form-row-2">
         <div class="form-row"><label class="form-label">Land</label><select class="form-input" id="fCountry"></select></div>
         <div class="form-row"><label class="form-label">Börse</label><select class="form-input" id="fExchange"></select></div>
+      </div>
+      <div class="form-row-2">
+        <div class="form-row"><label class="form-label">Yahoo-Ticker Vorschlag</label><input type="text" class="form-input" id="fTicker" placeholder="z. B. SXR8.DE"></div>
+        <div class="form-row"><label class="form-label">Währung</label><select class="form-input" id="fCurrency"><option>EUR</option><option>USD</option><option>CHF</option><option>CAD</option><option>AUD</option></select></div>
       </div>
     </div>
     <div class="form-row"><label class="form-label">Notiz</label><input type="text" class="form-input" id="fNotiz"></div>
@@ -706,6 +713,10 @@ const TICKER_MAP = {
   'A3DESP': { t:'IPX.AX',         fx:'AUD' },
   // CAD → EUR
   'A2PX5N': { t:'GRSL.V',        fx:'CAD' },
+  'A14Y6F': { t:'GOOGL',       fx:'USD' },
+  'A3C4QT': { t:'IONQ',        fx:'USD' },
+  'A2PMPY': { t:'AUMB.V',      fx:'CAD' },
+  'A2T68Z': { t:'AETH.DE',     fx:'EUR' },
 };
 
 
@@ -733,18 +744,29 @@ function getTickerInfoFromMeta(meta){
   const fx = normalizeCurrency(meta.currency || meta.fx || '');
   return ticker ? { t:ticker, fx, source:'security_master' } : null;
 }
-// Ticker-Auflösung: TICKER_MAP hat höchste Priorität (geprüfte Heimatbörsen-Ticker + Währung),
-// Security Master (Supabase/localStorage) nur als Fallback für manuell gepflegte Einträge.
+// Ticker-Auflösung: Security Master ist führend. TICKER_MAP dient nur als geprüfter Fallback/Vorschlag.
 function resolveTickerByWKN(wkn){
   const key = repairKnownWkn(wkn);
-  // TICKER_MAP gewinnt immer — er enthält geprüfte Heimatbörsen-Ticker inkl. Währung.
-  const mapEntry = TICKER_MAP[key];
-  if (mapEntry?.t) return { t:String(mapEntry.t).trim().toUpperCase(), fx:normalizeCurrency(mapEntry.fx), source:'ticker_map' };
-  // Nur für WKNs, die NICHT im TICKER_MAP stehen, Security Master befragen.
   const meta = findSecurityMeta({ wkn:key });
   const metaInfo = getTickerInfoFromMeta(meta);
   if (metaInfo) return metaInfo;
+  const mapEntry = TICKER_MAP[key];
+  if (mapEntry?.t) return { t:String(mapEntry.t).trim().toUpperCase(), fx:normalizeCurrency(mapEntry.fx), source:'ticker_map' };
   return null;
+}
+function getSecurityMasterDefault(wkn){
+  const key = repairKnownWkn(wkn);
+  const d = { ...(SECURITY_MASTER_DEFAULTS[key] || {}), ...(SECURITY_MASTER_CORRECTIONS[key] || {}) };
+  const t = TICKER_MAP[key] || {};
+  return { wkn:key, ...d, ticker:d.ticker || d.yahoo_ticker || t.t || '', yahoo_ticker:d.yahoo_ticker || d.ticker || t.t || '', currency:normalizeCurrency(d.currency || d.fx || t.fx || 'EUR'), fx:normalizeCurrency(d.fx || d.currency || t.fx || 'EUR') };
+}
+function securityDisplayName(wkn, fallback=''){
+  const meta = findSecurityMeta({ wkn });
+  return (meta && (meta.name || meta.bezeichnung)) || fallback || repairKnownWkn(wkn) || '';
+}
+function securityAssetType(wkn, fallback=''){
+  const meta = findSecurityMeta({ wkn });
+  return (meta && (meta.asset_type || meta.art)) || fallback || '';
 }
 function sanitizePositionRow(p) {
   const row = { ...p };
@@ -825,7 +847,7 @@ const SECURITY_MASTER_DEFAULTS = {
   'A2T0VS': { name:'Xtrackers Silver ETC', category:'Precious Metals', country:'Europa', exchange:'Xetra' },
   'A1KWPR': { name:'Verallia', category:'Industrials & Mobility', country:'Europa', exchange:'Xetra' },
   'A0YEDG': { name:'iShares Core S&P 500 ETF', category:'Broad Market ETF', country:'USA', exchange:'Xetra', asset_type:'ETF', yahoo_ticker:'SXR8.DE', ticker:'SXR8.DE', currency:'EUR', fx:'EUR' },
-  'EWG2LD': { name:'WisdomTree Uranium', category:'Energy & Utilities', country:'Europa', exchange:'Xetra' },
+  'EWG2LD': { name:'Euwax Gold', category:'Precious Metals', country:'Deutschland', exchange:'Xetra', asset_type:'ETC', yahoo_ticker:'EWG2.DE', ticker:'EWG2.DE', currency:'EUR', fx:'EUR' },
   'A0Q4DC': { name:'Nestlé', category:'Consumer & Brands', country:'Schweiz', exchange:'SIX Swiss Exchange' },
   '906866': { name:'Amazon', category:'Consumer & Brands', country:'USA', exchange:'NASDAQ' },
   '850471': { name:'Boeing', category:'Industrials & Mobility', country:'USA', exchange:'NYSE' },
@@ -833,7 +855,7 @@ const SECURITY_MASTER_DEFAULTS = {
   '932798': { name:'Dominion Energy', category:'Energy & Utilities', country:'USA', exchange:'NYSE' },
   'A2JG9Z': { name:'Broadcom', category:'Semiconductors & AI Infrastructure', country:'USA', exchange:'NASDAQ' },
   '870747': { name:'Microsoft', category:'Technology & Software', country:'USA', exchange:'NASDAQ' },
-  'A4A59K': { name:'iShares Bitcoin Trust ETP', category:'Digital Assets & Crypto', country:'Europa', exchange:'Xetra' },
+  'A4A59K': { name:'iShares Bitcoin Trust ETP', category:'Digital Assets & Crypto', country:'Europa', exchange:'Xetra', asset_type:'ETP', yahoo_ticker:'IB1T.DE', ticker:'IB1T.DE', currency:'EUR', fx:'EUR' },
   'A3CL8W': { name:'AST SpaceMobile', category:'Technology & Software', country:'USA', exchange:'NASDAQ' },
   'A3CVQC': { name:'Robinhood', category:'Financial Services', country:'USA', exchange:'NASDAQ' },
   'A3DHHB': { name:'Applied Digital', category:'Semiconductors & AI Infrastructure', country:'USA', exchange:'NASDAQ' },
@@ -849,7 +871,16 @@ const SECURITY_MASTER_DEFAULTS = {
   'A0YAND': { name:'Kratos Defense', category:'Industrials & Mobility', country:'USA', exchange:'NASDAQ' },
   'A12GD6': { name:'Viking Therapeutics', category:'Healthcare & Biotech', country:'USA', exchange:'NASDAQ' },
   'A3DESP': { name:'IPERIONX', category:'Industrials & Mobility', country:'Australien', exchange:'ASX' },
-  'A2PX5N': { name:'Gogold / Gold Silver', category:'Precious Metals', country:'Kanada', exchange:'TSX Venture' }
+  'A2PX5N': { name:'Gogold / Gold Silver', category:'Precious Metals', country:'Kanada', exchange:'TSX Venture' },
+  'A14Y6F': { name:'Alphabet A', category:'Technology & Software', country:'USA', exchange:'NASDAQ', asset_type:'Aktie', yahoo_ticker:'GOOGL', ticker:'GOOGL', currency:'USD', fx:'USD' },
+  'A3C4QT': { name:'IonQ A', category:'Technology & Software', country:'USA', exchange:'NYSE', asset_type:'Aktie', yahoo_ticker:'IONQ', ticker:'IONQ', currency:'USD', fx:'USD' },
+  'A2PMPY': { name:'1911 Gold Corp', category:'Precious Metals', country:'Kanada', exchange:'TSX Venture', asset_type:'Aktie', yahoo_ticker:'AUMB.V', ticker:'AUMB.V', currency:'CAD', fx:'CAD' },
+  'A2T68Z': { name:'Sonst. Zertifikat auf Ethereum', category:'Digital Assets & Crypto', country:'Europa', exchange:'Xetra', asset_type:'Zertifikat', yahoo_ticker:'AETH.DE', ticker:'AETH.DE', currency:'EUR', fx:'EUR' }
+};
+const SECURITY_MASTER_CORRECTIONS = {
+  'A0YEDG': { name:'iShares Core S&P 500 UCITS ETF', category:'Broad Market ETF', country:'USA', exchange:'Xetra', asset_type:'ETF', yahoo_ticker:'SXR8.DE', ticker:'SXR8.DE', currency:'EUR', fx:'EUR' },
+  'EWG2LD': { name:'Euwax Gold', category:'Precious Metals', country:'Deutschland', exchange:'Xetra', asset_type:'ETC', yahoo_ticker:'EWG2.DE', ticker:'EWG2.DE', currency:'EUR', fx:'EUR' },
+  'A4A59K': { name:'iShares Bitcoin Trust ETP', category:'Digital Assets & Crypto', country:'Europa', exchange:'Xetra', asset_type:'ETP', yahoo_ticker:'IB1T.DE', ticker:'IB1T.DE', currency:'EUR', fx:'EUR' }
 };
 function normalizeSecurityText(v){ return String(v||'').trim().toLowerCase(); }
 function getLocalSecurityMaster(){
@@ -886,8 +917,9 @@ function mergeSecurityEntries(base, extra){
 function hydrateSecurityMaster(){
   const remote = Array.isArray(db.security_master) ? db.security_master : [];
   const defaults = Object.entries(SECURITY_MASTER_DEFAULTS).map(([wkn,row]) => ({ wkn, ...row }));
+  const corrections = Object.entries(SECURITY_MASTER_CORRECTIONS).map(([wkn,row]) => ({ wkn, ...row }));
   const deleted = new Set(getDeletedSecurityMaster().map(repairKnownWkn));
-  db.security_master = mergeSecurityEntries(defaults, mergeSecurityEntries(remote, getLocalSecurityMaster()))
+  db.security_master = mergeSecurityEntries(mergeSecurityEntries(defaults, remote), mergeSecurityEntries(getLocalSecurityMaster(), corrections))
     .filter(row => !deleted.has(repairKnownWkn(row.wkn)));
 }
 async function syncLocalSecurityMasterToSupabase(){
@@ -911,16 +943,22 @@ async function syncLocalSecurityMasterToSupabase(){
 }
 function findSecurityMeta({ wkn='', name='' } = {}){
   const key = repairKnownWkn(wkn);
+  if (key) {
+    const byWkn = (db.security_master || []).find(row => repairKnownWkn(row.wkn) === key);
+    if (byWkn) return byWkn;
+  }
   const nameKey = normalizeSecurityText(name);
+  if (!nameKey) return null;
   return (db.security_master || []).find(row => {
-    const rowWkn = repairKnownWkn(row.wkn);
     const rowName = normalizeSecurityText(row.name || row.bezeichnung);
-    return (key && rowWkn === key) || (nameKey && rowName && rowName === nameKey);
+    return rowName && rowName === nameKey;
   }) || null;
 }
 function getEffectiveMetaForPosition(p){
   const found = findSecurityMeta({ wkn:p?.wkn, name:p?.bezeichnung });
   return {
+    name: found?.name || found?.bezeichnung || p?.bezeichnung || '',
+    asset_type: found?.asset_type || found?.art || p?.art || '',
     category: found?.category || 'Nicht zugeordnet',
     country: found?.country || 'Nicht zugeordnet',
     exchange: found?.exchange || 'Nicht zugeordnet'
@@ -1011,44 +1049,102 @@ function refreshOverviewStructure(){
   const positions = db.positionen.filter(p => !p.verkauft && num(p.stueck) > 0);
   el.innerHTML = renderStructureHtml(positions, 'Gesamtdepot WAX');
 }
+function suggestMetaForForm(){
+  const wkn = repairKnownWkn(document.getElementById('fWkn')?.value || '');
+  const art = document.getElementById('fArt')?.value || '';
+  const existing = findSecurityMeta({ wkn });
+  if (existing) return { source:'security_master', ...existing, wkn };
+  const def = getSecurityMasterDefault(wkn);
+  const hasDef = !!(def.name || def.ticker || def.yahoo_ticker || def.category);
+  if (hasDef) return { source:'vorschlag', ...def, asset_type:def.asset_type || art || 'Aktie' };
+  return { source:'heuristik', wkn, name:'', asset_type:art || 'Aktie', category:'', country:'', exchange:'', ticker:'', yahoo_ticker:'', currency:'EUR', fx:'EUR' };
+}
+function applyHeuristicTickerSuggestion(){
+  const art = document.getElementById('fArt')?.value || '';
+  const country = document.getElementById('fCountry')?.value || '';
+  const exchange = document.getElementById('fExchange')?.value || '';
+  const tEl = document.getElementById('fTicker');
+  const cEl = document.getElementById('fCurrency');
+  if (!tEl || !cEl) return;
+  const current = String(tEl.value||'').trim();
+  if (!current) {
+    if (country==='Deutschland' || exchange==='Xetra' || exchange==='Tradegate' || /ETC|ETP|Zertifikat/i.test(art)) cEl.value='EUR';
+    else if (country==='USA' || exchange==='NASDAQ' || exchange==='NYSE') cEl.value='USD';
+    else if (country==='Schweiz' || exchange==='SIX Swiss Exchange') cEl.value='CHF';
+    else if (country==='Kanada' || exchange==='TSX Venture') cEl.value='CAD';
+    else if (country==='Australien' || exchange==='ASX') cEl.value='AUD';
+  }
+}
+function setKnownSecurityFormState(meta){
+  const bez = document.getElementById('fBez');
+  const art = document.getElementById('fArt');
+  if (bez) { bez.value = meta.name || meta.bezeichnung || bez.value; bez.readOnly = true; bez.style.background = '#f5f2ed'; }
+  if (art && (meta.asset_type || meta.art)) art.value = meta.asset_type || meta.art;
+}
+function setNewSecurityFormState(suggestion){
+  const bez = document.getElementById('fBez');
+  if (bez) { bez.readOnly = false; bez.style.background = ''; if(!bez.value && suggestion.name) bez.value = suggestion.name; }
+  const art = document.getElementById('fArt');
+  if (art && suggestion.asset_type) art.value = suggestion.asset_type;
+}
 function refreshKaufMetaUI(){
   const info = document.getElementById('fMetaInfo');
   const wrap = document.getElementById('fMetaWrap');
   if (!info || !wrap) return;
   const typ = document.getElementById('fTyp')?.value;
   if (typ !== 'KAUF') { info.style.display = 'none'; wrap.style.display = 'none'; return; }
-  const wkn = document.getElementById('fWkn')?.value || '';
-  const bez = document.getElementById('fBez')?.value || '';
-  const meta = findSecurityMeta({ wkn, name:bez });
+  const wkn = repairKnownWkn(document.getElementById('fWkn')?.value || '');
+  if (!wkn) { info.style.display = 'none'; wrap.style.display = 'none'; return; }
+  const meta = findSecurityMeta({ wkn });
   if (meta) {
+    setKnownSecurityFormState(meta);
     info.style.display = 'block';
     wrap.style.display = 'none';
-    info.innerHTML = `<span class="ok">Wertpapier bereits erfasst.</span><br><strong>${meta.name || bez || repairKnownWkn(wkn)}</strong><div class="meta-grid"><div><strong>Kategorie</strong><br>${meta.category || '—'}</div><div><strong>Land</strong><br>${meta.country || '—'}</div><div><strong>Börse</strong><br>${meta.exchange || '—'}</div></div>`;
+    const ticker = (meta.yahoo_ticker || meta.ticker || '').trim();
+    const ccy = normalizeCurrency(meta.currency || meta.fx || 'EUR');
+    info.innerHTML = `<span class="ok">Wertpapier bereits erfasst.</span><br><strong>${escapeHtml(meta.name || meta.bezeichnung || wkn)}</strong><div class="meta-grid"><div><strong>Kategorie</strong><br>${escapeHtml(meta.category || '—')}</div><div><strong>Land</strong><br>${escapeHtml(meta.country || '—')}</div><div><strong>Börse</strong><br>${escapeHtml(meta.exchange || '—')}</div></div><div style="margin-top:6px"><strong>Yahoo:</strong> ${escapeHtml(ticker || '—')} / ${escapeHtml(ccy)}</div>`;
     ['fCategory','fCountry','fExchange'].forEach(id => { const el = document.getElementById(id); if (el) el.value = meta[id === 'fCategory' ? 'category' : id === 'fCountry' ? 'country' : 'exchange'] || ''; });
+    const tEl = document.getElementById('fTicker'); if (tEl) tEl.value = ticker;
+    const cEl = document.getElementById('fCurrency'); if (cEl) cEl.value = ccy;
   } else {
+    const sug = suggestMetaForForm();
+    setNewSecurityFormState(sug);
     info.style.display = 'block';
     wrap.style.display = 'block';
-    info.innerHTML = `<span class="warn">Neues Wertpapier für den WAX.</span><br>Bitte Kategorie, Land und Börse einmalig festlegen. Danach wird die Zuordnung bei künftigen Käufen automatisch wiederverwendet.`;
+    const category = sug.category || '';
+    const country = sug.country || '';
+    const exchange = sug.exchange || '';
+    const ticker = sug.yahoo_ticker || sug.ticker || '';
+    const ccy = normalizeCurrency(sug.currency || sug.fx || 'EUR');
+    const set = (id,val)=>{ const el=document.getElementById(id); if(el && val) el.value=val; };
+    set('fCategory', category); set('fCountry', country); set('fExchange', exchange); set('fTicker', ticker); set('fCurrency', ccy);
+    applyHeuristicTickerSuggestion();
+    const src = sug.source==='vorschlag' ? 'Automatischer Vorschlag aus WKN-Liste.' : 'Bitte Stammdaten prüfen und freigeben.';
+    info.innerHTML = `<span class="warn">Neues Wertpapier für den WAX.</span><br>${src}<div style="margin-top:6px"><strong>Vorschlag:</strong> ${escapeHtml(ticker || '—')} / ${escapeHtml(document.getElementById('fCurrency')?.value || 'EUR')}</div>`;
   }
 }
 async function ensureSecurityMetaForForm(){
   const typ = document.getElementById('fTyp').value;
   if (typ !== 'KAUF') return { ok:true, remote:true };
   const wkn = repairKnownWkn(document.getElementById('fWkn').value);
+  const existing = findSecurityMeta({ wkn });
+  if (existing) {
+    const bez = document.getElementById('fBez');
+    if (bez) bez.value = existing.name || existing.bezeichnung || bez.value;
+    return { ok:true, remote:true, entry:existing, existing:true };
+  }
   const name = document.getElementById('fBez').value.trim();
-  const existing = findSecurityMeta({ wkn, name });
-  if (existing) return { ok:true, remote:true, entry:existing, existing:true };
   const category = document.getElementById('fCategory').value;
   const country = document.getElementById('fCountry').value;
   const exchange = document.getElementById('fExchange').value;
-  if (!category || !country || !exchange) return { ok:false, message:'Bitte für neue Wertpapiere zusätzlich Kategorie, Land und Börse auswählen.' };
-  const resolved = resolveTickerByWKN(wkn);
-  const ticker = resolved?.t || null;
-  const currency = resolved?.fx || null;
+  const ticker = (document.getElementById('fTicker')?.value || '').trim().toUpperCase();
+  const currency = normalizeCurrency(document.getElementById('fCurrency')?.value || 'EUR');
+  if (!category || !country || !exchange) return { ok:false, message:'Bitte für neue Wertpapiere Kategorie, Land und Börse auswählen.' };
+  if (!ticker) return { ok:false, message:'Bitte für neue Wertpapiere den Yahoo-Ticker eintragen oder bestätigen.' };
   const asset_type = document.getElementById('fArt').value;
-  const entry = { wkn, name, ticker, yahoo_ticker: ticker, currency, asset_type, category, country, exchange };
+  const entry = { wkn, name, ticker, yahoo_ticker: ticker, currency, fx:currency, asset_type, category, country, exchange };
   const remote = await persistSecurityMeta(entry);
-  return { ok:true, remote, entry };
+  return { ok:true, remote, entry, existing:false };
 }
 
 // PIN
@@ -1830,7 +1926,7 @@ function populateSelects() {
   fill('fCategory', META_OPTIONS.categories, 'Bitte wählen');
   fill('fCountry', META_OPTIONS.countries, 'Bitte wählen');
   fill('fExchange', META_OPTIONS.exchanges, 'Bitte wählen');
-  ['fWkn','fBez','fTyp'].forEach(id => {
+  ['fWkn','fBez','fTyp','fArt','fCategory','fCountry','fExchange','fTicker','fCurrency'].forEach(id => {
     const el = document.getElementById(id);
     if (!el || el.dataset.metaBound === '1') return;
     el.addEventListener('input', refreshKaufMetaUI);
@@ -2061,7 +2157,7 @@ function renderUebersicht() {
   db.positionen.filter(p=>!p.verkauft).forEach(p=>{
     const k=liveKurse[p.wkn];
     const w=k!=null?k*p.stueck:(p.wert_ref||p.kaufwert);
-    if(!holdingsMap[p.wkn]) holdingsMap[p.wkn]={bezeichnung:p.bezeichnung, wkn:p.wkn, wert:0};
+    if(!holdingsMap[p.wkn]) holdingsMap[p.wkn]={bezeichnung:securityDisplayName(p.wkn, p.bezeichnung), wkn:p.wkn, wert:0};
     holdingsMap[p.wkn].wert+=w;
   });
   const totalInvest = Object.values(holdingsMap).reduce((s,h)=>s+h.wert,0);
@@ -2194,7 +2290,7 @@ function renderInvestments() {
     const key = p.wkn || p.bezeichnung;
     if (!map[key]) {
       const meta = getEffectiveMetaForPosition(p);
-      map[key] = { bezeichnung:p.bezeichnung, wkn:p.wkn, art:p.art, stueck:0, kaufwert:0, refWert:0, category:meta.category, country:meta.country, exchange:meta.exchange };
+      map[key] = { bezeichnung:securityDisplayName(p.wkn, p.bezeichnung), wkn:p.wkn, art:securityAssetType(p.wkn, p.art), stueck:0, kaufwert:0, refWert:0, category:meta.category, country:meta.country, exchange:meta.exchange };
     }
     map[key].stueck += num(p.stueck);
     map[key].kaufwert += num(p.kaufwert);
@@ -2237,7 +2333,7 @@ function renderInvestments() {
     if (detailRows.length) {
       detailRows.forEach(r => {
         html += `<tr>
-          <td>${f(r.stueck,0)}</td><td>${r.bezeichnung}</td><td class="dim">${r.wkn||'—'}</td><td class="dim">${r.art||'—'}</td>
+          <td>${f(r.stueck,0)}</td><td>${securityDisplayName(r.wkn, r.bezeichnung)}</td><td class="dim">${r.wkn||'—'}</td><td class="dim">${securityAssetType(r.wkn, r.art)||'—'}</td>
           <td class="dim">${r.category||'Nicht zugeordnet'}</td><td class="dim">${r.country||'Nicht zugeordnet'}</td><td class="dim">${r.exchange||'Nicht zugeordnet'}</td>
         </tr>`;
       });
@@ -2260,7 +2356,7 @@ function renderInvestments() {
     rows.forEach(r => {
       const kursDisplay = r.aktKurs != null ? f(r.aktKurs,4) : `<span class="kurs-loading">lädt…</span>`;
       html += `<tr>
-        <td>${f(r.stueck,0)}</td><td>${r.bezeichnung}</td><td class="dim">${r.wkn||'—'}</td><td class="dim">${r.art||'—'}</td>
+        <td>${f(r.stueck,0)}</td><td>${securityDisplayName(r.wkn, r.bezeichnung)}</td><td class="dim">${r.wkn||'—'}</td><td class="dim">${securityAssetType(r.wkn, r.art)||'—'}</td>
         <td class="dim">${r.kaufkurs!=null?f(r.kaufkurs,4):'—'}</td><td class="dim">${f(r.kaufwert)}</td>
         <td class="dim">${r.refKurs!=null?f(r.refKurs,4):'—'}</td><td class="dim">${f(r.refWert)}</td>
         <td class="bold">${kursDisplay}</td><td class="bold">${f(r.aktWert)}</td>
@@ -2476,7 +2572,7 @@ function renderDepot(id) {
       const dateBadge=p.kauf_datum?`<span class="badge b-new">NEU ${fdate(p.kauf_datum)}</span>`:'';
       const kursDisplay = k!=null ? f(k,4) : `<span class="kurs-loading">lädt…</span>`;
       html+=`<tr>
-        <td>${f(p.stueck,0)}</td><td>${p.bezeichnung}${dateBadge}</td>
+        <td>${f(p.stueck,0)}</td><td>${securityDisplayName(p.wkn, p.bezeichnung)}${dateBadge}</td>
         <td class="dim">${p.wkn}</td><td class="dim">${p.art}</td>
         <td class="dim">${f(p.kaufkurs,4)}</td><td class="dim">${f(p.kaufwert)}</td>
         <td class="dim">${baseK?f(baseK,4):'—'}</td><td class="dim">${wBase!=null?f(wBase):'—'}</td>
@@ -2553,7 +2649,7 @@ function renderDepot(id) {
       soldDiff += Number(diffAbs||0);
       const dateBadge=p.verkauf_datum?`<span class="badge b-out">RAUS ${fdate(p.verkauf_datum)}</span>`:'';
       html+=`<tr style="opacity:.97">
-        <td>${f(p.stueck,0)}</td><td class="sold">${p.bezeichnung}${dateBadge}</td>
+        <td>${f(p.stueck,0)}</td><td class="sold">${securityDisplayName(p.wkn, p.bezeichnung)}${dateBadge}</td>
         <td class="dim">${p.wkn}</td><td class="dim">${p.art}</td>
         <td class="dim">${f(p.kaufkurs,4)}</td><td class="dim">${f(p.kaufwert)}</td>
         <td class="dim">${refK?f(refK,4):'—'}</td><td class="dim">${refV!=null?f(refV):'—'}</td>
@@ -2697,8 +2793,8 @@ function renderMissingTickerTable(){
     let status = 'ok';
     if (!info) status = 'missing';
     else if (!hasLiveKurs) status = 'no_quote';
-    const meta = findSecurityMeta({ wkn, name: p.bezeichnung });
-    return { wkn, name: p.bezeichnung || meta?.name || '', info, meta, hasLiveKurs, status };
+    const meta = findSecurityMeta({ wkn });
+    return { wkn, name: meta?.name || meta?.bezeichnung || p.bezeichnung || '', info, meta, hasLiveKurs, status };
   }).filter(x => x.status !== 'ok');
 
   if (!issues.length) {
@@ -2711,8 +2807,8 @@ function renderMissingTickerTable(){
   wrap.style.display = '';
 
   body.innerHTML = issues.map(issue => {
-    const suggestedTicker = issue.info?.t || TICKER_MAP[issue.wkn]?.t || '';
-    const suggestedCcy = issue.info?.fx || TICKER_MAP[issue.wkn]?.fx || 'EUR';
+    const suggestedTicker = issue.info?.t || getSecurityMasterDefault(issue.wkn).ticker || TICKER_MAP[issue.wkn]?.t || '';
+    const suggestedCcy = issue.info?.fx || getSecurityMasterDefault(issue.wkn).currency || TICKER_MAP[issue.wkn]?.fx || 'EUR';
     const statusLabel = issue.status === 'missing'
       ? '<span class="ticker-warn">kein Ticker</span>'
       : '<span class="ticker-warn">kein Kurs</span>';
@@ -2788,6 +2884,11 @@ async function saveTickerForWkn(wkn){
 }
 
 
+let securityMasterShowAll = false;
+function toggleSecurityMasterScope(){
+  securityMasterShowAll = !securityMasterShowAll;
+  renderSecurityMasterTable();
+}
 function getSecurityMasterScopeRows(){
   const year = String(new Date().getFullYear());
   const activeByWkn = new Map();
@@ -2809,19 +2910,23 @@ function getSecurityMasterScopeRows(){
     if (b.bezeichnung) prev.names.add(b.bezeichnung);
     currentYearByWkn.set(wkn, prev);
   });
-  const keys = [...new Set([...activeByWkn.keys(), ...currentYearByWkn.keys()])].sort();
+  const allMasterKeys = (db.security_master||[]).map(r=>repairKnownWkn(r.wkn)).filter(Boolean);
+  const keys = [...new Set(securityMasterShowAll ? [...allMasterKeys, ...activeByWkn.keys(), ...currentYearByWkn.keys()] : [...activeByWkn.keys(), ...currentYearByWkn.keys()])].sort();
+  const q = String(document.getElementById('smSearch')?.value || '').trim().toLowerCase();
   return keys.map(wkn=>{
     const active = activeByWkn.get(wkn);
     const cy = currentYearByWkn.get(wkn);
-    const meta = findSecurityMeta({ wkn }) || {};
+    const meta = findSecurityMeta({ wkn }) || getSecurityMasterDefault(wkn) || {};
     const tickerInfo = resolveTickerByWKN(wkn) || {};
     const names = [...(active?.names || []), ...(cy?.names || [])].filter(Boolean);
-    let status = 'Aktuell im Depot';
-    if (!active && cy) status = 'Nur Bewegung ' + year;
-    return {
+    let status = 'Nur Stammdaten';
+    if (active) status = 'Aktuell im Depot';
+    else if (cy) status = 'Nur Bewegung ' + year;
+    const row = {
       wkn,
       status,
       active: !!active,
+      currentYear: !!cy,
       stueck: active?.stueck || 0,
       name: meta.name || meta.bezeichnung || names[0] || wkn,
       asset_type: meta.asset_type || meta.art || active?.art || 'Aktie',
@@ -2831,7 +2936,8 @@ function getSecurityMasterScopeRows(){
       ticker: meta.yahoo_ticker || meta.ticker || tickerInfo.t || '',
       currency: normalizeCurrency(meta.currency || meta.fx || tickerInfo.fx || 'EUR')
     };
-  });
+    return row;
+  }).filter(row => !q || [row.wkn,row.name,row.ticker,row.category,row.country,row.exchange].join(' ').toLowerCase().includes(q));
 }
 function smSelect(id, values, selected){
   const opts = ['Nicht zugeordnet', ...values].filter((v,i,a)=>a.indexOf(v)===i);
@@ -2842,12 +2948,14 @@ function renderSecurityMasterTable(){
   const body = document.getElementById('securityMasterBody');
   if (!info || !body) return;
   const rows = getSecurityMasterScopeRows();
+  const scopeBtn = document.getElementById('smScopeBtn');
+  if (scopeBtn) scopeBtn.textContent = securityMasterShowAll ? 'Nur aktive/relevante anzeigen' : 'Alle bekannten Wertpapiere anzeigen';
   info.innerHTML = rows.length
-    ? rows.length + ' relevante Wertpapier-Stammdatensätze: <span style="color:#666">aktuelle Positionen plus Käufe/Verkäufe im laufenden Jahr</span>'
-    : 'Keine relevanten Stammdaten für das aktuelle Jahr vorhanden.';
+    ? rows.length + (securityMasterShowAll ? ' bekannte Wertpapier-Stammdatensätze' : ' relevante Wertpapier-Stammdatensätze')
+    : 'Keine passenden Stammdaten gefunden.';
   if (!rows.length) { body.innerHTML = '<tr><td colspan="10" style="text-align:center;color:#888;padding:18px">Keine relevanten Wertpapiere gefunden.</td></tr>'; return; }
   body.innerHTML = rows.map(row=>{
-    const stat = row.active ? '<span class="ticker-ok">aktuell im Depot</span><div class="ticker-mini">'+f(row.stueck,4)+' Stück</div>' : '<span class="ticker-warn">nicht im Depot</span><div class="ticker-mini">nur aktuelles Jahr</div>';
+    const stat = row.active ? '<span class="ticker-ok">aktuell im Depot</span><div class="ticker-mini">'+f(row.stueck,4)+' Stück</div>' : (row.currentYear ? '<span class="ticker-warn">nicht im Depot</span><div class="ticker-mini">nur aktuelles Jahr</div>' : '<span class="dim">nur Stammdaten</span>');
     return '<tr>'+
       '<td>'+stat+'</td>'+
       '<td class="bold">'+escapeHtml(row.wkn)+'</td>'+
@@ -2954,8 +3062,8 @@ async function saveKauf() {
   const mid=parseInt(document.getElementById('fMitglied').value);
   const datum=document.getElementById('fDatum').value;
   const wkn=repairKnownWkn(document.getElementById('fWkn').value.trim());
-  const bez=document.getElementById('fBez').value.trim();
-  const art=document.getElementById('fArt').value;
+  let bez=document.getElementById('fBez').value.trim();
+  let art=document.getElementById('fArt').value;
   const stueck=parseFloat(document.getElementById('fStueck').value);
   const kurs=parseFloat(document.getElementById('fKurs').value);
   const notiz=document.getElementById('fNotiz').value;
@@ -2964,6 +3072,10 @@ async function saveKauf() {
 
   const metaResult = await ensureSecurityMetaForForm();
   if(!metaResult.ok){ alert(metaResult.message || 'Metadaten fehlen.'); return; }
+  if (metaResult.entry) {
+    bez = metaResult.entry.name || metaResult.entry.bezeichnung || bez;
+    art = metaResult.entry.asset_type || metaResult.entry.art || art;
+  }
 
   try {
     if(typ==='KAUF') {
