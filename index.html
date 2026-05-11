@@ -553,7 +553,7 @@ if (window.caches && caches.keys) {
 
   <div class="sec-t" style="margin-top:28px"><span class="sec-n">5.6 ·</span> Stammdaten bekannte Wertpapiere</div>
   <div class="info-box" style="margin-bottom:12px">
-    Standard: aktuelle Depotpositionen plus Käufe/Verkäufe im laufenden Jahr. Mit <strong>Alle bekannten Wertpapiere</strong> wird der komplette Security Master sichtbar. Änderungen betreffen Stammdaten, nicht Buchungen.
+    Standard: bestätigte Wertpapiere mit funktionierendem Kursabruf. Unvollständige/falsche Kursdaten bleiben oben in 5.5, bis sie dort übernommen wurden. Mit <strong>Alle bekannten Wertpapiere</strong> wird der komplette Security Master sichtbar.
   </div>
   <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-bottom:10px">
     <button class="btn btn-outline" id="smScopeBtn" onclick="toggleSecurityMasterScope()">Alle bekannten Wertpapiere anzeigen</button>
@@ -717,7 +717,7 @@ const TICKER_MAP = {
   'A2T0VS': { t:'XSLR.DE',        fx:'EUR' },
   'A1KWPR': { t:'VZLB.DE',        fx:'EUR' },
   'A0YEDG': { t:'SXR8.DE',        fx:'EUR' },
-  'EWG2LD': { t:'EWG2.DE',        fx:'EUR' },
+  'EWG2LD': { t:'EWG2.SG',        fx:'EUR' },
   // CHF → EUR
   'A0Q4DC': { t:'NESN.SW',        fx:'CHF' },
   // USD → EUR
@@ -811,6 +811,22 @@ function getSecurityMasterDefault(wkn){
   const t = TICKER_MAP[key] || {};
   return { wkn:key, ...d, ticker:d.ticker || d.yahoo_ticker || t.t || '', yahoo_ticker:d.yahoo_ticker || d.ticker || t.t || '', currency:normalizeCurrency(d.currency || d.fx || t.fx || 'EUR'), fx:normalizeCurrency(d.fx || d.currency || t.fx || 'EUR') };
 }
+function isSecurityMetaComplete(meta){
+  if (!meta) return false;
+  const wkn = repairKnownWkn(meta.wkn || '');
+  const ticker = String(meta.ticker || meta.yahoo_ticker || '').trim();
+  const name = String(meta.name || meta.bezeichnung || '').trim();
+  const asset = String(meta.asset_type || meta.art || '').trim();
+  const category = String(meta.category || '').trim();
+  const country = String(meta.country || '').trim();
+  const exchange = String(meta.exchange || '').trim();
+  const bad = v => !v || v === 'Nicht zugeordnet';
+  return !!wkn && !!ticker && !!name && !bad(asset) && !bad(category) && !bad(country) && !bad(exchange);
+}
+function getConfirmedSecurityMeta(wkn){
+  const meta = findSecurityMeta({ wkn });
+  return isSecurityMetaComplete(meta) ? meta : null;
+}
 function securityDisplayName(wkn, fallback=''){
   const meta = findSecurityMeta({ wkn });
   return (meta && (meta.name || meta.bezeichnung)) || fallback || repairKnownWkn(wkn) || '';
@@ -857,7 +873,7 @@ const META_OPTIONS = {
     'Industrials & Mobility','Energy & Utilities','Precious Metals','Digital Assets & Crypto','Financial Services','Broad Market ETF'
   ],
   countries:['USA','Deutschland','Europa','Schweiz','Kanada','Australien','Asien'],
-  exchanges:['NASDAQ','NYSE','Xetra','Tradegate','SIX Swiss Exchange','TSX Venture','ASX','Asia Exchange']
+  exchanges:['NASDAQ','NYSE','Xetra','Tradegate','Stuttgart / EUWAX','SIX Swiss Exchange','TSX Venture','ASX','Asia Exchange']
 };
 const STRUCTURE_COLORS = {
   'Technology & Software':'#2563EB',
@@ -883,6 +899,7 @@ const STRUCTURE_COLORS = {
   'NYSE':'#F59E0B',
   'Xetra':'#111827',
   'Tradegate':'#6B7280',
+  'Stuttgart / EUWAX':'#9A3412',
   'SIX Swiss Exchange':'#10B981',
   'TSX Venture':'#7C3AED',
   'ASX':'#DC2626',
@@ -898,7 +915,7 @@ const SECURITY_MASTER_DEFAULTS = {
   'A2T0VS': { name:'Xtrackers Silver ETC', category:'Precious Metals', country:'Europa', exchange:'Xetra' },
   'A1KWPR': { name:'Verallia', category:'Industrials & Mobility', country:'Europa', exchange:'Xetra' },
   'A0YEDG': { name:'iShares Core S&P 500 ETF', category:'Broad Market ETF', country:'USA', exchange:'Xetra', asset_type:'ETF', yahoo_ticker:'SXR8.DE', ticker:'SXR8.DE', currency:'EUR', fx:'EUR' },
-  'EWG2LD': { name:'Euwax Gold', category:'Precious Metals', country:'Deutschland', exchange:'Xetra', asset_type:'ETC', yahoo_ticker:'EWG2.DE', ticker:'EWG2.DE', currency:'EUR', fx:'EUR' },
+  'EWG2LD': { name:'Euwax Gold', category:'Precious Metals', country:'Deutschland', exchange:'Stuttgart / EUWAX', asset_type:'ETC', yahoo_ticker:'EWG2.SG', ticker:'EWG2.SG', currency:'EUR', fx:'EUR' },
   'A0Q4DC': { name:'Nestlé', category:'Consumer & Brands', country:'Schweiz', exchange:'SIX Swiss Exchange' },
   '906866': { name:'Amazon', category:'Consumer & Brands', country:'USA', exchange:'NASDAQ' },
   '850471': { name:'Boeing', category:'Industrials & Mobility', country:'USA', exchange:'NYSE' },
@@ -930,7 +947,7 @@ const SECURITY_MASTER_DEFAULTS = {
 };
 const SECURITY_MASTER_CORRECTIONS = {
   'A0YEDG': { name:'iShares Core S&P 500 UCITS ETF', category:'Broad Market ETF', country:'USA', exchange:'Xetra', asset_type:'ETF', yahoo_ticker:'SXR8.DE', ticker:'SXR8.DE', currency:'EUR', fx:'EUR' },
-  'EWG2LD': { name:'Euwax Gold', category:'Precious Metals', country:'Deutschland', exchange:'Xetra', asset_type:'ETC', yahoo_ticker:'EWG2.DE', ticker:'EWG2.DE', currency:'EUR', fx:'EUR' },
+  'EWG2LD': { name:'Euwax Gold', category:'Precious Metals', country:'Deutschland', exchange:'Stuttgart / EUWAX', asset_type:'ETC', yahoo_ticker:'EWG2.SG', ticker:'EWG2.SG', currency:'EUR', fx:'EUR' },
   'A4A59K': { name:'iShares Bitcoin Trust ETP', category:'Digital Assets & Crypto', country:'Europa', exchange:'Xetra', asset_type:'ETP', yahoo_ticker:'IB1T.DE', ticker:'IB1T.DE', currency:'EUR', fx:'EUR' }
 };
 function normalizeSecurityText(v){ return String(v||'').trim().toLowerCase(); }
@@ -2871,37 +2888,47 @@ function renderMissingTickerTable(){
   const body = document.getElementById('tickerCheckBody');
   if (!info || !wrap || !body) return;
 
-  // Nur echte Problemfälle: WKNs ohne Ticker ODER Ticker vorhanden aber kein Kurs
+  // 5.5 ist die Arbeitsliste für aktive Positionen mit fehlendem oder nicht funktionierendem Kursabruf.
+  // 5.6 ist der bestätigte Security Master. Beide Bereiche werden aus derselben db.security_master-Quelle gerendert.
   const active = [...new Map(
     db.positionen.filter(p=>!p.verkauft && num(p.stueck)>0).map(p=>[repairKnownWkn(p.wkn), p])
   ).values()];
 
   const issues = active.map(p => {
     const wkn = repairKnownWkn(p.wkn);
-    const info = resolveTickerByWKN(wkn);
+    const meta = findSecurityMeta({ wkn });
+    const infoResolved = resolveTickerByWKN(wkn);
+    const hasTicker = !!infoResolved?.t;
     const hasLiveKurs = liveKurse[wkn] != null;
     let status = 'ok';
-    if (!info) status = 'missing';
+    if (!hasTicker) status = 'missing';
     else if (!hasLiveKurs) status = 'no_quote';
-    const meta = findSecurityMeta({ wkn });
-    return { wkn, name: meta?.name || meta?.bezeichnung || p.bezeichnung || '', info, meta, hasLiveKurs, status };
+    return { wkn, name: meta?.name || meta?.bezeichnung || p.bezeichnung || '', info:infoResolved, meta, hasLiveKurs, status };
   }).filter(x => x.status !== 'ok');
 
   if (!issues.length) {
-    info.innerHTML = '<span style="color:#1a6e3a;font-weight:700">✓ Alle aktiven Positionen haben Kursdaten.</span>';
+    info.innerHTML = '<span style="color:#1a6e3a;font-weight:700">✓ Alle aktiven Positionen haben funktionierende Kursdaten.</span>';
     wrap.style.display = 'none';
     return;
   }
 
-  info.innerHTML = issues.length + ' Position(en) ohne vollständige Kursdaten:';
+  info.innerHTML = issues.length + ' Position(en) ohne vollständige/funktionierende Kursdaten:';
   wrap.style.display = '';
 
   body.innerHTML = issues.map(issue => {
-    const suggestedTicker = issue.info?.t || getSecurityMasterDefault(issue.wkn).ticker || TICKER_MAP[issue.wkn]?.t || '';
-    const suggestedCcy = issue.info?.fx || getSecurityMasterDefault(issue.wkn).currency || TICKER_MAP[issue.wkn]?.fx || 'EUR';
+    const def = getSecurityMasterDefault(issue.wkn) || {};
+    const map = TICKER_MAP[issue.wkn] || {};
+    // Wenn ein Ticker vorhanden ist, aber keinen Kurs liefert, schlagen wir bewusst den geprüften Default vor.
+    // Beispiel: EWG2.DE lieferte keinen Kurs, EWG2.SG funktioniert für EUWAX Gold II.
+    const suggestedTicker = issue.status === 'no_quote'
+      ? (def.ticker || def.yahoo_ticker || map.t || issue.info?.t || '')
+      : (issue.info?.t || def.ticker || def.yahoo_ticker || map.t || '');
+    const suggestedCcy = normalizeCurrency(
+      (issue.status === 'no_quote' ? (def.fx || def.currency || map.fx || issue.info?.fx) : (issue.info?.fx || def.fx || def.currency || map.fx)) || inferCurrencyFromTicker(suggestedTicker)
+    );
     const statusLabel = issue.status === 'missing'
       ? '<span class="ticker-warn">kein Ticker</span>'
-      : '<span class="ticker-warn">kein Kurs</span>';
+      : '<span class="ticker-warn">kein Kurs</span><div class="ticker-mini">gespeicherter Ticker liefert keinen Kurs</div>';
     return '<tr>' +
       '<td class="bold">' + escapeHtml(issue.wkn) + '</td>' +
       '<td>' + escapeHtml(issue.name || '—') + '</td>' +
@@ -2917,7 +2944,6 @@ function renderMissingTickerTable(){
     '</tr>';
   }).join('');
 
-  // Event-Delegation statt inline onclick — vermeidet String-Escaping-Probleme
   body.querySelectorAll('button[data-wkn]').forEach(btn => {
     btn.addEventListener('click', () => {
       const wkn = btn.dataset.wkn;
@@ -2925,6 +2951,7 @@ function renderMissingTickerTable(){
       else saveTickerForWkn(wkn);
     });
   });
+  applyPflegeAccess();
 }
 
 async function testTickerForWkn(wkn){
@@ -2964,11 +2991,13 @@ async function saveTickerForWkn(wkn){
     alert('✗ Supabase-Speicherung fehlgeschlagen.\n\nDer Ticker wurde NICHT als dauerhaft gepflegt markiert.\n\nFehler: ' + (result.error || 'unbekannt'));
     return;
   }
+  await reloadSecurityMasterFromSupabase();
+  liveKurse = {};
+  prevKurse = {};
   await loadFX();
   await loadKurse();
   renderAll();
-  renderMissingTickerTable();
-  alert('✓ Ticker ' + ticker + ' dauerhaft in Supabase gespeichert und Kurse aktualisiert.');
+  alert('✓ Ticker ' + ticker + ' dauerhaft in Supabase gespeichert. 5.5 und 5.6 wurden neu aus Supabase aufgebaut.');
 }
 
 
@@ -2999,7 +3028,13 @@ function getSecurityMasterScopeRows(){
     currentYearByWkn.set(wkn, prev);
   });
   const allMasterKeys = (db.security_master||[]).map(r=>repairKnownWkn(r.wkn)).filter(Boolean);
-  const keys = [...new Set(securityMasterShowAll ? [...allMasterKeys, ...activeByWkn.keys(), ...currentYearByWkn.keys()] : [...activeByWkn.keys(), ...currentYearByWkn.keys()])].sort();
+  // Standardansicht 5.6: bestätigte/relevante Stammdaten.
+  // Unvollständige oder nicht funktionierende Kursdaten bleiben oben in 5.5, bis sie dort übernommen wurden.
+  const relevantKeys = [...activeByWkn.keys(), ...currentYearByWkn.keys()].filter(wkn => {
+    const meta = findSecurityMeta({ wkn });
+    return isSecurityMetaComplete(meta) && liveKurse[wkn] != null;
+  });
+  const keys = [...new Set(securityMasterShowAll ? [...allMasterKeys, ...activeByWkn.keys(), ...currentYearByWkn.keys()] : relevantKeys)].sort();
   const q = String(document.getElementById('smSearch')?.value || '').trim().toLowerCase();
   return keys.map(wkn=>{
     const active = activeByWkn.get(wkn);
@@ -3102,10 +3137,13 @@ async function saveSecurityMasterRow(wkn){
     alert('✗ Supabase-Speicherung fehlgeschlagen.\n\nDie Stammdaten wurden NICHT dauerhaft gespeichert.\n\nFehler: ' + (result.error || 'unbekannt'));
     return;
   }
+  await reloadSecurityMasterFromSupabase();
+  liveKurse = {};
+  prevKurse = {};
   await loadFX();
   await loadKurse();
   renderAll();
-  alert('✓ Stammdaten dauerhaft in Supabase gespeichert und Kurse aktualisiert.');
+  alert('✓ Stammdaten dauerhaft in Supabase gespeichert. 5.5 und 5.6 wurden neu aufgebaut.');
 }
 async function deleteSecurityMasterRow(wkn){
   if (!isAdmin()) { alert('Nur für den Administrator.'); return; }
