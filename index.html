@@ -482,9 +482,9 @@ if (window.caches && caches.keys) {
     </div>
   </div>
   <div style="display:grid;grid-template-columns:repeat(4,minmax(180px,1fr));gap:12px;margin:-4px 0 20px">
-    <button class="btn btn-outline" style="text-align:left;padding-left:16px;opacity:.45;cursor:not-allowed" onclick="deleteLastBookingByGroup('transaktion')"><span style="font-size:20px;line-height:1;display:inline-block;vertical-align:-2px;margin-right:8px">×</span>Letzte Transaktion löschen (gesperrt)</button>
-    <button class="btn btn-outline" style="text-align:left;padding-left:16px;opacity:.45;cursor:not-allowed" onclick="deleteLastBookingByGroup('freigabe')"><span style="font-size:20px;line-height:1;display:inline-block;vertical-align:-2px;margin-right:8px">×</span>Letzte Freigabe löschen (gesperrt)</button>
-    <button class="btn btn-outline" style="text-align:left;padding-left:16px;opacity:.45;cursor:not-allowed" onclick="deleteLastBookingByGroup('reise')"><span style="font-size:20px;line-height:1;display:inline-block;vertical-align:-2px;margin-right:8px">×</span>Letzte Reise löschen (gesperrt)</button>
+    <button class="btn btn-outline" style="text-align:left;padding-left:16px" onclick="deleteLastBookingByGroup('transaktion')"><span style="font-size:20px;line-height:1;display:inline-block;vertical-align:-2px;margin-right:8px">×</span>Letzte Transaktion löschen</button>
+    <button class="btn btn-outline" style="text-align:left;padding-left:16px" onclick="deleteLastBookingByGroup('freigabe')"><span style="font-size:20px;line-height:1;display:inline-block;vertical-align:-2px;margin-right:8px">×</span>Letzte Freigabe löschen</button>
+    <button class="btn btn-outline" style="text-align:left;padding-left:16px" onclick="deleteLastBookingByGroup('reise')"><span style="font-size:20px;line-height:1;display:inline-block;vertical-align:-2px;margin-right:8px">×</span>Letzte Reise löschen</button>
     <div style="margin-top:8px;font-size:12px;color:#a35a00;line-height:1.45">Produktivschutz aktiv: Undo-Löschungen sind in dieser Datei bewusst gesperrt. Erst nach sauberem Neuaufbau und Tests in einer separaten Testumgebung wieder freigeben.</div>
     <div></div>
   </div>
@@ -864,7 +864,7 @@ let investmentDetailsSortRules = [];
 let investmentsView = 'main';
 const investmentsDefaultSortRules = [{ key:'aktWert', dir:'desc' }];
 const investmentDetailsDefaultSortRules = [{ key:'bezeichnung', dir:'asc' }];
-const PROD_SICHERHEIT_AKTIV = true; // Undo/Freigabe-Reverts in Produktivsystem sperren
+const PROD_SICHERHEIT_AKTIV = false; // Undo ist in dieser Sicherheitsversion wieder freigegeben
 let reiseVorschauData = null;
 
 const META_OPTIONS = {
@@ -3370,90 +3370,172 @@ function buildDeleteSummary(group, last) {
   parts.push(`${formatDate(last.datum)} · ${last.typ}`);
   if(last.bezeichnung) parts.push(last.bezeichnung);
   if(last.wkn) parts.push(last.wkn);
-  if(last.stueck) parts.push(`${f(last.stueck,4)} Stk.`);
+  if(last.stueck) parts.push(`${formatStueckSafe(last.stueck)} Stk.`);
   if(last.kurs) parts.push(`${f(last.kurs,4)} €`);
   if(last.betrag!=null) parts.push(`${fc(parseFloat(last.betrag)||0)}`);
   return parts.join(' | ');
 }
+function formatStueckSafe(v){
+  const n = Number(v)||0;
+  return Math.abs(n - Math.round(n)) < 1e-9 ? String(Math.round(n)) : f(n,4);
+}
+function waxEq(field, value){ return `${field}=eq.${encodeURIComponent(String(value ?? ''))}`; }
+function waxAlmost(a,b,eps=1e-7){ return Math.abs((Number(a)||0)-(Number(b)||0)) <= eps; }
+function waxSortDescById(rows){ return [...(rows||[])].sort((a,b)=>Number(b.id||0)-Number(a.id||0)); }
+function waxAbort(msg){ alert('Abbruch: ' + msg); return false; }
+async function waxCreateUndoSnapshot(group, last){
+  try {
+    const snapshot = await tmBuildSnapshot();
+    snapshot.undo_context = { group, booking: last, created_before_undo: true };
+    const stamp = tmNowStamp();
+    tmDownload(`UNDO_SICHERUNG_${group}_${stamp}.json`, JSON.stringify(snapshot, null, 2), 'application/json;charset=utf-8');
+    return true;
+  } catch(e) {
+    return confirm('Die automatische Sicherungsdatei konnte nicht erzeugt werden. Trotzdem fortfahren?\n\nFehler: ' + (e?.message || e));
+  }
+}
+function waxRequireTypedConfirmation(label, summary){
+  const msg = `${label} wirklich rückgängig machen?\n\n${summary}\n\nSicherheitsregeln:\n• Es wird nur die jeweils letzte passende Aktion gelöscht.\n• Bei unklaren Positionen bricht die App ab.\n• Vorher wird automatisch eine UNDO-Sicherungsdatei heruntergeladen.\n\nZum Fortfahren bitte exakt RÜCKGÄNGIG eingeben:`;
+  const answer = prompt(msg, '');
+  return answer === 'RÜCKGÄNGIG';
+}
 async function deleteLastBookingByGroup(group) {
+  if(!isAdmin()){ alert('Nur für den Administrator.'); return; }
   if (PROD_SICHERHEIT_AKTIV) {
-    alert('Produktivschutz aktiv: Undo/Löschen ist in dieser Index-Datei gesperrt. Bitte erst in einer Testumgebung wieder freigeben.');
+    alert('Produktivschutz aktiv: Undo/Löschen ist in dieser Index-Datei gesperrt.');
     return;
   }
   const last = getLastBookingByGroup(group);
   if(!last){ alert('Keine passende Buchung vorhanden.'); return; }
-  const labelMap = {transaktion:'letzte Transaktion', freigabe:'letzte Cash-Freigabe', reise:'letzte Reise'};
+  const labelMap = {transaktion:'Letzte Transaktion', freigabe:'Letzte Cash-Freigabe', reise:'Letzte Reise'};
   const summary = buildDeleteSummary(group, last);
-  const txt = `Wirklich ${labelMap[group] || 'letzte Buchung'} löschen?\n\n${summary}\n\nNur direkt nach einer Fehl- oder Testbuchung verwenden.`;
-  if(!confirm(txt)) return;
+  if(!waxRequireTypedConfirmation(labelMap[group] || 'Letzte Buchung', summary)) return;
+  const snapshotOk = await waxCreateUndoSnapshot(group, last);
+  if(!snapshotOk) return;
+
   let ok = false;
   if(group==='transaktion'){
-    if(last.typ==='KAUF') ok = await undoLastKauf(last);
-    else if(last.typ==='VERKAUF') ok = await undoLastVerkauf(last);
+    if(last.typ==='KAUF') ok = await undoLastKaufSafe(last);
+    else if(last.typ==='VERKAUF') ok = await undoLastVerkaufSafe(last);
   } else if(group==='freigabe'){
-    ok = await undoGroupedCashBooking(last, -1);
+    ok = await undoGroupedCashBookingSafe(last, -1, 'FREIGABE');
   } else if(group==='reise'){
-    ok = await undoGroupedCashBooking(last, +1);
+    ok = await undoGroupedCashBookingSafe(last, +1, 'REISE');
   }
-  if(!ok){ alert('Löschen/Rückgängigmachen fehlgeschlagen.'); return; }
+  if(!ok){ alert('Löschen/Rückgängigmachen wurde abgebrochen oder ist fehlgeschlagen. Die Sicherungsdatei wurde vorher erzeugt.'); return; }
   await initApp();
-  alert(`${labelMap[group] || 'Die Buchung'} wurde gelöscht.`);
+  alert(`${labelMap[group] || 'Die Buchung'} wurde rückgängig gemacht. Bitte Kontrollblick auf Cash und Depot werfen.`);
 }
-async function undoLastKauf(b) {
-  const c=db.cash.find(x=>x.mitglied_id===b.mitglied_id);
-  const okCash = await sbPatch('cash', `mitglied_id=eq.${b.mitglied_id}`, {betrag:(c?.betrag||0)+Math.abs(parseFloat(b.betrag)||0),updated_at:new Date().toISOString()});
-  if(!okCash) return false;
-  const pos = await sbGet('positionen', `mitglied_id=eq.${b.mitglied_id}&wkn=eq.${b.wkn}&verkauft=eq.false&kauf_datum=eq.${b.datum}&order=id.desc&limit=20`);
-  const target = pos.find(p => Math.abs((parseFloat(p.stueck)||0) - (parseFloat(b.stueck)||0)) < 1e-9 && Math.abs((parseFloat(p.kaufkurs)||0) - (parseFloat(b.kurs)||0)) < 1e-9);
-  if(!target) return false;
-  const okPos = await sbDelete('positionen', `id=eq.${target.id}`);
-  if(!okPos) return false;
-  return await sbDelete('buchungen', `id=eq.${b.id}`);
+async function undoLastKaufSafe(b) {
+  if(b.typ !== 'KAUF') return waxAbort('Die ausgewählte Buchung ist kein Kauf.');
+  const mid = Number(b.mitglied_id);
+  const wkn = repairKnownWkn(b.wkn);
+  const st = Number(b.stueck)||0;
+  const kurs = Number(b.kurs)||0;
+  const betrag = Math.abs(Number(b.betrag)||0);
+  if(!mid || !wkn || st<=0 || kurs<=0 || betrag<=0) return waxAbort('Die Kaufbuchung ist unvollständig.');
+
+  const positions = await sbGet('positionen', [waxEq('mitglied_id', mid), waxEq('wkn', wkn), 'verkauft=eq.false', waxEq('kauf_datum', b.datum), 'order=id.desc', 'limit=50'].join('&'));
+  const matches = (positions||[]).filter(p =>
+    waxAlmost(p.stueck, st) && waxAlmost(p.kaufkurs, kurs) &&
+    (!b.bezeichnung || !p.bezeichnung || String(p.bezeichnung) === String(b.bezeichnung))
+  );
+  if(matches.length !== 1) return waxAbort(`Kauf-Position nicht eindeutig gefunden (${matches.length} Treffer). Keine Änderung vorgenommen.`);
+
+  const cashRows = await sbGet('cash', waxEq('mitglied_id', mid));
+  const cash = cashRows && cashRows[0] ? Number(cashRows[0].betrag)||0 : null;
+  if(cash === null) return waxAbort('Cash-Satz für das Mitglied wurde nicht gefunden.');
+
+  const okPos = await sbDelete('positionen', waxEq('id', matches[0].id));
+  if(!okPos) return waxAbort('Kaufposition konnte nicht gelöscht werden.');
+  const okCash = await sbPatch('cash', waxEq('mitglied_id', mid), {betrag: cash + betrag, updated_at:new Date().toISOString()});
+  if(!okCash) return waxAbort('Cash konnte nicht zurückgedreht werden. Sicherung verwenden und prüfen.');
+  const okB = await sbDelete('buchungen', waxEq('id', b.id));
+  if(!okB) return waxAbort('Buchung konnte nicht gelöscht werden. Sicherung verwenden und prüfen.');
+  return true;
 }
-async function undoLastVerkauf(b) {
-  const c=db.cash.find(x=>x.mitglied_id===b.mitglied_id);
-  const okCash = await sbPatch('cash', `mitglied_id=eq.${b.mitglied_id}`, {betrag:(c?.betrag||0)-Math.abs(parseFloat(b.betrag)||0),updated_at:new Date().toISOString()});
-  if(!okCash) return false;
-  const soldLots = await sbGet('positionen', `mitglied_id=eq.${b.mitglied_id}&wkn=eq.${b.wkn}&verkauft=eq.true&verkauf_datum=eq.${b.datum}&order=id.desc&limit=20`);
-  let remaining = parseFloat(b.stueck)||0;
-  for(const lot of soldLots){
-    if(remaining<=0) break;
-    const lotSt = parseFloat(lot.stueck)||0;
-    if(Math.abs(lotSt - remaining) < 1e-9 || lotSt <= remaining + 1e-9){
-      if(lot.kauf_datum === b.datum && Math.abs((parseFloat(lot.kaufkurs)||0)-(parseFloat(b.kurs)||0))<1e-9){
-        const okPos = await sbDelete('positionen', `id=eq.${lot.id}`);
-        if(!okPos) return false;
-      } else {
-        const okPos = await sbPatch('positionen', `id=eq.${lot.id}`, {verkauft:false, verkauf_datum:null, verkaufswert:null});
-        if(!okPos) return false;
-      }
-      remaining -= lotSt;
-    } else {
-      const openLots = await sbGet('positionen', `mitglied_id=eq.${b.mitglied_id}&wkn=eq.${b.wkn}&verkauft=eq.false&kauf_datum=eq.${lot.kauf_datum}&order=id.desc&limit=20`);
-      const openLot = openLots.find(p => Math.abs((parseFloat(p.kaufkurs)||0)-(parseFloat(lot.kaufkurs)||0))<1e-9);
-      if(!openLot) return false;
-      const okOpen = await sbPatch('positionen', `id=eq.${openLot.id}`, {stueck:(parseFloat(openLot.stueck)||0)+remaining, kaufwert:((parseFloat(openLot.stueck)||0)+remaining)*(parseFloat(openLot.kaufkurs)||0)});
-      if(!okOpen) return false;
-      const okSold = await sbPatch('positionen', `id=eq.${lot.id}`, {stueck:lotSt-remaining, kaufwert:(lotSt-remaining)*(parseFloat(lot.kaufkurs)||0)});
-      if(!okSold) return false;
-      remaining = 0;
-    }
+async function undoLastVerkaufSafe(b) {
+  if(b.typ !== 'VERKAUF') return waxAbort('Die ausgewählte Buchung ist kein Verkauf.');
+  const mid = Number(b.mitglied_id);
+  const wkn = repairKnownWkn(b.wkn);
+  const st = Number(b.stueck)||0;
+  const betrag = Math.abs(Number(b.betrag)||0);
+  if(!mid || !wkn || st<=0 || betrag<=0) return waxAbort('Die Verkaufsbuchung ist unvollständig.');
+
+  const allSold = waxSortDescById(await sbGet('positionen', [waxEq('mitglied_id', mid), waxEq('wkn', wkn), 'verkauft=eq.true', waxEq('verkauf_datum', b.datum), 'order=id.desc', 'limit=100'].join('&')));
+  const selected = [];
+  let sum = 0;
+  for(const lot of allSold){
+    if(sum >= st - 1e-7) break;
+    const lotSt = Number(lot.stueck)||0;
+    selected.push(lot);
+    sum += lotSt;
+    if(sum > st + 1e-7) return waxAbort('Die zuletzt verkauften Lots passen nicht exakt zur Verkaufsbuchung. Keine Änderung vorgenommen.');
   }
-  if(remaining>1e-9) return false;
-  return await sbDelete('buchungen', `id=eq.${b.id}`);
+  if(!selected.length || !waxAlmost(sum, st)) return waxAbort(`Verkaufs-Lots nicht eindeutig gefunden. Erwartet ${formatStueckSafe(st)} Stk., gefunden ${formatStueckSafe(sum)} Stk.`);
+
+  const cashRows = await sbGet('cash', waxEq('mitglied_id', mid));
+  const cash = cashRows && cashRows[0] ? Number(cashRows[0].betrag)||0 : null;
+  if(cash === null) return waxAbort('Cash-Satz für das Mitglied wurde nicht gefunden.');
+
+  const restorePlan = [];
+  for(const sold of selected){
+    const candidates = (await sbGet('positionen', [waxEq('mitglied_id', mid), waxEq('wkn', wkn), waxEq('kauf_datum', sold.kauf_datum), 'order=id.asc', 'limit=100'].join('&')))
+      .filter(p => Number(p.id)!==Number(sold.id)
+        && waxAlmost(p.kaufkurs, sold.kaufkurs)
+        && (p.verkauf_datum == null || p.verkauf_datum === '')
+        && (!sold.bezeichnung || !p.bezeichnung || String(p.bezeichnung) === String(sold.bezeichnung)));
+    if(candidates.length !== 1) return waxAbort(`Ursprungs-Lot für verkauften Lot ${sold.id} nicht eindeutig gefunden (${candidates.length} Treffer). Keine Änderung vorgenommen.`);
+    const orig = candidates[0];
+    const newSt = (Number(orig.stueck)||0) + (Number(sold.stueck)||0);
+    const kk = Number(orig.kaufkurs || sold.kaufkurs)||0;
+    restorePlan.push({ sold, orig, patch:{ stueck:newSt, kaufwert:newSt*kk, verkauft:false, verkauf_datum:null } });
+  }
+
+  for(const r of restorePlan){
+    const okPatch = await sbPatch('positionen', waxEq('id', r.orig.id), r.patch);
+    if(!okPatch) return waxAbort(`Ursprungs-Lot ${r.orig.id} konnte nicht wiederhergestellt werden. Sicherung verwenden und prüfen.`);
+  }
+  for(const r of restorePlan){
+    const okDel = await sbDelete('positionen', waxEq('id', r.sold.id));
+    if(!okDel) return waxAbort(`Verkaufs-Lot ${r.sold.id} konnte nicht gelöscht werden. Sicherung verwenden und prüfen.`);
+  }
+  const okCash = await sbPatch('cash', waxEq('mitglied_id', mid), {betrag: cash - betrag, updated_at:new Date().toISOString()});
+  if(!okCash) return waxAbort('Cash konnte nicht zurückgedreht werden. Sicherung verwenden und prüfen.');
+  const okB = await sbDelete('buchungen', waxEq('id', b.id));
+  if(!okB) return waxAbort('Buchung konnte nicht gelöscht werden. Sicherung verwenden und prüfen.');
+  return true;
 }
-async function undoGroupedCashBooking(last, sign) {
-  const group = db.buchungen.filter(b => b.typ===last.typ && b.datum===last.datum && (b.bezeichnung||'')===(last.bezeichnung||''));
-  if(!group.length) return false;
+async function undoGroupedCashBookingSafe(last, sign, expectedTyp) {
+  if(last.typ !== expectedTyp) return waxAbort('Falscher Buchungstyp.');
+  const candidates = waxSortDescById(db.buchungen.filter(b =>
+    b.typ===last.typ && b.datum===last.datum && (b.bezeichnung||'')===(last.bezeichnung||'')
+  ));
+  const group = [];
+  const seen = new Set();
+  for(const b of candidates){
+    const mid = Number(b.mitglied_id);
+    if(!mid || seen.has(mid)) continue;
+    group.push(b); seen.add(mid);
+    if(group.length === db.mitglieder.length) break;
+  }
+  if(group.length !== db.mitglieder.length) return waxAbort(`Gruppenbuchung ist nicht vollständig (${group.length}/${db.mitglieder.length}). Keine Änderung vorgenommen.`);
+
+  const cashNow = new Map();
   for(const b of group){
-    const c=db.cash.find(x=>x.mitglied_id===b.mitglied_id);
-    const delta = Math.abs(parseFloat(b.betrag)||0) * sign;
-    const okCash = await sbPatch('cash', `mitglied_id=eq.${b.mitglied_id}`, {betrag:(c?.betrag||0)+delta,updated_at:new Date().toISOString()});
-    if(!okCash) return false;
+    const rows = await sbGet('cash', waxEq('mitglied_id', b.mitglied_id));
+    if(!rows || !rows[0]) return waxAbort(`Cash-Satz für Mitglied ${b.mitglied_id} fehlt.`);
+    cashNow.set(Number(b.mitglied_id), Number(rows[0].betrag)||0);
   }
   for(const b of group){
-    const okDel = await sbDelete('buchungen', `id=eq.${b.id}`);
-    if(!okDel) return false;
+    const mid = Number(b.mitglied_id);
+    const delta = Math.abs(Number(b.betrag)||0) * sign;
+    const okCash = await sbPatch('cash', waxEq('mitglied_id', mid), {betrag: (cashNow.get(mid)||0)+delta, updated_at:new Date().toISOString()});
+    if(!okCash) return waxAbort(`Cash für Mitglied ${mid} konnte nicht zurückgedreht werden. Sicherung verwenden und prüfen.`);
+  }
+  for(const b of group){
+    const okDel = await sbDelete('buchungen', waxEq('id', b.id));
+    if(!okDel) return waxAbort(`Buchung ${b.id} konnte nicht gelöscht werden. Sicherung verwenden und prüfen.`);
   }
   return true;
 }
