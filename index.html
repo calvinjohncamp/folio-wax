@@ -55,6 +55,8 @@ body { background: #f0ede8; color: #111; font-family: 'DM Sans', sans-serif; fon
 .kpi-v { font-size: 20px; font-weight: 700; color: #111; line-height: 1.1; }
 .kpi-v.pos { color: #1a6e3a; } .kpi-v.neg { color: #c8441a; }
 .kpi-s { font-size: 10px; color: #777; margin-top: 3px; }
+.kpi-footnote{font-size:10px;color:#666;line-height:1.5;margin:-16px 0 22px 0;padding:0 2px}
+.kpi-footnote strong{color:#1a1814}
 .tw { overflow-x: auto; -webkit-overflow-scrolling: touch; background: #fff; border: 1px solid #d8d4ce; margin-bottom: 24px; }
 table { width: 100%; border-collapse: collapse; font-size: 12px; }
 thead th { font-size: 9px; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; color: #777; padding: 8px 10px; text-align: right; border-bottom: 1px solid #e8e4de; white-space: nowrap; background: #faf9f6; }
@@ -228,7 +230,7 @@ body::-webkit-scrollbar {
 
 <script>
 // Cache-Bereinigung ohne aggressive Storage-Resets
-const WAX_BUILD = '1778481300000-pflege-active-scope-20260511';
+const WAX_BUILD = '1778529900000-ytd-sum-virtual-depots-20260511';
 try {
   sessionStorage.setItem('wax_build_seen', WAX_BUILD);
 } catch(e) {}
@@ -303,14 +305,15 @@ if (window.caches && caches.keys) {
 <div id="view-uebersicht">
   <div class="sec-t mode-row" style="margin-top:4px"><span><span class="sec-n">1 ·</span> Gesamtübersicht — WAX Aktienclub 2026</span><div class="mode-tools"><button id="overviewRefreshBtn" class="icon-btn refresh-btn" type="button" title="Kurse aktualisieren" aria-label="Kurse aktualisieren" onclick="refreshMarketData()">↻</button><button id="overviewToggleBtn" class="mode-toggle" onclick="toggleOverviewMode()">Heute</button></div></div>
   <div class="kpi-grid">
-    <div class="kpi"><div class="kpi-l">Gesamtwert</div><div class="kpi-v" id="kGesamt">—</div><div class="kpi-s">inkl. Anpassung Cash-Puffer</div></div>
-    <div class="kpi"><div class="kpi-l">Ø pro Person</div><div class="kpi-v" id="kProPerson">—</div><div class="kpi-s">inkl. Puffer</div></div>
+    <div class="kpi"><div class="kpi-l">Gesamtwert</div><div class="kpi-v" id="kGesamt">—</div><div class="kpi-s">Summe Einzeldepots*</div></div>
+    <div class="kpi"><div class="kpi-l">Ø pro Person</div><div class="kpi-v" id="kProPerson">—</div><div class="kpi-s">Ø aus Summe Einzeldepots*</div></div>
     <div class="kpi"><div class="kpi-l" id="kModeLabelPct">YTD Performance</div><div class="kpi-v" id="kYtd">—</div><div class="kpi-s" id="kModeSubPct">seit 31.12. des Vorjahres</div></div>
     <div class="kpi"><div class="kpi-l" id="kModeLabelAbs">Gewinn ytd</div><div class="kpi-v" id="kYtdAbs">—</div><div class="kpi-s" id="kModeSubAbs">Gewinn/Verlust</div></div>
     <div class="kpi"><div class="kpi-l">Perf. p.a.</div><div class="kpi-v" id="kPerfPa">—</div><div class="kpi-s">interner Zinsfuß seit Start</div></div>
     <div class="kpi"><div class="kpi-l">Cashanteil</div><div class="kpi-v" id="kCashAnteil">—</div><div class="kpi-s" id="kCashAnteilSub">echter Comdirect-Cash</div></div>
     <div class="kpi"><div class="kpi-l">Gewinn Alltime</div><div class="kpi-v" id="kGewinnAlltime">—</div><div class="kpi-s">neutralisiert seit Start</div></div>
   </div>
+  <div class="kpi-footnote" id="cashPufferFootnote"><strong>* Hinweis:</strong> Dieser Betrag weicht ab vom Gesamtwert des WAX-Depots aufgrund des sogenannten Cash-Puffers. Siehe Bereich Pflege unter 5.2.</div>
   <div class="sec-t"><span class="sec-n">2 ·</span> Ranking — aktuell & Alltime</div>
   <div class="tw"><table>
     <thead><tr>
@@ -2164,12 +2167,14 @@ function applyOverviewModeLabels() {
 
 function renderUebersicht() {
   applyOverviewModeLabels();
-  const gesamtOhnePuffer = db.mitglieder.reduce((s,m)=>s+getDepotwert(m.id),0);
-  const gesamtOhnePufferPrev = db.mitglieder.reduce((s,m)=>s+getDepotwert(m.id, prevKurse, liveKurse),0);
+  // Leistungsansicht wie in Excel: Summe der sechs virtuellen Einzeldepots, ohne Cash-Puffer-Abzug.
+  // Der Cash-Puffer wird weiterhin separat ausgewiesen und im Pflegebereich 5.2 erläutert.
+  const gesamtEinzeldepots = db.mitglieder.reduce((s,m)=>s+getDepotwert(m.id),0);
+  const gesamtEinzeldepotsPrev = db.mitglieder.reduce((s,m)=>s+getDepotwert(m.id, prevKurse, liveKurse),0);
   const puffer = getComdirectPuffer();
   const comdirectCashTotal = getComdirectCashTotal();
-  const gesamt = gesamtOhnePuffer + puffer;
-  const gesamtPrev = gesamtOhnePufferPrev + puffer;
+  const gesamt = gesamtEinzeldepots;
+  const gesamtPrev = gesamtEinzeldepotsPrev;
   const cashPctGesamt = gesamt>0 ? comdirectCashTotal/gesamt : 0;
   const ref2025 = Object.values(REF).reduce((s,r)=>s+r.total,0);
   const ytdPct = ref2025>0 ? (gesamt-ref2025)/ref2025 : 0;
@@ -2178,7 +2183,7 @@ function renderUebersicht() {
   const todayAbs = gesamt-gesamtPrev;
   const modePct = overviewMode === 'today' ? todayPct : ytdPct;
   const modeAbs = overviewMode === 'today' ? todayAbs : ytdAbs;
-  document.getElementById('kGesamt').textContent = f(gesamt)+' €';
+  document.getElementById('kGesamt').textContent = f(gesamt)+' €*';
   document.getElementById('kProPerson').textContent = f(gesamt/6)+' €';
   const ytdEl = document.getElementById('kYtd');
   ytdEl.textContent = fp(modePct); ytdEl.className = 'kpi-v '+(modePct>=0?'pos':'neg');
@@ -2256,9 +2261,9 @@ function renderUebersicht() {
   const tg = rows.reduce((s,r)=>s+(r.gewinn||0),0);
   const totalCashWax = comdirectCashTotal;
   const totalCashPctWax = gesamt>0 ? totalCashWax/gesamt : 0;
-  html+=`<tr class="total-row"><td></td><td>Gesamt / Ø</td>
+  html+=`<tr class="total-row"><td></td><td>Gesamt</td>
     <td class="${cl(modePct)}">${fp(modePct)}</td><td class="${cl(modeAbs)}">${fc(modeAbs)}</td>
-    <td>${f(gesamt)} €</td><td>100%</td><td>${f(totalCashPctWax*100,1)}%</td>
+    <td>${f(gesamt)} €*</td><td>100%</td><td>${f(totalCashPctWax*100,1)}%</td>
     <td></td><td>${f(totalAlltime)} €</td><td>100%</td>
     <td class="${cl(tg)}">${fc(tg)}</td>
     <td class="${perfPaLive>=0?'pos':'neg'}">${fp(perfPaLive)}</td>
