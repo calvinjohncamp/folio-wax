@@ -196,7 +196,7 @@ body::-webkit-scrollbar {
 
 <script>
 // Cache-Bereinigung ohne aggressive Storage-Resets
-const WAX_BUILD = '1778478580000';
+const WAX_BUILD = '1778478580000-fxfix-20260511';
 try {
   sessionStorage.setItem('wax_build_seen', WAX_BUILD);
 } catch(e) {}
@@ -639,52 +639,49 @@ const REF_FALLBACK = {
 let REF = {...REF_FALLBACK};
 let REF_JAHR = 2025; // aktuell geladenes Referenzjahr
 
-// WKN → Yahoo-Ticker + Währung (alle auf EUR-Handelsplätze umgestellt)
-// Alle Ticker beziehen Kurse direkt in EUR (Frankfurt/Xetra) → keine FX-Umrechnung nötig.
-// Hintergrund: Yahoo-Heimatbörsen-Kurse (USD/CHF/AUD/CAD) weichen von den
-// finanzen100-Kursen (Xetra/Frankfurt, bereits in EUR) ab → Bewertungsdifferenz.
+// WKN → Yahoo-Ticker + Heimatwährung (via Cloudflare Worker)
+// Bewertungslogik: Heimatbörse + echte Handelswährung; danach sauber in EUR umrechnen.
+// Wichtig: Nicht auf Frankfurt-EUR-Ersatzticker ausweichen, weil diese teils falsche/stale Kurse liefern.
 const TICKER_MAP = {
-  // EUR — Xetra/Frankfurt direkt
-  '716460': { t:'SAP.DE',         fx:'EUR' },  // SAP
-  '766403': { t:'VOW3.DE',        fx:'EUR' },  // Volkswagen Vz.
-  'A0D9PT': { t:'MTX.DE',         fx:'EUR' },  // MTU Aero Engines
-  '823212': { t:'LHA.DE',         fx:'EUR' },  // Lufthansa
-  'A0LD6E': { t:'GXI.DE',         fx:'EUR' },  // Gerresheimer
-  'A2TT3D': { t:'21XH.DE',        fx:'EUR' },  // 21Shares Krypto Index ETP
-  'A2T0VS': { t:'XSLR.DE',        fx:'EUR' },  // Xtrackers Silver ETC
-  'A1KWPR': { t:'VZLB.DE',        fx:'EUR' },  // ETC Silber
-  'A0YEDG': { t:'SXR8.DE',        fx:'EUR' },  // iShares S&P 500 ETF
-  'EWG2LD': { t:'EWG2.DE',        fx:'EUR' },  // Euwax Gold ETC
-  'A4A59K': { t:'IB1T.DE',        fx:'EUR' },  // iShares Bitcoin Trust ETP
-  'A2UBKC': { t:'21XP.DE',        fx:'EUR' },  // 21Shares Ripple ETP
-  'A3C4QT': { t:'0YB0.F',         fx:'EUR' },  // IonQ (Frankfurt EUR-Listing)
-  // Nestlé: Xetra EUR-Listing statt SIX CHF
-  'A0Q4DC': { t:'NESN.DE',        fx:'EUR' },  // Nestlé (Xetra, EUR)
-  // US-Aktien: Frankfurt EUR-Listing statt NYSE/NASDAQ USD
-  '906866': { t:'AMZ.DE',         fx:'EUR' },  // Amazon
-  '850471': { t:'BCO.DE',         fx:'EUR' },  // Boeing
-  'A0NJ38': { t:'A9W.DE',         fx:'EUR' },  // American Water Works
-  '932798': { t:'DNN.DE',         fx:'EUR' },  // Dominion Energy
-  'A2JG9Z': { t:'A4S.DE',         fx:'EUR' },  // Broadcom
-  '870747': { t:'MSF.DE',         fx:'EUR' },  // Microsoft
-  'A3CL8W': { t:'3ZU0.DE',         fx:'EUR' },  // AST SpaceMobile (Frankfurt)
-  'A3CVQC': { t:'HDD.DE',         fx:'EUR' },  // Robinhood
-  'A3DHHB': { t:'FLH0.DE',        fx:'EUR' },  // Applied Digital (Frankfurt)
-  'A2APCZ': { t:'2MG.DE',         fx:'EUR' },  // Madrigal Pharma
-  'A2QB38': { t:'SNO.DE',         fx:'EUR' },  // Snowflake
-  'A0YEFE': { t:'FTN.DE',         fx:'EUR' },  // Fortinet
-  'A3CND6': { t:'PXR.DE',         fx:'EUR' },  // UiPath
-  'A2AT0Z': { t:'1CR.DE',         fx:'EUR' },  // CRISPR Therapeutics
-  '936386': { t:'SGM.DE',         fx:'EUR' },  // Sangamo Therapeutics
-  '918422': { t:'NVD.DE',         fx:'EUR' },  // NVIDIA
-  'A2PK2R': { t:'C2RW.DE',        fx:'EUR' },  // CrowdStrike
-  'A0YAND': { t:'9KT.DE',         fx:'EUR' },  // Kratos Defense
-  'A12GD6': { t:'9VK.DE',         fx:'EUR' },  // Viking Therapeutics
-  // Australien: Frankfurt EUR-Listing statt ASX AUD
-  'A3DESP': { t:'IPX.DE',         fx:'EUR' },  // Iperionx
-  // Kanada: Frankfurt EUR-Listing statt TSX CAD
-  'A2PX5N': { t:'57G.F',          fx:'EUR' },  // GR Silver Mining
-  'A2PMPY': { t:'AUMB.F',         fx:'EUR' },  // 1911 Gold Corp
+  // EUR — direkt, keine Umrechnung nötig
+  '716460': { t:'SAP.DE',         fx:'EUR' },
+  '766403': { t:'VOW3.DE',        fx:'EUR' },
+  'A0D9PT': { t:'MTX.DE',         fx:'EUR' },
+  '823212': { t:'LHA.DE',         fx:'EUR' },
+  'A0LD6E': { t:'GXI.DE',         fx:'EUR' },
+  'A2TT3D': { t:'21XH.DE',        fx:'EUR' },
+  'A2T0VS': { t:'XSLR.DE',        fx:'EUR' },
+  'A1KWPR': { t:'VZLB.DE',        fx:'EUR' },
+  'A0YEDG': { t:'SXR8.DE',        fx:'EUR' },
+  'EWG2LD': { t:'EWG2.DE',        fx:'EUR' },
+  // CHF → EUR
+  'A0Q4DC': { t:'NESN.SW',        fx:'CHF' },
+  // USD → EUR
+  '906866': { t:'AMZN',        fx:'USD' },
+  '850471': { t:'BA',          fx:'USD' },
+  'A0NJ38': { t:'AWK',         fx:'USD' },
+  '932798': { t:'D',           fx:'USD' },
+  'A2JG9Z': { t:'AVGO',        fx:'USD' },
+  '870747': { t:'MSFT',        fx:'USD' },
+  'A4A59K': { t:'IB1T.DE',     fx:'EUR' },
+  'A3CL8W': { t:'ASTS',        fx:'USD' },
+  'A3CVQC': { t:'HOOD',        fx:'USD' },
+  'A3DHHB': { t:'APLD',        fx:'USD' },
+  'A2APCZ': { t:'MDGL',        fx:'USD' },
+  'A2QB38': { t:'SNOW',        fx:'USD' },
+  'A2UBKC': { t:'21XP.DE',      fx:'EUR' },
+  'A0YEFE': { t:'FTNT',        fx:'USD' },
+  'A3CND6': { t:'PATH',        fx:'USD' },
+  'A2AT0Z': { t:'CRSP',        fx:'USD' },
+  '936386': { t:'SGMO',        fx:'USD' },
+  '918422': { t:'NVDA',        fx:'USD' },
+  'A2PK2R': { t:'CRWD',        fx:'USD' },
+  'A0YAND': { t:'KTOS',        fx:'USD' },
+  'A12GD6': { t:'VKTX',        fx:'USD' },
+  // AUD → EUR
+  'A3DESP': { t:'IPX.AX',         fx:'AUD' },
+  // CAD → EUR
+  'A2PX5N': { t:'GRSL.V',        fx:'CAD' },
 };
 
 
@@ -712,11 +709,11 @@ function getTickerInfoFromMeta(meta){
   const fx = normalizeCurrency(meta.currency || meta.fx || '');
   return ticker ? { t:ticker, fx, source:'security_master' } : null;
 }
-// Ticker-Auflösung: TICKER_MAP hat höchste Priorität (enthält immer EUR-Handelsplätze),
+// Ticker-Auflösung: TICKER_MAP hat höchste Priorität (geprüfte Heimatbörsen-Ticker + Währung),
 // Security Master (Supabase/localStorage) nur als Fallback für manuell gepflegte Einträge.
 function resolveTickerByWKN(wkn){
   const key = repairKnownWkn(wkn);
-  // TICKER_MAP gewinnt immer — er enthält die geprüften EUR-Handelsplatz-Ticker.
+  // TICKER_MAP gewinnt immer — er enthält geprüfte Heimatbörsen-Ticker inkl. Währung.
   const mapEntry = TICKER_MAP[key];
   if (mapEntry?.t) return { t:String(mapEntry.t).trim().toUpperCase(), fx:normalizeCurrency(mapEntry.fx), source:'ticker_map' };
   // Nur für WKNs, die NICHT im TICKER_MAP stehen, Security Master befragen.
@@ -1329,13 +1326,15 @@ function setRefreshButtonsLoading(isLoading) {
 async function refreshMarketData() {
   if (marketRefreshRunning) return;
   setRefreshButtonsLoading(true);
-  setStatus('loading','Aktualisiere Kurse…');
+  setStatus('loading','Aktualisiere Kurse & Wechselkurse…');
   try {
+    await loadFX();
     await Promise.all([loadKurse(), loadBenchmarks()]);
     const loaded = Object.keys(liveKurse).length;
     const total = [...new Set(db.positionen.filter(p=>!p.verkauft&&num(p.stueck)>0).map(p=>repairKnownWkn(p.wkn)))].length;
+    const fxLoaded = Object.keys(fxRates).length;
     const now = new Date().toLocaleTimeString('de-DE');
-    setStatus('live', `Aktualisiert — ${loaded}/${total} Kurse geladen (alle in EUR)`);
+    setStatus('live', `Aktualisiert — ${loaded}/${total} Kurse geladen, ${fxLoaded} Währungen`);
     document.getElementById('sTime').textContent = 'Stand: '+now;
     document.getElementById('footTime').textContent = 'Datenstand: '+now;
     investmentsSortRules = [];
@@ -1439,12 +1438,14 @@ async function init() {
   hydrateSecurityMaster(); // Kein automatischer localStorage→Supabase-Sync; Ticker nur bewusst per Admin-Button speichern
   populateSelects();
   setRefreshButtonsLoading(false);
-  setStatus('loading','Lade Kurse…');
+  setStatus('loading','Lade Kurse & Wechselkurse…');
+  await loadFX();
   await Promise.all([loadKurse(), loadBenchmarks()]);
   const loaded = Object.keys(liveKurse).length;
   const total = [...new Set(db.positionen.filter(p=>!p.verkauft&&num(p.stueck)>0).map(p=>repairKnownWkn(p.wkn)))].length;
+  const fxLoaded = Object.keys(fxRates).length;
   const now = new Date().toLocaleTimeString('de-DE');
-  setStatus('live', `Bereit — ${loaded}/${total} Kurse geladen (alle in EUR)`);
+  setStatus('live', `Bereit — ${loaded}/${total} Kurse geladen, ${fxLoaded} Währungen`);
   document.getElementById('sTime').textContent = 'Stand: '+now;
   document.getElementById('footTime').textContent = 'Datenstand: '+now;
   renderAll();
