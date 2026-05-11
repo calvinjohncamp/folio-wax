@@ -3,6 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-title" content="Folio.wax">
 <title>Folio.wax · Aktienclub</title>
@@ -738,17 +739,35 @@ function normalizeCurrency(v){
   const c = String(v || '').trim().toUpperCase();
   return ['EUR','USD','CHF','CAD','AUD'].includes(c) ? c : 'EUR';
 }
-function getTickerInfoFromMeta(meta){
+function inferCurrencyFromTicker(ticker){
+  const t = String(ticker || '').trim().toUpperCase();
+  if (!t) return 'EUR';
+  if (t.endsWith('.DE') || t.endsWith('.F') || t.endsWith('.DU') || t.endsWith('.BE') || t.endsWith('.HM') || t.endsWith('.HA')) return 'EUR';
+  if (t.endsWith('.SW')) return 'CHF';
+  if (t.endsWith('.AX')) return 'AUD';
+  if (t.endsWith('.V') || t.endsWith('.TO') || t.endsWith('.NE')) return 'CAD';
+  // Yahoo-US-Ticker ohne Börsensuffix liefern in der Regel USD.
+  if (!t.includes('.')) return 'USD';
+  return 'EUR';
+}
+function getTickerInfoFromMeta(meta, wkn){
   if (!meta) return null;
   const ticker = String(meta.yahoo_ticker || meta.ticker || '').trim().toUpperCase();
-  const fx = normalizeCurrency(meta.currency || meta.fx || '');
-  return ticker ? { t:ticker, fx, source:'security_master' } : null;
+  if (!ticker) return null;
+  const key = repairKnownWkn(wkn || meta.wkn || '');
+  const mapEntry = TICKER_MAP[key];
+  const rawCcy = String(meta.currency || meta.fx || '').trim().toUpperCase();
+  // Sicherheitsregel: Security Master ist für Ticker/Name führend.
+  // Fehlt dort aber die Währung, MUSS die geprüfte TICKER_MAP-Währung bzw. eine Ticker-Heuristik greifen.
+  // Sonst werden US/CHF/CAD/AUD-Kurse fälschlich als EUR bewertet.
+  const fx = rawCcy ? normalizeCurrency(rawCcy) : normalizeCurrency(mapEntry?.fx || inferCurrencyFromTicker(ticker));
+  return { t:ticker, fx, source:'security_master' };
 }
-// Ticker-Auflösung: Security Master ist führend. TICKER_MAP dient nur als geprüfter Fallback/Vorschlag.
+// Ticker-Auflösung: Security Master ist führend. TICKER_MAP dient als geprüfter Fallback und als Währungs-Sicherheitsnetz.
 function resolveTickerByWKN(wkn){
   const key = repairKnownWkn(wkn);
   const meta = findSecurityMeta({ wkn:key });
-  const metaInfo = getTickerInfoFromMeta(meta);
+  const metaInfo = getTickerInfoFromMeta(meta, key);
   if (metaInfo) return metaInfo;
   const mapEntry = TICKER_MAP[key];
   if (mapEntry?.t) return { t:String(mapEntry.t).trim().toUpperCase(), fx:normalizeCurrency(mapEntry.fx), source:'ticker_map' };
