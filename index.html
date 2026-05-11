@@ -482,11 +482,10 @@ if (window.caches && caches.keys) {
     </div>
   </div>
   <div style="display:grid;grid-template-columns:repeat(4,minmax(180px,1fr));gap:12px;margin:-4px 0 20px">
-    <button class="btn btn-outline" style="text-align:left;padding-left:16px" onclick="deleteLastBookingByGroup('transaktion')"><span style="font-size:20px;line-height:1;display:inline-block;vertical-align:-2px;margin-right:8px">×</span>Letzte Transaktion löschen</button>
+    <button class="btn btn-outline" style="text-align:left;padding-left:16px" onclick="deleteLastBookingByGroup('kauf')"><span style="font-size:20px;line-height:1;display:inline-block;vertical-align:-2px;margin-right:8px">×</span>Letzten Kauf löschen</button>
+    <button class="btn btn-outline" style="text-align:left;padding-left:16px" onclick="deleteLastBookingByGroup('verkauf')"><span style="font-size:20px;line-height:1;display:inline-block;vertical-align:-2px;margin-right:8px">×</span>Letzten Verkauf löschen</button>
     <button class="btn btn-outline" style="text-align:left;padding-left:16px" onclick="deleteLastBookingByGroup('freigabe')"><span style="font-size:20px;line-height:1;display:inline-block;vertical-align:-2px;margin-right:8px">×</span>Letzte Freigabe löschen</button>
     <button class="btn btn-outline" style="text-align:left;padding-left:16px" onclick="deleteLastBookingByGroup('reise')"><span style="font-size:20px;line-height:1;display:inline-block;vertical-align:-2px;margin-right:8px">×</span>Letzte Reise löschen</button>
-    <div style="margin-top:8px;font-size:12px;color:#a35a00;line-height:1.45">Produktivschutz aktiv: Undo-Löschungen sind in dieser Datei bewusst gesperrt. Erst nach sauberem Neuaufbau und Tests in einer separaten Testumgebung wieder freigeben.</div>
-    <div></div>
   </div>
   <div class="sec-t"><span class="sec-n">5.1 ·</span> Cash-Bestände der Mitglieder</div>
   <div class="tw"><table>
@@ -3355,14 +3354,17 @@ Alltime-Werte und Performance seit Start p.a. werden dafür künftig automatisch
 
 
 function getLastBookingByGroup(group) {
-  const rows = [...db.buchungen].sort((a,b)=> {
+  const rows = [...(db.buchungen||[])].sort((a,b)=> {
     const da = (a.datum||'') + ' ' + String(a.id||'').padStart(10,'0');
     const dbb = (b.datum||'') + ' ' + String(b.id||'').padStart(10,'0');
     return dbb.localeCompare(da);
   });
-  if(group==='transaktion') return rows.find(b=>b.typ==='KAUF' || b.typ==='VERKAUF') || null;
-  if(group==='freigabe') return rows.find(b=>b.typ==='FREIGABE') || null;
-  if(group==='reise') return rows.find(b=>b.typ==='REISE') || null;
+  const typOf = b => String(b.typ||'').trim().toUpperCase();
+  if(group==='kauf') return rows.find(b=>typOf(b)==='KAUF') || null;
+  if(group==='verkauf') return rows.find(b=>typOf(b)==='VERKAUF') || null;
+  if(group==='transaktion') return rows.find(b=>typOf(b)==='KAUF' || typOf(b)==='VERKAUF') || null;
+  if(group==='freigabe') return rows.find(b=>typOf(b)==='FREIGABE') || null;
+  if(group==='reise') return rows.find(b=>typOf(b)==='REISE') || null;
   return null;
 }
 function buildDeleteSummary(group, last) {
@@ -3406,17 +3408,24 @@ async function deleteLastBookingByGroup(group) {
     return;
   }
   const last = getLastBookingByGroup(group);
-  if(!last){ alert('Keine passende Buchung vorhanden.'); return; }
-  const labelMap = {transaktion:'Letzte Transaktion', freigabe:'Letzte Cash-Freigabe', reise:'Letzte Reise'};
+  const labelMap = {kauf:'Letzter Kauf', verkauf:'Letzter Verkauf', transaktion:'Letzte Transaktion', freigabe:'Letzte Cash-Freigabe', reise:'Letzte Reise'};
+  if(!last){ alert(`Keine passende Buchung vorhanden: ${labelMap[group] || group}.`); return; }
+  const lastTyp = String(last.typ||'').trim().toUpperCase();
   const summary = buildDeleteSummary(group, last);
   if(!waxRequireTypedConfirmation(labelMap[group] || 'Letzte Buchung', summary)) return;
   const snapshotOk = await waxCreateUndoSnapshot(group, last);
   if(!snapshotOk) return;
 
   let ok = false;
-  if(group==='transaktion'){
-    if(last.typ==='KAUF') ok = await undoLastKaufSafe(last);
-    else if(last.typ==='VERKAUF') ok = await undoLastVerkaufSafe(last);
+  if(group==='kauf'){
+    if(lastTyp !== 'KAUF') return waxAbort('Interner Fehler: Die ausgewählte Buchung ist kein Kauf.');
+    ok = await undoLastKaufSafe(last);
+  } else if(group==='verkauf'){
+    if(lastTyp !== 'VERKAUF') return waxAbort('Interner Fehler: Die ausgewählte Buchung ist kein Verkauf.');
+    ok = await undoLastVerkaufSafe(last);
+  } else if(group==='transaktion'){
+    if(lastTyp==='KAUF') ok = await undoLastKaufSafe(last);
+    else if(lastTyp==='VERKAUF') ok = await undoLastVerkaufSafe(last);
   } else if(group==='freigabe'){
     ok = await undoGroupedCashBookingSafe(last, -1, 'FREIGABE');
   } else if(group==='reise'){
@@ -3427,7 +3436,7 @@ async function deleteLastBookingByGroup(group) {
   alert(`${labelMap[group] || 'Die Buchung'} wurde rückgängig gemacht. Bitte Kontrollblick auf Cash und Depot werfen.`);
 }
 async function undoLastKaufSafe(b) {
-  if(b.typ !== 'KAUF') return waxAbort('Die ausgewählte Buchung ist kein Kauf.');
+  if(String(b.typ||'').trim().toUpperCase() !== 'KAUF') return waxAbort('Die ausgewählte Buchung ist kein Kauf.');
   const mid = Number(b.mitglied_id);
   const wkn = repairKnownWkn(b.wkn);
   const st = Number(b.stueck)||0;
@@ -3455,7 +3464,7 @@ async function undoLastKaufSafe(b) {
   return true;
 }
 async function undoLastVerkaufSafe(b) {
-  if(b.typ !== 'VERKAUF') return waxAbort('Die ausgewählte Buchung ist kein Verkauf.');
+  if(String(b.typ||'').trim().toUpperCase() !== 'VERKAUF') return waxAbort('Die ausgewählte Buchung ist kein Verkauf.');
   const mid = Number(b.mitglied_id);
   const wkn = repairKnownWkn(b.wkn);
   const st = Number(b.stueck)||0;
@@ -3507,9 +3516,9 @@ async function undoLastVerkaufSafe(b) {
   return true;
 }
 async function undoGroupedCashBookingSafe(last, sign, expectedTyp) {
-  if(last.typ !== expectedTyp) return waxAbort('Falscher Buchungstyp.');
+  if(String(last.typ||'').trim().toUpperCase() !== expectedTyp) return waxAbort('Falscher Buchungstyp.');
   const candidates = waxSortDescById(db.buchungen.filter(b =>
-    b.typ===last.typ && b.datum===last.datum && (b.bezeichnung||'')===(last.bezeichnung||'')
+    String(b.typ||'').trim().toUpperCase()===String(last.typ||'').trim().toUpperCase() && b.datum===last.datum && (b.bezeichnung||'')===(last.bezeichnung||'')
   ));
   const group = [];
   const seen = new Set();
