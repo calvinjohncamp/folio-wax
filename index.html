@@ -228,7 +228,7 @@ body::-webkit-scrollbar {
 
 <script>
 // Cache-Bereinigung ohne aggressive Storage-Resets
-const WAX_BUILD = '1778478580000-fxfix-20260511';
+const WAX_BUILD = '1778481300000-pflege-active-scope-20260511';
 try {
   sessionStorage.setItem('wax_build_seen', WAX_BUILD);
 } catch(e) {}
@@ -553,7 +553,7 @@ if (window.caches && caches.keys) {
 
   <div class="sec-t" style="margin-top:28px"><span class="sec-n">5.6 ·</span> Stammdaten bekannte Wertpapiere</div>
   <div class="info-box" style="margin-bottom:12px">
-    Standard: bestätigte Wertpapiere mit funktionierendem Kursabruf. Unvollständige/falsche Kursdaten bleiben oben in 5.5, bis sie dort übernommen wurden. Mit <strong>Alle bekannten Wertpapiere</strong> wird der komplette Security Master sichtbar.
+    Standard: alle Wertpapiere, die aktuell in irgendeinem Einzeldepot Bestand haben – sortiert nach Name. Mit <strong>Alle bekannten Wertpapiere</strong> werden zusätzlich Wertpapiere angezeigt, die im laufenden Jahr gekauft oder verkauft wurden, aktuell aber nicht mehr im Depot liegen.
   </div>
   <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-bottom:10px">
     <button class="btn btn-outline" id="smScopeBtn" onclick="toggleSecurityMasterScope()">Alle bekannten Wertpapiere anzeigen</button>
@@ -1699,6 +1699,11 @@ async function init() {
 
 // HELPERS
 const f  = (n,d=2) => (n!=null&&!isNaN(n)) ? n.toLocaleString('de-DE',{minimumFractionDigits:d,maximumFractionDigits:d}) : '—';
+const formatStueck = (n) => {
+  if (n == null || isNaN(n)) return '—';
+  const v = Number(n);
+  return v.toLocaleString('de-DE', { minimumFractionDigits: Number.isInteger(v) ? 0 : 0, maximumFractionDigits: Number.isInteger(v) ? 0 : 4 });
+};
 const fp = n => (n!=null&&!isNaN(n)) ? (n>=0?'▲ +':'▼ ')+f(Math.abs(n*100))+'%' : '—';
 const fc = n => (n!=null&&!isNaN(n)) ? (n>=0?'+':'')+f(n)+' €' : '—';
 const cl = n => (!n&&n!==0)||isNaN(n)?'':n>=0?'pos':'neg';
@@ -3027,14 +3032,12 @@ function getSecurityMasterScopeRows(){
     if (b.bezeichnung) prev.names.add(b.bezeichnung);
     currentYearByWkn.set(wkn, prev);
   });
-  const allMasterKeys = (db.security_master||[]).map(r=>repairKnownWkn(r.wkn)).filter(Boolean);
-  // Standardansicht 5.6: bestätigte/relevante Stammdaten.
-  // Unvollständige oder nicht funktionierende Kursdaten bleiben oben in 5.5, bis sie dort übernommen wurden.
-  const relevantKeys = [...activeByWkn.keys(), ...currentYearByWkn.keys()].filter(wkn => {
-    const meta = findSecurityMeta({ wkn });
-    return isSecurityMetaComplete(meta) && liveKurse[wkn] != null;
-  });
-  const keys = [...new Set(securityMasterShowAll ? [...allMasterKeys, ...activeByWkn.keys(), ...currentYearByWkn.keys()] : relevantKeys)].sort();
+  // Standardansicht 5.6: nur echte aktuelle Depotbestände aller Teilnehmer.
+  // Erweiterte Ansicht: zusätzlich Wertpapiere mit Kauf/Verkauf im laufenden Jahr,
+  // die aktuell keinen Bestand mehr haben. Alte reine Stammdaten werden nicht mitgeschleppt.
+  const activeKeys = [...activeByWkn.keys()];
+  const currentYearSoldKeys = [...currentYearByWkn.keys()].filter(wkn => !activeByWkn.has(wkn));
+  const keys = [...new Set(securityMasterShowAll ? [...activeKeys, ...currentYearSoldKeys] : activeKeys)];
   const q = String(document.getElementById('smSearch')?.value || '').trim().toLowerCase();
   return keys.map(wkn=>{
     const active = activeByWkn.get(wkn);
@@ -3060,7 +3063,9 @@ function getSecurityMasterScopeRows(){
       currency: normalizeCurrency(tickerInfo.fx || inferCurrencyFromTicker(meta.ticker || meta.yahoo_ticker || tickerInfo.t || ''))
     };
     return row;
-  }).filter(row => !q || [row.wkn,row.name,row.ticker,row.category,row.country,row.exchange].join(' ').toLowerCase().includes(q));
+  })
+  .filter(row => !q || [row.wkn,row.name,row.ticker,row.category,row.country,row.exchange].join(' ').toLowerCase().includes(q))
+  .sort((a,b)=>String(a.name||a.wkn).localeCompare(String(b.name||b.wkn), 'de', { numeric:true, sensitivity:'base' }));
 }
 function smSelect(id, values, selected){
   const opts = ['Nicht zugeordnet', ...values].filter((v,i,a)=>a.indexOf(v)===i);
@@ -3072,13 +3077,13 @@ function renderSecurityMasterTable(){
   if (!info || !body) return;
   const rows = getSecurityMasterScopeRows();
   const scopeBtn = document.getElementById('smScopeBtn');
-  if (scopeBtn) scopeBtn.textContent = securityMasterShowAll ? 'Nur aktive/relevante anzeigen' : 'Alle bekannten Wertpapiere anzeigen';
+  if (scopeBtn) scopeBtn.textContent = securityMasterShowAll ? 'Nur aktuelle Depotwerte anzeigen' : 'Alle bekannten Wertpapiere anzeigen';
   info.innerHTML = rows.length
-    ? rows.length + (securityMasterShowAll ? ' bekannte Wertpapier-Stammdatensätze' : ' relevante Wertpapier-Stammdatensätze')
+    ? rows.length + (securityMasterShowAll ? ' bekannte Wertpapiere im laufenden Jahr' : ' aktuelle Wertpapiere im Depot')
     : 'Keine passenden Stammdaten gefunden.';
   if (!rows.length) { body.innerHTML = '<tr><td colspan="10" style="text-align:center;color:#888;padding:18px">Keine relevanten Wertpapiere gefunden.</td></tr>'; return; }
   body.innerHTML = rows.map(row=>{
-    const stat = row.active ? '<span class="ticker-ok">aktuell im Depot</span><div class="ticker-mini">'+f(row.stueck,4)+' Stück</div>' : (row.currentYear ? '<span class="ticker-warn">nicht im Depot</span><div class="ticker-mini">nur aktuelles Jahr</div>' : '<span class="dim">nur Stammdaten</span>');
+    const stat = row.active ? '<span class="ticker-ok">aktuell im Depot</span><div class="ticker-mini">'+formatStueck(row.stueck)+' Stück</div>' : (row.currentYear ? '<span class="ticker-warn">nicht im Depot</span><div class="ticker-mini">nur aktuelles Jahr</div>' : '<span class="dim">nur Stammdaten</span>');
     return '<tr>'+
       '<td>'+stat+'</td>'+
       '<td class="bold">'+escapeHtml(row.wkn)+'</td>'+
