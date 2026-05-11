@@ -973,6 +973,18 @@ function hydrateSecurityMaster(){
   db.security_master = mergeSecurityEntries(mergeSecurityEntries(defaults, remote), mergeSecurityEntries(getLocalSecurityMaster(), corrections))
     .filter(row => !deleted.has(repairKnownWkn(row.wkn)));
 }
+
+async function reloadSecurityMasterFromSupabase(){
+  try {
+    const remote = await sbGet('security_master','order=wkn');
+    db.security_master = Array.isArray(remote) ? remote : [];
+    hydrateSecurityMaster();
+    return true;
+  } catch(e) {
+    console.warn('Security Master konnte nicht neu aus Supabase geladen werden', e);
+    return false;
+  }
+}
 async function syncLocalSecurityMasterToSupabase(){
   // Automatischer Sync deaktiviert — Ticker nur bewusst per Admin-Übernehmen-Button speichern
   return { synced:0, failed:0 };
@@ -1022,14 +1034,30 @@ function upsertSecurityMasterLocal(entry){
 }
 async function persistSecurityMeta(entry){
   const payload = { ...entry, wkn:repairKnownWkn(entry.wkn), updated_at:new Date().toISOString() };
+  if (!payload.wkn) return { ok:false, error:'WKN fehlt' };
   unmarkSecurityMasterDeleted(payload.wkn);
-  const existing = findSecurityMeta({ wkn:payload.wkn, name:payload.name });
-  let ok = false;
+
+  // Hartes Supabase-Speichern: PATCH gilt nur als Erfolg, wenn wirklich eine Zeile geändert wurde.
+  // Falls keine Zeile existiert, wird sauber per POST neu angelegt.
   try {
-    ok = existing ? await sbPatch('security_master', `wkn=eq.${encodeURIComponent(payload.wkn)}`, payload) : await sbPost('security_master', payload);
-  } catch {}
-  upsertSecurityMasterLocal(payload);
-  return ok;
+    const patch = await sbPatchDetailed('security_master', `wkn=eq.${encodeURIComponent(payload.wkn)}`, payload);
+    if (patch.ok && Array.isArray(patch.rows) && patch.rows.length > 0) {
+      upsertSecurityMasterLocal(payload);
+      await reloadSecurityMasterFromSupabase();
+      return { ok:true, action:'updated' };
+    }
+
+    const post = await sbPostRow('security_master', payload);
+    if (post.ok) {
+      upsertSecurityMasterLocal(payload);
+      await reloadSecurityMasterFromSupabase();
+      return { ok:true, action:'inserted' };
+    }
+
+    return { ok:false, error:post.error || patch.error || 'Supabase hat nicht gespeichert' };
+  } catch(e) {
+    return { ok:false, error:String(e) };
+  }
 }
 function getStructureColor(label, idx){
   return STRUCTURE_COLORS[label] || ['#3B82F6','#10B981','#F59E0B','#8B5CF6','#EF4444','#6B7280','#14B8A6','#111827'][idx % 8];
@@ -2924,15 +2952,16 @@ async function saveTickerForWkn(wkn){
     country: existing.country || 'Nicht zugeordnet',
     exchange: existing.exchange || 'Nicht zugeordnet'
   };
-  const ok = await persistSecurityMeta(entry);
+  const result = await persistSecurityMeta(entry);
+  if (!result.ok) {
+    alert('✗ Supabase-Speicherung fehlgeschlagen.\n\nDer Ticker wurde NICHT als dauerhaft gepflegt markiert.\n\nFehler: ' + (result.error || 'unbekannt'));
+    return;
+  }
+  await loadFX();
   await loadKurse();
   renderAll();
   renderMissingTickerTable();
-  if (ok) {
-    alert('✓ Ticker ' + ticker + ' im Security Master gespeichert und Kurse aktualisiert.');
-  } else {
-    alert('Ticker lokal gespeichert (Supabase-Sync noch ausstehend). Kurse wurden aktualisiert.');
-  }
+  alert('✓ Ticker ' + ticker + ' dauerhaft in Supabase gespeichert und Kurse aktualisiert.');
 }
 
 
@@ -3063,10 +3092,15 @@ async function saveSecurityMasterRow(wkn){
   const row = readSecurityMasterRowFromUi(wkn);
   if (!row.wkn || !row.name) { alert('WKN und Name fehlen.'); return; }
   if (!confirm('Stammdaten für ' + row.wkn + ' speichern?')) return;
-  const ok = await persistSecurityMeta(row);
+  const result = await persistSecurityMeta(row);
+  if (!result.ok) {
+    alert('✗ Supabase-Speicherung fehlgeschlagen.\n\nDie Stammdaten wurden NICHT dauerhaft gespeichert.\n\nFehler: ' + (result.error || 'unbekannt'));
+    return;
+  }
+  await loadFX();
   await loadKurse();
   renderAll();
-  alert(ok ? '✓ Stammdaten gespeichert und Kurse aktualisiert.' : 'Stammdaten lokal gespeichert. Supabase-Speicherung prüfen.');
+  alert('✓ Stammdaten dauerhaft in Supabase gespeichert und Kurse aktualisiert.');
 }
 async function deleteSecurityMasterRow(wkn){
   if (!isAdmin()) { alert('Nur für den Administrator.'); return; }
