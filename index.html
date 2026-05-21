@@ -230,7 +230,7 @@ body::-webkit-scrollbar {
 
 <script>
 // Cache-Bereinigung ohne aggressive Storage-Resets
-const WAX_BUILD = '1778533000000-ytd-sold-fallback-cashdiff-20260521';
+const WAX_BUILD = '1778539000000-ytd-ja-investref-supabase-20260521';
 try {
   sessionStorage.setItem('wax_build_seen', WAX_BUILD);
 } catch(e) {}
@@ -2760,10 +2760,12 @@ function renderDepot(id) {
         <td class="${cl(dp)}">${dp!=null?fp(dp):'—'}</td><td class="${cl(de)}">${de!=null?fc(de):'—'}</td>
       </tr>`;
     });
-    // Summenzeile AKTIVE Positionen:
-    // Hier darf nur die sichtbare aktive Tabelle summiert werden.
-    // Verkaufte Positionen stehen separat darunter und werden dort gegen 31.12. bewertet.
-    const sumBase = sumBaseVisible;
+    // Summenzeile WERTPAPIERE:
+    // Im YTD-Modus ist die 31.12.-Basis ein eingefrorener Jahresabschluss-Fixwert
+    // aus Supabase (jahresabschluss.invest_ref), NICHT die Summe sichtbarer aktiver Lots.
+    // Das ist wichtig, weil Käufe/Verkäufe nach dem Jahreswechsel die sichtbaren aktiven
+    // Positionen verändern, die Excel-Referenzbasis 31.12. aber unverändert bleiben muss.
+    const sumBase = isToday ? sumBaseVisible : investRef;
     const sumDiff = sumAktVisible - sumBase;
     html+=`<tr class="total-row">
       <td colspan="5" style="text-align:right">Summe Wertpapiere</td>
@@ -2774,8 +2776,10 @@ function renderDepot(id) {
     </tr>`;
   } else {
     html+=`<tr class="gr"><td colspan="12">Aktive Positionen</td></tr>`;
-    const sumBase = 0;
-    const sumDiff = 0;
+    // Auch ohne aktive Positionen bleibt die YTD-31.12.-Wertpapierbasis der
+    // eingefrorene Supabase-Wert jahresabschluss.invest_ref.
+    const sumBase = isToday ? 0 : investRef;
+    const sumDiff = 0 - sumBase;
     html+=`<tr style="visibility:hidden;height:0"><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td></tr>`;
     html+=`<tr><td colspan="5" style="text-align:left;color:#888;padding:9px 10px">Alle Positionen 2026 verkauft</td>
       <td style="text-align:right" class="dim">—</td><td style="text-align:right" class="dim">—</td><td style="text-align:right" class="dim">${f(sumBase)}</td><td style="text-align:right" class="dim">—</td><td class="bold">0,00</td>
