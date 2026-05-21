@@ -2835,7 +2835,11 @@ function renderDepot(id) {
       soldRef += Number(refV||0);
       soldWert += Number(sellV||0);
       soldDiff += Number(diffAbs||0);
-      const dateBadge=(p.verkauft_datum||p.verkauf_datum)?`<span class="badge b-out">RAUS ${fdate(p.verkauft_datum||p.verkauf_datum)}</span>`:'';
+      const soldDate = String(p.verkauft_datum || p.verkauf_datum || '').slice(0,10);
+      // Neustart-Regel: Die per Excel/Supabase-Patch übernommenen Alt-Verkäufe wurden technisch pauschal auf 2026-05-19 gesetzt.
+      // Dieses Datum ist keine fachlich verlässliche Verkaufsinformation und wird deshalb nicht als RAUS-Badge gezeigt.
+      // Neue Verkäufe ab App-Neustart behalten ihr echtes Verkaufsdatum und zeigen den Badge wieder automatisch.
+      const dateBadge = (soldDate && soldDate !== '2026-05-19') ? `<span class="badge b-out">RAUS ${fdate(soldDate)}</span>` : '';
       html+=`<tr style="opacity:.97">
         <td>${f(p.stueck,0)}</td><td class="sold">${securityDisplayName(p.wkn, p.bezeichnung)}${dateBadge}</td>
         <td class="dim">${p.wkn}</td><td class="dim">${p.art}</td>
