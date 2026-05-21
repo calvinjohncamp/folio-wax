@@ -72,13 +72,15 @@ td:nth-child(2) { text-align: left; }
 .cash-row td { background: #f7f5f2; color: #444; }
 .sum-row td { background: #1a1814; color: #faf9f6; font-weight: 700; border-top: 2px solid #c8441a; }
 #rankingBody tr { height: 54px; }
-#rankingBody td:nth-child(1), #rankingBody td:nth-child(7) { width: 80px; }
+#rankingBody td:nth-child(1) { width: 80px; }
+#rankingBody td:nth-child(8) { width: 70px; min-width:70px; max-width:70px; text-align:center !important; padding-left:4px; padding-right:4px; }
+#view-uebersicht .tw table thead th:nth-child(8) { width:70px; min-width:70px; max-width:70px; text-align:center !important; padding-left:4px; padding-right:4px; }
 #rankingBody td:nth-child(2) { max-width: 90px; overflow: hidden; text-overflow: ellipsis; }
 #rankingBody td { vertical-align: middle; }
 .animal-cell { display: flex; align-items: center; }
 .animal-img { mix-blend-mode: multiply; height: 2.2em; vertical-align: middle; flex-shrink: 0; }
-.at-rank-cell { min-width: 92px; text-align: center !important; padding-left: 0 !important; padding-right: 0 !important; }
-.at-rank-wrap { display:flex; align-items:center; justify-content:center; width:100%; gap:8px; }
+.at-rank-cell { width:70px !important; min-width:70px !important; max-width:70px !important; text-align:center !important; padding-left:4px !important; padding-right:4px !important; }
+.at-rank-wrap { display:inline-flex; align-items:center; justify-content:center; width:auto; min-width:0; gap:8px; margin:0 auto; }
 .at-rank-num { display:inline-block; min-width:12px; text-align:center; }
 .at-rank-icon { display:inline-flex; align-items:center; justify-content:center; min-width:22px; }
 .pos { color: #1a6e3a; } .neg { color: #c8441a; } .dim { color: #666; }
@@ -248,7 +250,7 @@ body::-webkit-scrollbar {
 
 <script>
 // Cache-Bereinigung ohne aggressive Storage-Resets
-const WAX_BUILD = '1778539000000-ytd-ja-investref-supabase-20260521e-at-rank-center-v2';
+const WAX_BUILD = '1778539000000-ytd-ja-investref-supabase-20260521f-at-rank-center-v3';
 try {
   sessionStorage.setItem('wax_build_seen', WAX_BUILD);
 } catch(e) {}
