@@ -226,11 +226,29 @@ body::-webkit-scrollbar {
 .ticker-actions{display:flex;gap:6px}
 .ticker-mini{font-size:10px;color:#888;margin-top:2px}
 
+/* Transaktionen: kompakte Desktop-Ansicht, Betrag ohne horizontales Scrollen sichtbar */
+#view-log .tw { overflow-x: visible; }
+#view-log table { table-layout: fixed; width: 100%; }
+#view-log th, #view-log td { padding-left: 8px; padding-right: 8px; }
+#view-log th:nth-child(1), #view-log td:nth-child(1) { width: 72px; text-align: left; }
+#view-log th:nth-child(2), #view-log td:nth-child(2) { width: 112px; text-align: left; }
+#view-log th:nth-child(3), #view-log td:nth-child(3) { width: 110px; text-align: left; }
+#view-log th:nth-child(4), #view-log td:nth-child(4) { width: auto; max-width: 360px; text-align: left; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+#view-log th:nth-child(5), #view-log td:nth-child(5) { width: 72px; text-align: center; }
+#view-log th:nth-child(6), #view-log td:nth-child(6) { width: 66px; text-align: right; }
+#view-log th:nth-child(7), #view-log td:nth-child(7) { width: 82px; text-align: right; }
+#view-log th:nth-child(8), #view-log td:nth-child(8) { width: 112px; text-align: right; }
+#view-log .log-title { display:block; max-width:360px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; text-align:left; }
+@media (max-width: 900px) {
+  #view-log .tw { overflow-x:auto; }
+  #view-log table { min-width: 820px; }
+}
+
 </style>
 
 <script>
 // Cache-Bereinigung ohne aggressive Storage-Resets
-const WAX_BUILD = '1778539000000-ytd-ja-investref-supabase-20260521';
+const WAX_BUILD = '1778539000000-ytd-ja-investref-supabase-20260521b';
 try {
   sessionStorage.setItem('wax_build_seen', WAX_BUILD);
 } catch(e) {}
@@ -1659,18 +1677,29 @@ function renderBenchmarks() {
 async function init() {
   setStatus('loading','Lade Daten…');
   document.getElementById('hdDate').textContent = new Date().toLocaleDateString('de-DE',{weekday:'short',day:'2-digit',month:'short',year:'numeric'});
-  // Jahresabschluss laden (neuesten verfügbaren Eintrag)
+  // Jahresabschluss laden — neuestes vollständiges Jahr (alle 6 Mitglieder vorhanden)
+  // limit=12 statt 6, damit nach dem Jahresabschluss 2026 beide Jahre (2025+2026) geladen
+  // werden können und wir sicher das neueste *vollständige* Jahr erwischen.
   try {
-    const jaResp = await fetch(`${SB_URL}/rest/v1/jahresabschluss?order=jahr.desc&limit=6`,
+    const jaResp = await fetch(`${SB_URL}/rest/v1/jahresabschluss?order=jahr.desc,mitglied_id.asc&limit=12`,
       {headers:{'apikey':SB_KEY,'Authorization':'Bearer '+SB_KEY}});
     if(jaResp.ok) {
       const jaData = await jaResp.json();
       if(jaData && jaData.length > 0) {
-        REF_JAHR = jaData[0].jahr;
-        REF = {};
-        jaData.forEach(r => {
-          REF[r.mitglied_id] = { total: r.gesamt_ref, cash: r.cash_ref, invest: r.invest_ref };
-        });
+        // Neuestes vollständiges Jahr finden (alle 6 Mitglieder müssen vorhanden sein)
+        const jahre = [...new Set(jaData.map(r => r.jahr))].sort((a,b) => b-a);
+        let besteJahr = null;
+        for(const j of jahre) {
+          const eintraege = jaData.filter(r => r.jahr === j);
+          if(eintraege.length === 6) { besteJahr = j; break; }
+        }
+        if(besteJahr) {
+          REF_JAHR = besteJahr;
+          REF = {};
+          jaData.filter(r => r.jahr === besteJahr).forEach(r => {
+            REF[r.mitglied_id] = { total: r.gesamt_ref, cash: r.cash_ref, invest: r.invest_ref };
+          });
+        }
       }
     }
   } catch(e) { /* Fallback auf REF_FALLBACK */ }
@@ -2915,7 +2944,7 @@ function renderLog() {
     html+=`<tr>
       <td>${fdate(b.datum)}</td><td>${((b.typ==='ENTNAHME'||b.typ==='KONTOSTAND') && /Comdirect-Gesamtstand/i.test(b.bezeichnung||'')) ? '💳 Kontostand' : `${typen[b.typ]||''} ${b.typ}`}</td>
       <td>${m?.name.split(',')[0]||'Alle'}</td>
-      <td>${b.bezeichnung||''} ${b.notiz?'<span class="dim">'+b.notiz+'</span>':''}</td>
+      <td><span class="log-title" title="${String((b.bezeichnung||'') + (b.notiz?' '+b.notiz:'')).replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;').replace(/>/g,'&gt;')}">${b.bezeichnung||''}${b.notiz?' <span class="dim">'+b.notiz+'</span>':''}</span></td>
       <td class="dim">${b.wkn||''}</td><td class="dim">${b.stueck?f(b.stueck,0):''}</td>
       <td class="dim">${b.kurs?f(b.kurs,4):''}</td>
       <td class="${b.betrag>=0?'pos':'neg'} bold">${fc(b.betrag)}</td>
@@ -3962,47 +3991,70 @@ function vorschauJahresabschluss() {
 
 async function saveJahresabschluss(jahr) {
   if(!isAdmin()){ alert('Nur für den Administrator.'); return; }
-  if(!confirm(`Jahresabschluss ${jahr} wirklich einfrieren?\n\nDies setzt:\n• REF-Werte für alle 6 Mitglieder\n• kurs_ref + wert_ref für alle aktiven Positionen\n\nDieser Schritt kann nicht rückgängig gemacht werden.`)) return;
-  // ── SUBMIT-LOCK ──
-  const _jaBtn = document.activeElement;
-  if(_jaBtn && _jaBtn._waxSubmitting){ return; }
-  if(_jaBtn){ _jaBtn._waxSubmitting=true; _jaBtn.disabled=true; }
+
+  // ── SUBMIT-LOCK (sicheres Flag-Pattern, nicht activeElement-abhängig) ──
+  if(saveJahresabschluss._running){ alert('Jahresabschluss wird bereits gespeichert…'); return; }
+  saveJahresabschluss._running = true;
+
   const info = document.getElementById('jahresabschlussInfo');
-  info.textContent = 'Speichere…';
-  
+
   try {
-    // 1. kurs_ref + wert_ref für alle aktiven Positionen setzen
+    // 0. Vorprüfung: fehlende Kurse ermitteln
     const aktivePos = db.positionen.filter(p=>!p.verkauft&&num(p.stueck)>0);
+    const fehlend = aktivePos.filter(p => liveKurse[p.wkn] == null);
+    if(fehlend.length > 0) {
+      const namen = fehlend.map(p=>`• ${p.bezeichnung||p.wkn} (${p.wkn})`).join('\n');
+      const weiter = confirm(
+        `⚠️ Für ${fehlend.length} Position(en) fehlt der aktuelle Kurs:\n\n${namen}\n\n` +
+        `Diese Positionen können nicht eingefroren werden.\n` +
+        `Bitte erst die Kurse laden (Refresh) und dann erneut versuchen.\n\n` +
+        `Abbrechen empfohlen. Trotzdem fortfahren?`
+      );
+      if(!weiter) return;
+    }
+
+    if(!confirm(`Jahresabschluss ${jahr} wirklich einfrieren?\n\nDies setzt:\n• REF-Werte für alle 6 Mitglieder\n• kurs_ref + wert_ref für alle aktiven Positionen\n\nDieser Schritt kann nicht rückgängig gemacht werden.`)) return;
+
+    info.textContent = 'Speichere…';
+
+    // 1. kurs_ref + wert_ref für alle aktiven Positionen setzen
+    let fehlerPos = [];
     for(const p of aktivePos) {
       const k = liveKurse[p.wkn];
       if(k != null) {
         const wert_ref = k * p.stueck;
         await sbPatch('positionen', `id=eq.${p.id}`, {kurs_ref: k, wert_ref});
+      } else {
+        fehlerPos.push(p.bezeichnung || p.wkn);
       }
     }
-    
+
     // 2. cash.betrag_ref für alle Mitglieder setzen
     for(const m of db.mitglieder) {
       const cash = getCash(m.id);
       await sbPatch('cash', `mitglied_id=eq.${m.id}`, {betrag_ref: cash, updated_at: new Date().toISOString()});
     }
-    
+
     // 3. jahresabschluss-Tabelle befüllen
+    // invest_ref = Summe der eingefrorenen wert_ref aller aktiven Positionen (live kurs × stueck)
+    // cash_ref   = aktueller Cash-Stand des Mitglieds
+    // gesamt_ref = invest_ref + cash_ref
     for(const m of db.mitglieder) {
       const cash = getCash(m.id);
       const pos = db.positionen.filter(p=>p.mitglied_id===m.id&&!p.verkauft&&num(p.stueck)>0);
       let invest = 0;
       pos.forEach(p => {
         const k = liveKurse[p.wkn];
-        invest += k!=null ? k*p.stueck : (p.wert_ref||p.kaufwert);
+        // Nur Positionen mit vorhandenem Kurs einfließen lassen
+        if(k != null) invest += k * p.stueck;
+        else invest += (p.wert_ref || p.kaufwert || 0);
       });
       const total = invest + cash;
-      
-      // Upsert: erst versuchen patch, dann post
+
       const existing = await fetch(`${SB_URL}/rest/v1/jahresabschluss?jahr=eq.${jahr}&mitglied_id=eq.${m.id}`,
         {headers:{'apikey':SB_KEY,'Authorization':'Bearer '+SB_KEY}});
       const ex = await existing.json();
-      
+
       const payload = {jahr, mitglied_id:m.id, gesamt_ref:total, cash_ref:cash, invest_ref:invest};
       if(ex && ex.length > 0) {
         await sbPatch('jahresabschluss', `jahr=eq.${jahr}&mitglied_id=eq.${m.id}`, payload);
@@ -4010,19 +4062,24 @@ async function saveJahresabschluss(jahr) {
         await sbPost('jahresabschluss', payload);
       }
     }
-    
-    info.innerHTML = `✓ Jahresabschluss ${jahr} erfolgreich eingefroren am ${new Date().toLocaleDateString('de-DE')}.<br>
+
+    let warnText = '';
+    if(fehlerPos.length > 0) {
+      warnText = `<br><strong style="color:#c8441a">⚠️ ${fehlerPos.length} Position(en) ohne Kurs übersprungen: ${fehlerPos.join(', ')}</strong>`;
+    }
+
+    info.innerHTML = `✓ Jahresabschluss ${jahr} erfolgreich eingefroren am ${new Date().toLocaleDateString('de-DE')}.${warnText}<br>
       <strong>Nächster Schritt:</strong> Bitte in der nächsten Chat-Session die <code>BENCH_BASIS</code>-Werte in der index.html auf die aktuellen Index-Schlusskurse vom 31.12.${jahr} aktualisieren lassen.<br>
       Seite wird neu geladen…`;
     info.style.color = '#1a6e3a';
     document.getElementById('jahresabschlussVorschau').innerHTML = '';
     setTimeout(()=>init(), 2000);
-    
+
   } catch(e) {
     info.textContent = `Fehler: ${e.message}`;
     info.style.color = '#c8441a';
   } finally {
-    if(_jaBtn){ _jaBtn._waxSubmitting=false; _jaBtn.disabled=false; }
+    saveJahresabschluss._running = false;
   }
 }
 </script>
