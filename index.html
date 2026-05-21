@@ -2750,7 +2750,10 @@ function renderDepot(id) {
         <td class="${cl(dp)}">${dp!=null?fp(dp):'—'}</td><td class="${cl(de)}">${de!=null?fc(de):'—'}</td>
       </tr>`;
     });
-    const sumBase = sumBaseVisible;
+    // YTD-Modus: "Wert 31.12.25" muss jahresabschluss.invest_ref zeigen (enthält auch
+    // im laufenden Jahr verkaufte Positionen, die am 31.12. noch im Depot lagen).
+    // sumBaseVisible summiert nur aktive wert_ref — das ist zu niedrig wenn Verkäufe stattfanden.
+    const sumBase = (!isToday && investRef > 0) ? investRef : sumBaseVisible;
     const sumDiff = sumAktVisible - sumBase;
     html+=`<tr class="total-row">
       <td colspan="5" style="text-align:right">Summe Wertpapiere</td>
