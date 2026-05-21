@@ -2709,7 +2709,7 @@ function renderDepot(id) {
     <th>Stück</th><th>Bezeichnung</th><th>WKN</th><th>Art</th>
     <th>Kaufkurs</th><th>Kaufwert</th>
     <th>${isToday ? 'Vortag Kurs' : 'Kurs 31.12.25'}</th><th>${isToday ? 'Wert Vortag' : 'Wert 31.12.25'}</th>
-    <th>Akt. Kurs</th><th>Akt. Wert</th><th>Diff. %</th><th>Diff. €</th>
+    <th>Akt. Kurs</th><th>Akt. Wert</th><th>${isToday ? 'Diff. %' : 'YTD %'}</th><th>${isToday ? 'Diff. €' : 'YTD €'}</th>
   </tr></thead><tbody>`;
 
   if (aktivPos.length > 0) {
@@ -2739,7 +2739,7 @@ function renderDepot(id) {
       sumBaseVisible += (wBase || 0);
       const dp=(k!=null&&wBase)?(wAkt-wBase)/wBase:null;
       const de=(k!=null&&wBase!=null)?wAkt-wBase:null;
-      const dateBadge=p.kauf_datum?`<span class="badge b-new">NEU ${fdate(p.kauf_datum)}</span>`:'';
+      const dateBadge=(!isToday && isNewCurrentYear && p.kauf_datum)?`<span class="badge b-new">NEU ${fdate(p.kauf_datum)}</span>`:'';
       const kursDisplay = k!=null ? f(k,4) : `<span class="kurs-loading">lädt…</span>`;
       html+=`<tr>
         <td>${f(p.stueck,0)}</td><td>${securityDisplayName(p.wkn, p.bezeichnung)}${dateBadge}</td>
@@ -2750,10 +2750,10 @@ function renderDepot(id) {
         <td class="${cl(dp)}">${dp!=null?fp(dp):'—'}</td><td class="${cl(de)}">${de!=null?fc(de):'—'}</td>
       </tr>`;
     });
-    // YTD-Modus: "Wert 31.12.25" muss jahresabschluss.invest_ref zeigen (enthält auch
-    // im laufenden Jahr verkaufte Positionen, die am 31.12. noch im Depot lagen).
-    // sumBaseVisible summiert nur aktive wert_ref — das ist zu niedrig wenn Verkäufe stattfanden.
-    const sumBase = (!isToday && investRef > 0) ? investRef : sumBaseVisible;
+    // Summenzeile AKTIVE Positionen:
+    // Hier darf nur die sichtbare aktive Tabelle summiert werden.
+    // Verkaufte Positionen stehen separat darunter und werden dort gegen 31.12. bewertet.
+    const sumBase = sumBaseVisible;
     const sumDiff = sumAktVisible - sumBase;
     html+=`<tr class="total-row">
       <td colspan="5" style="text-align:right">Summe Wertpapiere</td>
@@ -2803,7 +2803,7 @@ function renderDepot(id) {
       <th>Stück</th><th>Bezeichnung</th><th>WKN</th><th>Art</th>
       <th>Kaufkurs</th><th>Kaufwert</th>
       <th>Kurs 31.12.25</th><th>Wert 31.12.25</th>
-      <th>Verkaufskurs</th><th>Verkaufswert</th><th>Kursgew. %</th><th>Kursgew. €</th>
+      <th>Verkaufskurs</th><th>Verkaufswert</th><th>YTD %</th><th>YTD €</th>
     </tr></thead><tbody>`;
     html+=`<tr class="gr"><td colspan="12">Verkaufte Wertpapiere</td></tr>`;
     let soldKaufwert = 0, soldRef = 0, soldWert = 0, soldDiff = 0;
