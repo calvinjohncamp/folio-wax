@@ -1699,6 +1699,46 @@ async function init() {
   document.getElementById('footTime').textContent = 'Datenstand: '+now;
   renderAll();
   setupMitgliedBtns();
+  // ── AUTO-SNAPSHOT-HINWEIS (wöchentlich) ───────────────────────────────
+  if(isAdmin()) waxCheckSnapshotNudge();
+}
+
+function waxCheckSnapshotNudge() {
+  try {
+    const KEY = 'wax_last_snapshot_nudge';
+    const last = localStorage.getItem(KEY);
+    const now = Date.now();
+    const WEEK_MS = 7 * 24 * 60 * 60 * 1000;
+    if(last && (now - parseInt(last)) < WEEK_MS) return; // noch nicht fällig
+    localStorage.setItem(KEY, String(now));
+    // Kleiner Banner statt alert — nicht störend
+    const banner = document.createElement('div');
+    banner.id = 'waxSnapBanner';
+    banner.style.cssText = 'position:fixed;bottom:20px;right:20px;background:#1a1814;color:#faf9f6;padding:14px 18px;border-radius:6px;font-size:12px;z-index:9999;box-shadow:0 4px 20px rgba(0,0,0,.4);max-width:300px;line-height:1.5';
+    banner.innerHTML = `<div style="font-weight:700;margin-bottom:6px">📸 Wöchentlicher Snapshot</div>
+      <div style="color:#aaa;margin-bottom:10px">Letzter Snapshot vor über 7 Tagen — jetzt sichern?</div>
+      <div style="display:flex;gap:8px">
+        <button onclick="waxSnapNow()" style="background:#c8441a;color:#fff;border:none;padding:6px 12px;border-radius:4px;font-size:11px;cursor:pointer;font-family:inherit">Snapshot erstellen</button>
+        <button onclick="document.getElementById('waxSnapBanner').remove()" style="background:#333;color:#aaa;border:none;padding:6px 12px;border-radius:4px;font-size:11px;cursor:pointer;font-family:inherit">Später</button>
+      </div>`;
+    document.body.appendChild(banner);
+  } catch(e) {}
+}
+
+async function waxSnapNow() {
+  try {
+    const b = document.getElementById('waxSnapBanner');
+    if(b) b.innerHTML = '<div style="color:#aaa">Erstelle Snapshot…</div>';
+    const snapshot = await tmBuildSnapshot();
+    const stamp = tmNowStamp();
+    const month = tmMonthLabel();
+    tmDownload(`${month}_WAX_SNAPSHOT_${stamp}.json`, JSON.stringify(snapshot, null, 2), 'application/json;charset=utf-8');
+    localStorage.setItem('wax_last_snapshot_nudge', String(Date.now()));
+    if(b){ b.innerHTML = `<div style="color:#4caf50;font-weight:700">✓ Snapshot gespeichert!</div>`; setTimeout(()=>b.remove(), 2500); }
+  } catch(e) {
+    const b = document.getElementById('waxSnapBanner');
+    if(b) b.innerHTML = `<div style="color:#c8441a">Fehler: ${e.message}</div>`;
+  }
 }
 
 // HELPERS
@@ -3218,6 +3258,11 @@ function updateKaufVorschau() {
 
 async function saveKauf() {
   if(!isAdmin()){ alert('Nur für den Administrator.'); return; }
+  // ── SUBMIT-LOCK: verhindert Doppelbuchung durch schnellen Doppelklick ──
+  const _btn = document.querySelector('#modalOverlay button[onclick*="saveKauf"]') || document.activeElement;
+  if(_btn && _btn._waxSubmitting){ return; }
+  if(_btn){ _btn._waxSubmitting=true; _btn.disabled=true; _btn.dataset._origText=_btn.textContent; _btn.textContent='…'; }
+  try {
   const typ=document.getElementById('fTyp').value;
   const mid=parseInt(document.getElementById('fMitglied').value);
   const datum=document.getElementById('fDatum').value;
@@ -3264,6 +3309,9 @@ async function saveKauf() {
   } catch(err) {
     alert(err?.message || 'Speichern fehlgeschlagen.');
   }
+  } finally {
+    if(_btn){ _btn._waxSubmitting=false; _btn.disabled=false; _btn.textContent=_btn.dataset._origText||_btn.textContent; }
+  }
 }
 
 function calcFreigabe() {
@@ -3273,6 +3321,11 @@ function calcFreigabe() {
 
 async function saveFreigabe() {
   if(!isAdmin()){ alert('Nur für den Administrator.'); return; }
+  // ── SUBMIT-LOCK ──
+  const _btn = document.activeElement;
+  if(_btn && _btn._waxSubmitting){ return; }
+  if(_btn){ _btn._waxSubmitting=true; _btn.disabled=true; _btn.dataset._origText=_btn.textContent; _btn.textContent='…'; }
+  try {
   const betrag=parseFloat(document.getElementById('frBetrag').value);
   const datum=document.getElementById('frDatum').value;
   if(!betrag||!datum){alert('Bitte Betrag und Datum angeben.');return;}
@@ -3283,6 +3336,9 @@ async function saveFreigabe() {
     await sbPatch('cash',`mitglied_id=eq.${m.id}`,{betrag:(c?.betrag||0)+pp,updated_at:new Date().toISOString()});
   }
   closeModal(); await initApp();
+  } finally {
+    if(_btn){ _btn._waxSubmitting=false; _btn.disabled=false; _btn.textContent=_btn.dataset._origText||_btn.textContent; }
+  }
 }
 
 function calcReise() {
@@ -3346,6 +3402,11 @@ function showReiseBestätigung() {
 async function saveReise() {
   if(!isAdmin()){ alert('Nur für den Administrator.'); return; }
   if(!reiseVorschauData){calcReise();return;}
+  // ── SUBMIT-LOCK ──
+  const _btn = document.activeElement;
+  if(_btn && _btn._waxSubmitting){ return; }
+  if(_btn){ _btn._waxSubmitting=true; _btn.disabled=true; _btn.dataset._origText=_btn.textContent; _btn.textContent='…'; }
+  try {
   const name=document.getElementById('rName').value.trim();
   const datum=document.getElementById('rDatum').value;
   const gesamtBetrag=parseFloat(document.getElementById('rBetrag').value);
@@ -3370,6 +3431,9 @@ async function saveReise() {
 Die Cash-Bestände der 6 virtuellen Depots wurden anteilig nach aktuellem Depotwert reduziert. Negative Cash-Stände sind zulässig und können später durch Verkäufe ausgeglichen werden.
 
 Alltime-Werte und Performance seit Start p.a. werden dafür künftig automatisch aus den Buchungen fortgeführt – inklusive Verrechnung mit dem monatlichen Standardbeitrag von 100 € im jeweiligen Monat.`);
+  } finally {
+    if(_btn){ _btn._waxSubmitting=false; _btn.disabled=false; _btn.textContent=_btn.dataset._origText||_btn.textContent; }
+  }
 }
 
 
@@ -3578,6 +3642,11 @@ async function undoGroupedCashBookingSafe(last, sign, expectedTyp) {
 
 async function saveComdirect() {
   if(!isAdmin()){ alert('Nur für den Administrator.'); return; }
+  // ── SUBMIT-LOCK ──
+  const _btn = document.activeElement;
+  if(_btn && _btn._waxSubmitting){ return; }
+  if(_btn){ _btn._waxSubmitting=true; _btn.disabled=true; _btn.dataset._origText=_btn.textContent; _btn.textContent='…'; }
+  try {
   const betrag = parseFloat(document.getElementById('cdBetrag').value);
   const datum = document.getElementById('cdDatum').value;
   if(!betrag||!datum){alert('Bitte Betrag und Datum angeben.');return;}
@@ -3586,6 +3655,9 @@ async function saveComdirect() {
   closeModal();
   alert(`Comdirect-Stand ${f(betrag)} € gespeichert.`);
   await initApp();
+  } finally {
+    if(_btn){ _btn._waxSubmitting=false; _btn.disabled=false; _btn.textContent=_btn.dataset._origText||_btn.textContent; }
+  }
 }
 
 // ── TIME MACHINE (STUFE 2: JSON + RESTORE) ─────────────────────────────────
@@ -3869,7 +3941,10 @@ function vorschauJahresabschluss() {
 async function saveJahresabschluss(jahr) {
   if(!isAdmin()){ alert('Nur für den Administrator.'); return; }
   if(!confirm(`Jahresabschluss ${jahr} wirklich einfrieren?\n\nDies setzt:\n• REF-Werte für alle 6 Mitglieder\n• kurs_ref + wert_ref für alle aktiven Positionen\n\nDieser Schritt kann nicht rückgängig gemacht werden.`)) return;
-  
+  // ── SUBMIT-LOCK ──
+  const _jaBtn = document.activeElement;
+  if(_jaBtn && _jaBtn._waxSubmitting){ return; }
+  if(_jaBtn){ _jaBtn._waxSubmitting=true; _jaBtn.disabled=true; }
   const info = document.getElementById('jahresabschlussInfo');
   info.textContent = 'Speichere…';
   
@@ -3924,6 +3999,8 @@ async function saveJahresabschluss(jahr) {
   } catch(e) {
     info.textContent = `Fehler: ${e.message}`;
     info.style.color = '#c8441a';
+  } finally {
+    if(_jaBtn){ _jaBtn._waxSubmitting=false; _jaBtn.disabled=false; }
   }
 }
 </script>
