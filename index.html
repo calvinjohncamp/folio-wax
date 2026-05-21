@@ -248,7 +248,7 @@ body::-webkit-scrollbar {
 
 <script>
 // Cache-Bereinigung ohne aggressive Storage-Resets
-const WAX_BUILD = '1778539000000-ytd-ja-investref-supabase-20260521b';
+const WAX_BUILD = '1778539000000-ytd-ja-investref-supabase-20260521c';
 try {
   sessionStorage.setItem('wax_build_seen', WAX_BUILD);
 } catch(e) {}
@@ -3879,7 +3879,8 @@ async function tmDeleteAllForRestore(){
     ['positionen', 'id=gt.0'],
     ['jahresabschluss', 'jahr=gte.1900'],
     ['cash', 'mitglied_id=gt.0'],
-    ['alltime', 'mitglied_id=gt.0']
+    ['alltime', 'mitglied_id=gt.0'],
+    ['security_master', 'wkn=neq.XXXXXXXX'] // alles löschen, damit Restore sauber überschreibt
   ];
   for(const [table, filter] of steps){
     const ok = await sbDelete(table, filter);
