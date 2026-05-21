@@ -72,17 +72,19 @@ td:nth-child(2) { text-align: left; }
 .cash-row td { background: #f7f5f2; color: #444; }
 .sum-row td { background: #1a1814; color: #faf9f6; font-weight: 700; border-top: 2px solid #c8441a; }
 #rankingBody tr { height: 54px; }
-#rankingBody td:nth-child(1) { width: 80px; }
-#rankingBody td:nth-child(8) { width: 70px; min-width:70px; max-width:70px; text-align:center !important; padding-left:4px; padding-right:4px; }
-#view-uebersicht .tw table thead th:nth-child(8) { width:70px; min-width:70px; max-width:70px; text-align:center !important; padding-left:4px; padding-right:4px; }
+#rankingBody td:nth-child(1), #rankingBody td:nth-child(7) { width: 80px; }
 #rankingBody td:nth-child(2) { max-width: 90px; overflow: hidden; text-overflow: ellipsis; }
 #rankingBody td { vertical-align: middle; }
 .animal-cell { display: flex; align-items: center; }
 .animal-img { mix-blend-mode: multiply; height: 2.2em; vertical-align: middle; flex-shrink: 0; }
-.at-rank-cell { width:70px !important; min-width:70px !important; max-width:70px !important; text-align:center !important; padding-left:4px !important; padding-right:4px !important; }
-.at-rank-wrap { display:inline-flex; align-items:center; justify-content:center; width:auto; min-width:0; gap:8px; margin:0 auto; }
-.at-rank-num { display:inline-block; min-width:12px; text-align:center; }
+/* Pos. AT: Zahlen linksbündig wie Spalte 1, Symbol mit sauberem Abstand daneben */
+.pos-at-head { text-align: center !important; }
+#rankingBody td:nth-child(7),
+.at-rank-cell { width: 80px; min-width: 80px; text-align: left !important; padding-left: 10px; padding-right: 10px; }
+.at-rank-wrap { display:inline-flex; align-items:center; justify-content:flex-start; min-width:0; gap:8px; }
+.at-rank-num { display:inline-block; width:12px; text-align:left; }
 .at-rank-icon { display:inline-flex; align-items:center; justify-content:center; min-width:22px; }
+.at-rank-icon:empty { display:none; }
 .pos { color: #1a6e3a; } .neg { color: #c8441a; } .dim { color: #666; }
 .bold { font-weight: 700; }
 .badge { display: inline-block; font-size: 8px; font-weight: 700; padding: 2px 5px; border-radius: 2px; margin-left: 4px; vertical-align: middle; }
@@ -250,7 +252,7 @@ body::-webkit-scrollbar {
 
 <script>
 // Cache-Bereinigung ohne aggressive Storage-Resets
-const WAX_BUILD = '1778539000000-ytd-ja-investref-supabase-20260521f-at-rank-center-v3';
+const WAX_BUILD = '1778539000000-ytd-ja-investref-supabase-20260521c';
 try {
   sessionStorage.setItem('wax_build_seen', WAX_BUILD);
 } catch(e) {}
@@ -338,7 +340,7 @@ if (window.caches && caches.keys) {
     <thead><tr>
       <th>Pos.</th><th>Mitglied</th>
       <th id="rankPctHead">YTD %</th><th id="rankAbsHead">YTD €</th><th>Akt. Wert</th><th>Anteil %</th><th>Cashanteil</th>
-      <th>Pos. AT</th><th>Alltime echt</th><th>Anteil AT %</th>
+      <th class="pos-at-head">Pos. AT</th><th>Alltime echt</th><th>Anteil AT %</th>
       <th>Gewinn Alltime</th><th>Perf. p.a. Alltime</th>
     </tr></thead>
     <tbody id="rankingBody"></tbody>
@@ -2344,7 +2346,7 @@ function renderUebersicht() {
       <td class="dim">${f(r.anteilAkt*100,1)}%</td>
       <td class="dim">${f(r.cashPct*100,1)}%</td>
       <td class="dim at-rank-cell">
-        <span class="at-rank-wrap"><span class="at-rank-num">${atRank}</span>${atRank===1?`<span class="at-rank-icon">${bullImg}</span>`:atRank===rows.length?`<span class="at-rank-icon">${bearImg}</span>`:''}</span>
+        <span class="at-rank-wrap"><span class="at-rank-num">${atRank}</span><span class="at-rank-icon">${atRank===1?bullImg:atRank===rows.length?bearImg:''}</span></span>
       </td>
       <td>${r.at?f(r.at.wert_echt)+' €':'—'}</td>
       <td class="dim">${f(r.anteilAt*100,1)}%</td>
