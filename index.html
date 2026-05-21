@@ -75,10 +75,11 @@ td:nth-child(2) { text-align: left; }
 #rankingBody td:nth-child(1), #rankingBody td:nth-child(7) { width: 80px; }
 #rankingBody td:nth-child(2) { max-width: 90px; overflow: hidden; text-overflow: ellipsis; }
 #rankingBody td { vertical-align: middle; }
+table:has(#rankingBody) thead th:nth-child(7) { text-align: center !important; padding-left: 0 !important; padding-right: 0 !important; }
 .animal-cell { display: flex; align-items: center; }
 .animal-img { mix-blend-mode: multiply; height: 2.2em; vertical-align: middle; flex-shrink: 0; }
-.at-rank-cell { min-width: 92px; text-align: center !important; }
-.at-rank-wrap { display:inline-flex; align-items:center; justify-content:flex-start; min-width:44px; gap:8px; }
+.at-rank-cell { min-width: 92px; text-align: center !important; padding-left: 0 !important; padding-right: 0 !important; }
+.at-rank-wrap { display:inline-flex; align-items:center; justify-content:center; width:54px; margin:0 auto; gap:8px; }
 .at-rank-num { display:inline-block; width:12px; text-align:right; }
 .at-rank-icon { display:inline-flex; align-items:center; justify-content:center; min-width:22px; }
 .pos { color: #1a6e3a; } .neg { color: #c8441a; } .dim { color: #666; }
@@ -248,7 +249,7 @@ body::-webkit-scrollbar {
 
 <script>
 // Cache-Bereinigung ohne aggressive Storage-Resets
-const WAX_BUILD = '1778539000000-ytd-ja-investref-supabase-20260521c';
+const WAX_BUILD = '1778539000000-ytd-ja-investref-supabase-20260521d-at-rank-center';
 try {
   sessionStorage.setItem('wax_build_seen', WAX_BUILD);
 } catch(e) {}
