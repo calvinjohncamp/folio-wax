@@ -894,7 +894,7 @@ const META_OPTIONS = {
     'Technology & Software','Semiconductors & AI Infrastructure','Healthcare & Biotech','Consumer & Brands',
     'Industrials & Mobility','Energy & Utilities','Precious Metals','Digital Assets & Crypto','Financial Services','Broad Market ETF'
   ],
-  countries:['USA','Deutschland','Europa','Schweiz','Kanada','Australien','Asien'],
+  countries:['USA','Deutschland','Europa','Schweiz','Kanada','Australien','Asien','Welt'],
   exchanges:['NASDAQ','NYSE','Xetra','Tradegate','Stuttgart / EUWAX','SIX Swiss Exchange','TSX Venture','ASX','Asia Exchange']
 };
 const STRUCTURE_COLORS = {
@@ -916,6 +916,7 @@ const STRUCTURE_COLORS = {
   'Australien':'#F59E0B',
   'Europa':'#14B8A6',
   'Asien':'#22C55E',
+  'Welt':'#8B5CF6',
 
   'NASDAQ':'#2563EB',
   'NYSE':'#F59E0B',
@@ -1201,6 +1202,7 @@ function applyHeuristicTickerSuggestion(){
     else if (country==='Schweiz' || exchange==='SIX Swiss Exchange') cEl.value='CHF';
     else if (country==='Kanada' || exchange==='TSX Venture') cEl.value='CAD';
     else if (country==='Australien' || exchange==='ASX') cEl.value='AUD';
+    else if (country==='Welt') cEl.value='EUR';
   }
 }
 function setKnownSecurityFormState(meta){
