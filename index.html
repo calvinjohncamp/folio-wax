@@ -3800,6 +3800,14 @@ async function tmBuildSnapshot(){
       security_master: security_master.length,
       jahresabschluss: jahresabschluss.length
     },
+    // NEU: Bewertungsstand zum Snapshot-Zeitpunkt mitsichern, damit jeder
+    // Snapshot in sich vollständig ist und Monatsvergleiche möglich werden.
+    kurse: {
+      stand: (document.getElementById('sTime')||{}).textContent || '',
+      anzahl: Object.keys(liveKurse).length,
+      live: { ...liveKurse },
+      prev: { ...prevKurse }
+    },
     tables: { mitglieder, positionen, cash, alltime, buchungen, security_master, jahresabschluss }
   };
   return snapshot;
