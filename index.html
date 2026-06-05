@@ -3986,7 +3986,7 @@ function waxBerichtHtml(d){
       <td class="sep ${cls(m.perfPa)}">${pct(m.perfPa)}</td>
       <td class="${cls(m.gewinnAt)}">${seur0(m.gewinnAt)}</td>
       <td>${eur0(m.wertEcht)}</td>
-      <td class="at-pos">${m.atRank}${atTag}</td>
+      <td class="at-pos">${atTag}${m.atRank}</td>
     </tr>`;
   }).join('');
 
@@ -4141,6 +4141,7 @@ html,body{background:#aeb6c4;color:var(--ink);font-family:'IBM Plex Sans',sans-s
 .tag img{vertical-align:middle;margin:0;display:block}
 .tag.bull{background:#fff3cf;color:#8a6a0a;border:1px solid #f0d77a}
 .tag.bear{background:#e7eef9;color:#274b86;border:1px solid #c4d5ef}
+.rank-tbl tbody td.at-pos .tag{margin-left:0;margin-right:6px}
 .legend-row{margin-top:13px;font-size:10px;color:var(--muted);display:flex;gap:18px;flex-wrap:wrap;align-items:center}
 .legend-row b{color:var(--navy)}
 .struct{display:grid;grid-template-columns:1fr 1fr;gap:22px;align-items:start}
@@ -4250,7 +4251,7 @@ html,body{background:#aeb6c4;color:var(--ink);font-family:'IBM Plex Sans',sans-s
         <tbody>${rankingRows}</tbody>
         <tfoot><tr><td></td><td>Gesamt</td><td class="sep ${cls(d.ytdPct)}">${pct(d.ytdPct)}</td><td class="${cls(d.ytdAbs)}">${seur0(d.ytdAbs)}</td><td>${eur0(d.gesamtEinzeldepots)}</td><td>100 %</td><td class="sep ${cls(d.clubXirr)}">${pct(d.clubXirr)}</td><td class="${cls(d.gesamtGewinnAt)}">${seur0(d.gesamtGewinnAt)}</td><td>${eur0(d.gesamtAlltimeWert)}</td><td></td></tr></tfoot>
       </table>
-      <div class="legend-row"><span>${bullImg(16)} <b>Bulle</b> bestes Jahr · ${bearImg(16)} <b>Bär</b> schwächstes Jahr · AT-Pos. = Rang in der Alltime-Wertung</span></div>
+      <div class="legend-row"><span>${bullImg(16)} <b>Bulle</b> beste Position im Ranking · ${bearImg(16)} <b>Bär</b> schwächste Position im Ranking · AT-Pos. = Rang in der Alltime-Wertung</span></div>
       <p style="font-size:9.5px;color:var(--muted);margin-top:9px;line-height:1.5">Aktuelle Werte &amp; YTD live aus dem App-Datenstand gerechnet (Basis: Summe der sechs Einzeldepots) · Differenz zum App-Gesamtwert durch den Comdirect-Cash-Puffer.</p>
     </div></section>
 
