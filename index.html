@@ -4147,7 +4147,7 @@ function waxBerichtHtml(d){
     ).join('') || '<tr><td colspan="6" style="text-align:center;color:var(--muted)">Keine aktiven Positionen.</td></tr>';
     return `<section class="page">
       <div class="runhead"><span><b>Folio.wax</b> · Einzeldepot</span><span>${heute}</span></div>
-      <div class="sec-head"><div class="kicker"><span class="num">04.${k}</span> Einzeldepot · ${k} von 6</div></div>
+      <div class="sec-head"><div class="kicker"><span class="num">05.${k}</span> Einzeldepot · ${k} von 6</div></div>
       <div class="member-head">
         <div class="left"><div class="ord">YTD #${m.ytdRank} · ALLTIME #${m.atRank}</div><h2>${esc(vollname(m.name))}</h2><div class="ruf">im Bericht: „${esc(rufLong(m.name))}"</div></div>
         <div class="right"><div class="l">Depotwert</div><div class="v">${eur(m.depot)}</div><div class="d ${cls(m.ytdAbs)}">${pct(m.ytdPct)} YTD · ${seur0(m.ytdAbs)}</div></div>
@@ -4173,7 +4173,7 @@ function waxBerichtHtml(d){
         </tbody>
         <tfoot><tr><td>Gesamtdepot</td><td></td><td>${n2(m.ref)}</td><td>${n2(m.depot)}</td><td class="${cls(m.ytdPct)}">${pct(m.ytdPct)}</td><td class="${cls(m.ytdAbs)}">${seurP(m.ytdAbs)}</td></tr></tfoot>
       </table>
-      <div class="pagefoot">Vertraulich · Folio.wax</div><div class="pagenum">${String(4+k).padStart(2,'0')} / 11</div>
+      <div class="pagefoot">Vertraulich · Folio.wax</div><div class="pagenum">${String(4+k).padStart(2,'0')} / 10</div>
     </section>`;
   }).join('');
 
@@ -4242,6 +4242,13 @@ html,body{background:#aeb6c4;color:var(--ink);font-family:'IBM Plex Sans',sans-s
 .editorial p.lead{font-size:16px;line-height:1.6;color:var(--navy)}
 .editorial p.lead .drop{font-family:'IBM Plex Serif',serif;float:left;font-size:54px;line-height:.78;font-weight:600;color:var(--gold);margin:4px 11px 0 0}
 .sign{font-family:'IBM Plex Serif',serif;font-style:italic;font-size:16px;color:var(--navy);margin-top:6px}
+ .brief-hint{font-size:10.5px;line-height:1.45;color:var(--muted);margin:-8px 0 14px 0}
+.brief-area{height:960px;overflow:hidden;border:1px solid var(--line);border-left:4px solid var(--gold);background:linear-gradient(180deg,#fff,#fbfcff);border-radius:6px;padding:24px 30px 26px;box-shadow:0 8px 24px rgba(10,31,68,.04)}
+.brief-edit{height:100%;overflow:hidden;white-space:pre-wrap;outline:none;font-family:'IBM Plex Sans',Arial,sans-serif!important;font-size:12.7px!important;line-height:1.58!important;font-weight:400!important;color:#27384f!important;letter-spacing:0!important}
+.brief-edit *{font-family:'IBM Plex Sans',Arial,sans-serif!important;font-size:inherit!important;line-height:inherit!important;color:inherit!important;background:transparent!important;margin:0!important;padding:0!important;font-weight:inherit!important}
+.brief-edit b,.brief-edit strong{font-weight:600!important;color:var(--navy)!important}
+.brief-edit:empty:before{content:"Moin WAX,\A\A[Brief an die Aktionäre hier einfügen …]\A\ANe schöne Jrooß, Jörn";white-space:pre-wrap;color:var(--muted)}
+.brief-store{display:none!important}
 /* --- V8 Marktkommentar-Seite --- */
 .mk-period{font-size:11px;line-height:1.55;color:var(--muted);background:var(--paper-2);border:1px solid var(--line);border-left:3px solid var(--gold);border-radius:4px;padding:10px 13px;margin-bottom:18px}
 .mk-period b{color:var(--navy);font-weight:600}
@@ -4422,56 +4429,8 @@ html,body{background:#aeb6c4;color:var(--ink);font-family:'IBM Plex Sans',sans-s
       <div class="hero-item"><div class="l">Alltime p. a.</div><div class="v ${updown(d.clubXirr)}">${pct(d.clubXirr)}</div><div class="d ${updown(d.gesamtGewinnAt)}">${seur0(d.gesamtGewinnAt)} seit Start</div></div></div>
     <div class="cover-foot"><span>folio-wax.de</span><span>Erstellt von Jörn</span></div></div></section>
 
-  <section class="page"><div class="runhead"><span><b>Folio.wax</b> · Neueste Entwicklungen</span><span>${heute}</span></div>
-    <div class="sec-head"><div class="kicker"><span class="num">01</span> Zur Lage</div><h2>Neueste Entwicklungen</h2><div class="rule"></div></div>
-    <div class="mk-period">Marktgeschehen im Zeitraum <b>${d.zeitraum.von}</b> &ndash; <b>${d.zeitraum.bis}</b> (rollierende ${d.zeitraum.tage} Tage). Die Depot-Kennzahlen im weiteren Bericht sind <b>YTD</b> (seit 31.12.) — diese Seite ordnet das Marktumfeld qualitativ ein.</div>
-
-    <div class="mk-kern">
-      <div class="mk-kern-h"><span class="edit-tag">✎ 3 Kernaussagen — das Wichtigste zuerst</span></div>
-      <ol class="mk-kern-list">
-        <li class="editable" contenteditable="true" data-key="mk-kern-1">[Kernaussage 1 — übergeordnetes Marktbild der letzten vier Wochen in einem Satz.]</li>
-        <li class="editable" contenteditable="true" data-key="mk-kern-2">[Kernaussage 2 — wichtigster Treiber oder Risiko für unser Depot.]</li>
-        <li class="editable" contenteditable="true" data-key="mk-kern-3">[Kernaussage 3 — Einordnung für den Club. Stand YTD: ${pct(d.ytdPct)} (${seur0(d.ytdAbs)}), Alltime ${pct(d.clubXirr)} p. a.]</li>
-      </ol>
-    </div>
-
-    <div class="mk-grid">
-      <div class="mk-blk">
-        <h3><span class="mk-no">①</span> Politik &amp; Geopolitik</h3>
-        <ul class="editable mk-list" contenteditable="true" data-key="mk-politik">
-          <li>[Wahlen, Zölle, Handelspolitik, Konflikte …]</li>
-          <li>[Zweiter Punkt — max. 1–2 Zeilen.]</li>
-          <li>[Dritter Punkt.]</li>
-        </ul>
-      </div>
-      <div class="mk-blk">
-        <h3><span class="mk-no">②</span> Wirtschaft &amp; Zinsen</h3>
-        <ul class="editable mk-list" contenteditable="true" data-key="mk-wirtschaft">
-          <li>[Notenbanken, Zinsentscheid, Inflation …]</li>
-          <li>[Konjunktur, Arbeitsmarkt, Währungen.]</li>
-          <li>[Dritter Punkt.]</li>
-        </ul>
-      </div>
-      <div class="mk-blk">
-        <h3><span class="mk-no">③</span> Unternehmen &amp; Technologie</h3>
-        <ul class="editable mk-list" contenteditable="true" data-key="mk-unternehmen">
-          <li>[KI-Rally, Earnings, Big Tech …]</li>
-          <li>[Branchen-Highlights, Übernahmen.]</li>
-          <li>[Dritter Punkt.]</li>
-        </ul>
-      </div>
-      <div class="mk-blk mk-depot">
-        <h3><span class="mk-no">④</span> Auswirkungen auf unser Depot</h3>
-        <ul class="editable mk-list" contenteditable="true" data-key="mk-depot">
-          ${mkDepotSeed}
-          <li>[Was bedeutet das Marktumfeld konkret für uns?]</li>
-        </ul>
-      </div>
-    </div></section>
-
-
-  <section class="page"><div class="runhead"><span><b>Folio.wax</b> · Gesamtübersicht</span><span>${heute}</span></div>
-    <div class="sec-head"><div class="kicker"><span class="num">02</span> WAX Aktienclub ${gj}</div><h2>Gesamtübersicht &amp; Ranking</h2><div class="rule"></div></div>
+  <section class="page"><div class="runhead"><span><b>Folio.wax</b> · WAX-Überblick + Ranking</span><span>${heute}</span></div>
+    <div class="sec-head"><div class="kicker"><span class="num">02</span> WAX Aktienclub ${gj}</div><h2>WAX-Überblick + Ranking</h2><div class="rule"></div></div>
     <div class="kpis7">
       <div class="kpi"><div class="l">Gesamtwert (echt, inkl. Puffer)</div><div class="v">${eur(d.gesamtEcht)}</div><div class="s">Σ Einzeldepots ${eur0(d.gesamtEinzeldepots)} · Korrektur ${seur0(d.puffer)}</div></div>
       <div class="kpi"><div class="l">Ø pro Person</div><div class="v">${eur(d.proPerson)}</div><div class="s">echter Wert / 6 Mitglieder</div></div>
@@ -4494,8 +4453,11 @@ html,body{background:#aeb6c4;color:var(--ink);font-family:'IBM Plex Sans',sans-s
       <p style="font-size:9.5px;color:var(--muted);margin-top:9px;line-height:1.5">Aktuelle Werte &amp; YTD live aus dem App-Datenstand gerechnet (Basis: Summe der sechs Einzeldepots) · Differenz zum App-Gesamtwert durch den Comdirect-Cash-Puffer.</p>
     </div></section>
 
-  <section class="page"><div class="runhead"><span><b>Folio.wax</b> · Gesamtdepot</span><span>${heute}</span></div>
-    <div class="sec-head"><div class="kicker"><span class="num">03</span> Struktur &amp; Einordnung</div><h2>Gesamtdepot-Analyse</h2><div class="rule"></div></div>
+  <div id="briefPages"></div>
+  <div class="editable brief-store" data-key="brief-aktionaere"></div>
+
+  <section class="page"><div class="runhead"><span><b>Folio.wax</b> · Depot-Analyse</span><span>${heute}</span></div>
+    <div class="sec-head"><div class="kicker"><span class="num">04</span> Struktur &amp; Einordnung</div><h2>Depot-Analyse</h2><div class="rule"></div></div>
     <div class="struct">
       <div class="blk kat"><h3>Kategorien · ${eur0(d.investGesamt)} investiert</h3>${katRows}</div>
       <div class="blk bench"><h3>Benchmarks YTD</h3>
@@ -4510,28 +4472,10 @@ html,body{background:#aeb6c4;color:var(--ink);font-family:'IBM Plex Sans',sans-s
     <div style="margin-top:24px"><div class="colh">Top Holdings · aktuell (aus App-Datenstand)</div>
       <table class="hold-tbl"><thead><tr><th>Rang</th><th>Titel</th><th>WKN</th><th>Wert €</th><th>Anteil</th><th>kumuliert</th></tr></thead><tbody>${holdRows}</tbody></table>
     </div>
-    <div class="pkampf">
-      <div class="pkampf-head">
-        <div><div class="colh" style="margin:0 0 4px">Positionskämpfe · Monatsvergleich (4 Wochen)</div><span class="edit-tag">✎ frei bearbeitbar · Zielvorgabe ~1.150 Zeichen (füllt das untere Drittel)</span></div>
-        <span class="mk-count" id="pkampfCount">0</span>
-      </div>
-      <div class="editable pkampf-body" contenteditable="true" data-key="positionskampf">
-        <p>[Gesamtbild der letzten 4 Wochen: Wie hat sich der WAX geschlagen — Veränderung YTD und Alltime p. a., wer hat gekauft oder verkauft, wie verschiebt sich das Ranking aktuell und Alltime?]</p>
-        <p><span class="num">#1</span>[Treiber] · <span class="num">#2</span>[Treiber] · <span class="num">#3</span>[Treiber] · <span class="num">#4</span>[Treiber] · <span class="num">#5</span>[Treiber] · <span class="num">#6</span>[Treiber]</p>
-      </div>
-    </div>
-    <div class="pagefoot">Vertraulich · Folio.wax</div><div class="pagenum">04 / 11</div></section>
+    <div class="pagefoot">Vertraulich · Folio.wax</div><div class="pagenum">04 / 10</div></section>
 
   ${memberPages}
 
-  <section class="page"><div class="runhead"><span><b>Folio.wax</b> · Management-Bericht</span><span>${heute}</span></div>
-    <div class="sec-head"><div class="kicker"><span class="num">05</span> Ausblick</div><h2>Schlusswort</h2><div class="rule"></div></div>
-    <div class="editorial"><span class="edit-tag">✎ Dein persönlicher Abschluss — frei bearbeitbar</span>
-      <div class="editable" contenteditable="true" data-key="schluss">
-        <p style="font-size:14.5px;line-height:1.7">[Dein persönlicher Abschluss — Ausblick, nächstes Treffen, FC/SVW, Sommer …]</p>
-        <p class="sign">Ne schöne Jrooß,<br>Jörn</p></div></div>
-    <div style="position:absolute;left:52px;right:52px;bottom:38px;border-top:1px solid var(--line);padding-top:13px;display:flex;justify-content:space-between;font-size:10px;color:var(--muted);letter-spacing:.08em">
-      <span>FOLIO.WAX · AKTIENCLUB · VERTRAULICH</span><span>STAND: ${heuteLang} · KURSDATEN: YAHOO FINANCE · KEINE ANLAGEBERATUNG</span></div></section>
 
 </div>
 
@@ -4575,6 +4519,78 @@ html,body{background:#aeb6c4;color:var(--ink);font-family:'IBM Plex Sans',sans-s
   });
   recalc();
 
+  // ---- Brief an die Aktionäre: automatische Seiten im Berichtslayout ----
+  var BRIEF_LIMIT = 2350;
+  function escHtmlBrief(t){ return String(t||'').replace(/[&<>]/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;'}[c];}); }
+  function normalizeBriefText(t){ return String(t||'').replace(/
+/g,'
+').replace(/ /g,' '); }
+  function splitBriefText(text){
+    text = normalizeBriefText(text).trim();
+    if(!text) return [''];
+    var paras = text.split(/
+{2,}/), pages=[], cur='';
+    paras.forEach(function(pa){
+      var block = pa.trim(); if(!block) return;
+      var add = cur ? cur+'
+
+'+block : block;
+      if(add.length <= BRIEF_LIMIT){ cur = add; return; }
+      if(cur){ pages.push(cur); cur=''; }
+      while(block.length > BRIEF_LIMIT){
+        var cut = block.lastIndexOf(' ', BRIEF_LIMIT); if(cut < BRIEF_LIMIT*0.55) cut = BRIEF_LIMIT;
+        pages.push(block.slice(0,cut).trim()); block = block.slice(cut).trim();
+      }
+      cur = block;
+    });
+    if(cur || !pages.length) pages.push(cur);
+    return pages;
+  }
+  function collectBriefText(){
+    var edits=[].slice.call(document.querySelectorAll('.brief-edit'));
+    return normalizeBriefText(edits.map(function(e){return e.innerText || e.textContent || '';}).join('
+
+')).trim();
+  }
+  function refreshPageNumbers(){
+    var pages=[].slice.call(document.querySelectorAll('.page'));
+    var total=pages.length;
+    pages.forEach(function(pg,i){ var pn=pg.querySelector('.pagenum'); if(pn) pn.textContent=String(i+1).padStart(2,'0')+' / '+String(total).padStart(2,'0'); });
+  }
+  function makeBriefPage(txt, idx, total){
+    var cont=document.createElement('section'); cont.className='page brief-page';
+    cont.innerHTML='<div class="runhead"><span><b>Folio.wax</b> · Brief an die Aktionäre'+(total>1?' · Teil '+(idx+1):'')+'</span><span>${heute}</span></div>'+
+      '<div class="sec-head"><div class="kicker"><span class="num">03</span> Monatsbericht</div><h2>Brief an die Aktionäre</h2><div class="rule"></div></div>'+
+      (idx===0?'<p class="brief-hint"><span class="edit-tag">✎ editierbarer Monatsbrief</span> Text einfach einfügen. Der Bericht verteilt den Inhalt automatisch auf so viele Seiten wie nötig; leere Folgeseiten verschwinden.</p>':'<p class="brief-hint"><span class="edit-tag">Fortsetzung</span> Der Text gehört weiterhin zum gleichen Brief.</p>')+
+      '<div class="brief-area"><div class="brief-edit" contenteditable="true" spellcheck="true"></div></div>'+
+      '<div class="pagefoot">Vertraulich · Folio.wax</div><div class="pagenum"></div>';
+    cont.querySelector('.brief-edit').textContent=txt;
+    return cont;
+  }
+  function renderBrief(text, keepFocus){
+    var box=document.getElementById('briefPages'); if(!box) return;
+    var store=document.querySelector('.brief-store'); if(store) store.textContent=normalizeBriefText(text||'').trim();
+    var pages=splitBriefText(text);
+    box.innerHTML=''; pages.forEach(function(t,i){ box.appendChild(makeBriefPage(t,i,pages.length)); });
+    bindBriefEditors(); refreshPageNumbers();
+    if(keepFocus){ var last=box.querySelector('.brief-edit'); if(last){ last.focus(); } }
+  }
+  var briefTimer=null;
+  function bindBriefEditors(){
+    document.querySelectorAll('.brief-edit').forEach(function(ed){
+      ed.addEventListener('paste',function(ev){
+        ev.preventDefault();
+        var txt=(ev.clipboardData||window.clipboardData).getData('text/plain');
+        document.execCommand('insertText',false,txt);
+      });
+      ed.addEventListener('input',function(){
+        clearTimeout(briefTimer);
+        briefTimer=setTimeout(function(){ renderBrief(collectBriefText(), true); }, 450);
+      });
+    });
+  }
+  renderBrief('');
+
   // ---- DB-Archiv-Anbindung: editierbare Texte einsammeln / zurückschreiben ----
   var __d = JSON.parse(${dEmbed});
   // text_json ist ab V8 schlüsselbasiert: Array aus {key, html}. Jedes .editable hat ein
@@ -4600,7 +4616,8 @@ html,body{background:#aeb6c4;color:var(--ink);font-family:'IBM Plex Sans',sans-s
       // Legacy (Altbericht): reines String-Array, per Index zuordnen.
       els.forEach(function(e,i){ if(arr[i]!=null){ e.innerHTML=arr[i]; e.dataset.orig=arr[i]; } });
     }
-    try{ recalc(); }catch(e){}
+    try{ if(typeof renderBrief==='function'){ var st=document.querySelector('.brief-store'); renderBrief(st ? (st.textContent||st.innerText||'') : collectBriefText()); } }catch(e){}
+    try{ recalc(); refreshPageNumbers(); }catch(e){}
   };
   window.waxBerichtArchivieren = function(){
     var st=document.getElementById('archStatus');
@@ -4744,25 +4761,6 @@ html,body{background:#aeb6c4;color:var(--ink);font-family:'IBM Plex Sans',sans-s
   if(ta) ta.addEventListener('input',function(){ if(applyBtn) applyBtn.disabled=true; if(stat) stat.textContent=''; });
   if(ov) ov.addEventListener('click',function(e){ if(e.target===ov) __mkClose(); });
   document.addEventListener('keydown',function(e){ if(e.key==='Escape' && ov && ov.classList.contains('open')) __mkClose(); });
-
-  // ---- Positionskämpfe: Live-Zeichenzähler (Zielband fürs untere Drittel) ----
-  var pk=document.querySelector('.editable[data-key="positionskampf"]');
-  var pkC=document.getElementById('pkampfCount');
-  if(pk && pkC){
-    var PK_MIN=900, PK_MAX=1350;
-    function pkUpd(){
-      var n=(pk.textContent||'').replace(/\\s+/g,' ').trim().length;
-      pkC.textContent=n;
-      pkC.className='mk-count '+(n<PK_MIN?'low':(n>PK_MAX?'high':'ok'));
-    }
-    pk.addEventListener('input',pkUpd);
-    pk.addEventListener('blur',pkUpd);
-    pkUpd();
-  }
-})();
-<\/script>
-</body></html>`;
-}
 
 function waxBerichtErzeugen(){
   const info = document.getElementById('timeMachineInfo');
