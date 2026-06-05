@@ -252,7 +252,7 @@ body::-webkit-scrollbar {
 
 <script>
 // Cache-Bereinigung ohne aggressive Storage-Resets
-const WAX_BUILD = '1778547400000-report-archive-save-fix-20260605';
+const WAX_BUILD = '1778547400000-report-archive-save-fix2-20260605';
 try {
   sessionStorage.setItem('wax_build_seen', WAX_BUILD);
 } catch(e) {}
@@ -3887,8 +3887,30 @@ async function waxArchivLaden(){
   if(!box) return;
   if(!isAdmin()){ box.innerHTML='<div style="color:#c8441a;font-size:12px">Archiv ist nur für den Admin sichtbar.</div>'; return; }
   box.innerHTML='<div style="color:#666;font-size:12px">Lade Archiv…</div>';
-  const roh = await sbGet('berichte','select=id,stichtag,created_at,created_by,status&order=created_at.desc&limit=500');
-  const alle = Array.isArray(roh)?roh:[];   // bereits nach created_at absteigend sortiert
+
+  // Robust laden: Einige Supabase-Installationen haben die optionale Spalte "status" noch nicht.
+  // Wenn select=...,status dann fehlschlägt, laden wir ohne status erneut. sbGet verschluckt
+  // Fehler absichtlich; hier brauchen wir aber die genaue Reaktion.
+  async function loadBerichteQuery(query){
+    try{
+      const r = await fetch(`${SB_URL}/rest/v1/berichte?${query}`, {
+        headers:{'apikey':SB_KEY,'Authorization':'Bearer '+SB_KEY}
+      });
+      if(!r.ok) return { ok:false, error: await r.text() };
+      return { ok:true, rows: await r.json() };
+    }catch(e){ return { ok:false, error:String(e) }; }
+  }
+
+  let res = await loadBerichteQuery('select=id,stichtag,created_at,created_by,status&order=created_at.desc&limit=500');
+  if(!res.ok && /status/i.test(String(res.error||''))){
+    res = await loadBerichteQuery('select=id,stichtag,created_at,created_by&order=created_at.desc&limit=500');
+  }
+  if(!res.ok){
+    box.innerHTML = '<div style="color:#c8441a;font-size:12px"><strong>Archiv konnte nicht geladen werden.</strong><br><span style="color:#666">'+String(res.error||'unbekannter Supabase-Fehler').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')+'</span></div>';
+    return;
+  }
+
+  const alle = Array.isArray(res.rows)?res.rows:[];   // bereits nach created_at absteigend sortiert
   // Pro Stichtag den neuesten Eintrag bestimmen (erster je Datum = neuester, da desc sortiert)
   const neuesteIds = new Set();
   const gesehen = new Set();
@@ -4665,16 +4687,52 @@ html,body{background:#aeb6c4;color:var(--ink);font-family:'IBM Plex Sans',sans-s
   };
   window.waxBerichtArchivieren = function(){
     var st=document.getElementById('archStatus');
-    if(!window.opener || typeof window.opener.waxArchivBerichtVonPopup!=='function'){
-      if(st){ st.textContent='\u26a0 App-Fenster nicht erreichbar \u2013 bitte Bericht erneut aus der App \u00f6ffnen.'; st.style.color='#ffd27a'; }
-      return;
+    var texte=sammleTexte();
+    function setStatus(txt,col){ if(st){ st.textContent=txt; st.style.color=col||'#cfe2ff'; } }
+    function directSave(){
+      // Fallback direkt aus dem Bericht-Fenster. Das hilft, wenn der Browser window.opener kappt
+      // oder die App inzwischen neu geladen/geschlossen wurde.
+      var SB_URL=${repr('https://ywfpzdniicfrhnrvfqfe.supabase.co')};
+      var SB_KEY=${repr('eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inl3ZnB6ZG5paWNmcmhucnZmcWZlIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzU0Mjc4ODcsImV4cCI6MjA5MTAwMzg4N30.St-f48-kfbmlN_QlAKtv-JbbLQYu5IaPmiPO7pyYQ9A')};
+      function post(payload){
+        return fetch(SB_URL+'/rest/v1/berichte',{
+          method:'POST',
+          headers:{'apikey':SB_KEY,'Authorization':'Bearer '+SB_KEY,'Content-Type':'application/json','Prefer':'return=representation'},
+          body:JSON.stringify(payload)
+        }).then(function(r){
+          if(r.ok) return {ok:true};
+          return r.text().then(function(t){ return {ok:false,error:t}; });
+        }).catch(function(e){ return {ok:false,error:String(e)}; });
+      }
+      var pad=function(n){ return String(n).padStart(2,'0'); };
+      var now=new Date();
+      var payload={
+        stichtag: now.getFullYear()+'-'+pad(now.getMonth()+1)+'-'+pad(now.getDate()),
+        created_by: null,
+        status:'final',
+        snapshot_json: __d,
+        text_json: texte
+      };
+      return post(payload).then(function(res){
+        if(!res.ok && /status/i.test(String(res.error||''))){ var fb=Object.assign({},payload); delete fb.status; return post(fb); }
+        return res;
+      });
     }
-    if(st){ st.textContent='Speichere\u2026'; st.style.color='#cfe2ff'; }
-    Promise.resolve(window.opener.waxArchivBerichtVonPopup(__d, sammleTexte())).then(function(res){
-      if(res && res.ok){ if(st){ st.textContent='\u2713 Im Archiv gesichert'; st.style.color='#7bd88f'; } }
-      else if(res && res.skipped){ if(st){ st.textContent='\u26a0 Nur der Admin kann archivieren.'; st.style.color='#ffd27a'; } }
-      else { if(st){ st.textContent='\u26a0 '+((res&&res.error)||'nicht gespeichert'); st.style.color='#ffd27a'; } }
-    }).catch(function(e){ if(st){ st.textContent='\u26a0 '+e; st.style.color='#ffd27a'; } });
+    setStatus('Speichere\u2026','#cfe2ff');
+    var p;
+    if(window.opener && typeof window.opener.waxArchivBerichtVonPopup==='function'){
+      p=Promise.resolve(window.opener.waxArchivBerichtVonPopup(__d, texte));
+    } else {
+      p=directSave();
+    }
+    p.then(function(res){
+      if(res && res.ok){
+        setStatus('\u2713 Im Archiv gesichert','#7bd88f');
+        try{ if(window.opener && typeof window.opener.waxArchivLaden==='function') window.opener.waxArchivLaden(); }catch(e){}
+      }
+      else if(res && res.skipped){ setStatus('\u26a0 Nur der Admin kann archivieren.','#ffd27a'); }
+      else { setStatus('\u26a0 '+((res&&res.error)||'nicht gespeichert'),'#ffd27a'); }
+    }).catch(function(e){ setStatus('\u26a0 '+e,'#ffd27a'); });
   };
 
   // ===================== V8.1: Text -> Bulletpoints =====================
