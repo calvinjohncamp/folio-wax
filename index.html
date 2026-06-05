@@ -4379,6 +4379,18 @@ html,body{background:#aeb6c4;color:var(--ink);font-family:'IBM Plex Sans',sans-s
 .mk-imp-pcol.empty li{color:var(--muted);font-style:italic;list-style:none;margin-left:-18px}
 .mk-imp-warn{grid-column:1/-1;background:#fff7e6;border:1px solid #f0d77a;border-radius:5px;padding:10px 13px;font-size:11.5px;color:#7a5a00;line-height:1.5}
 .mk-imp-warn b{color:#5a4200}
+/* --- V8.2 Positionskämpfe --- */
+.pkampf{margin-top:22px;border-top:2px solid var(--navy);padding-top:13px}
+.pkampf-head{display:flex;align-items:flex-start;justify-content:space-between;gap:14px;margin-bottom:9px}
+.mk-count{font-family:'IBM Plex Mono',monospace;font-size:10px;letter-spacing:.04em;color:var(--muted);white-space:nowrap;flex:none}
+.mk-count::after{content:" Zeichen"}
+.mk-count.ok{color:var(--pos)}
+.mk-count.low{color:#b8860b}
+.mk-count.high{color:var(--neg)}
+.pkampf-body{min-height:236px;font-size:12.5px;line-height:1.62;color:#27384f}
+.pkampf-body p{margin-bottom:9px}
+.pkampf-body p:last-child{margin-bottom:0}
+.pkampf-body .num{font-family:'IBM Plex Mono',monospace;color:var(--blue);font-weight:600;margin-right:3px}
 @media print{
   @page{size:A4 portrait;margin:0}
   html,body{background:#fff}
@@ -4391,6 +4403,7 @@ html,body{background:#aeb6c4;color:var(--ink);font-family:'IBM Plex Sans',sans-s
   .page:last-child{page-break-after:auto}
   .editable{outline:none!important;background:transparent!important}
   .edit-tag{display:none!important}
+  .mk-count{display:none!important}
   *{-webkit-print-color-adjust:exact;print-color-adjust:exact}
 }
 </style></head><body>
@@ -4409,8 +4422,8 @@ html,body{background:#aeb6c4;color:var(--ink);font-family:'IBM Plex Sans',sans-s
       <div class="hero-item"><div class="l">Alltime p. a.</div><div class="v ${updown(d.clubXirr)}">${pct(d.clubXirr)}</div><div class="d ${updown(d.gesamtGewinnAt)}">${seur0(d.gesamtGewinnAt)} seit Start</div></div></div>
     <div class="cover-foot"><span>folio-wax.de</span><span>Erstellt von Jörn</span></div></div></section>
 
-  <section class="page"><div class="runhead"><span><b>Folio.wax</b> · Marktkommentar</span><span>${heute}</span></div>
-    <div class="sec-head"><div class="kicker"><span class="num">01</span> Zur Lage</div><h2>Marktkommentar &amp; Monats-Update</h2><div class="rule"></div></div>
+  <section class="page"><div class="runhead"><span><b>Folio.wax</b> · Neueste Entwicklungen</span><span>${heute}</span></div>
+    <div class="sec-head"><div class="kicker"><span class="num">01</span> Zur Lage</div><h2>Neueste Entwicklungen</h2><div class="rule"></div></div>
     <div class="mk-period">Marktgeschehen im Zeitraum <b>${d.zeitraum.von}</b> &ndash; <b>${d.zeitraum.bis}</b> (rollierende ${d.zeitraum.tage} Tage). Die Depot-Kennzahlen im weiteren Bericht sind <b>YTD</b> (seit 31.12.) — diese Seite ordnet das Marktumfeld qualitativ ein.</div>
 
     <div class="mk-kern">
@@ -4496,6 +4509,16 @@ html,body{background:#aeb6c4;color:var(--ink);font-family:'IBM Plex Sans',sans-s
     </div>
     <div style="margin-top:24px"><div class="colh">Top Holdings · aktuell (aus App-Datenstand)</div>
       <table class="hold-tbl"><thead><tr><th>Rang</th><th>Titel</th><th>WKN</th><th>Wert €</th><th>Anteil</th><th>kumuliert</th></tr></thead><tbody>${holdRows}</tbody></table>
+    </div>
+    <div class="pkampf">
+      <div class="pkampf-head">
+        <div><div class="colh" style="margin:0 0 4px">Positionskämpfe · Monatsvergleich (4 Wochen)</div><span class="edit-tag">✎ frei bearbeitbar · Zielvorgabe ~1.150 Zeichen (füllt das untere Drittel)</span></div>
+        <span class="mk-count" id="pkampfCount">0</span>
+      </div>
+      <div class="editable pkampf-body" contenteditable="true" data-key="positionskampf">
+        <p>[Gesamtbild der letzten 4 Wochen: Wie hat sich der WAX geschlagen — Veränderung YTD und Alltime p. a., wer hat gekauft oder verkauft, wie verschiebt sich das Ranking aktuell und Alltime?]</p>
+        <p><span class="num">#1</span>[Treiber] · <span class="num">#2</span>[Treiber] · <span class="num">#3</span>[Treiber] · <span class="num">#4</span>[Treiber] · <span class="num">#5</span>[Treiber] · <span class="num">#6</span>[Treiber]</p>
+      </div>
     </div>
     <div class="pagefoot">Vertraulich · Folio.wax</div><div class="pagenum">04 / 11</div></section>
 
@@ -4721,6 +4744,21 @@ html,body{background:#aeb6c4;color:var(--ink);font-family:'IBM Plex Sans',sans-s
   if(ta) ta.addEventListener('input',function(){ if(applyBtn) applyBtn.disabled=true; if(stat) stat.textContent=''; });
   if(ov) ov.addEventListener('click',function(e){ if(e.target===ov) __mkClose(); });
   document.addEventListener('keydown',function(e){ if(e.key==='Escape' && ov && ov.classList.contains('open')) __mkClose(); });
+
+  // ---- Positionskämpfe: Live-Zeichenzähler (Zielband fürs untere Drittel) ----
+  var pk=document.querySelector('.editable[data-key="positionskampf"]');
+  var pkC=document.getElementById('pkampfCount');
+  if(pk && pkC){
+    var PK_MIN=900, PK_MAX=1350;
+    function pkUpd(){
+      var n=(pk.textContent||'').replace(/\\s+/g,' ').trim().length;
+      pkC.textContent=n;
+      pkC.className='mk-count '+(n<PK_MIN?'low':(n>PK_MAX?'high':'ok'));
+    }
+    pk.addEventListener('input',pkUpd);
+    pk.addEventListener('blur',pkUpd);
+    pkUpd();
+  }
 })();
 <\/script>
 </body></html>`;
