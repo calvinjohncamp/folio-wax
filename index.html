@@ -3971,8 +3971,11 @@ function waxBerichtHtml(d){
   // Ranking-Zeilen
   const rankingRows = d.ranking.map(m=>{
     const isBull = m.ytdRank===1, isBear = m.ytdRank===d.nMit;
-    const tag = isBull ? `<span class="tag bull">${bullImg(13)} Bulle</span>`
-              : isBear ? `<span class="tag bear">${bearImg(13)} Bär</span>` : '';
+    const tag = isBull ? `<span class="tag bull">${bullImg(15)}</span>`
+              : isBear ? `<span class="tag bear">${bearImg(15)}</span>` : '';
+    const isAtBull = m.atRank===1, isAtBear = m.atRank===d.nMit;
+    const atTag = isAtBull ? `<span class="tag bull">${bullImg(15)}</span>`
+                : isAtBear ? `<span class="tag bear">${bearImg(15)}</span>` : '';
     return `<tr>
       <td class="pos-n">${m.ytdRank}</td>
       <td class="nm">${esc(nachname(m.name))} <small>· ${esc(rufname(m.name))}</small>${tag}</td>
@@ -3983,7 +3986,7 @@ function waxBerichtHtml(d){
       <td class="sep ${cls(m.perfPa)}">${pct(m.perfPa)}</td>
       <td class="${cls(m.gewinnAt)}">${seur0(m.gewinnAt)}</td>
       <td>${eur0(m.wertEcht)}</td>
-      <td>${m.atRank}</td>
+      <td class="at-pos">${m.atRank}${atTag}</td>
     </tr>`;
   }).join('');
 
@@ -4134,8 +4137,8 @@ html,body{background:#aeb6c4;color:var(--ink);font-family:'IBM Plex Sans',sans-s
 .rank-tbl tfoot td:nth-child(1),.rank-tbl tfoot td:nth-child(2){text-align:left;font-family:'IBM Plex Sans',sans-serif}
 .rank-tbl tfoot td.sep{border-left:2px solid var(--gold)}
 .pos{color:var(--pos)}.neg{color:var(--neg)}
-.tag{display:inline-block;font-size:8px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;padding:2px 6px;border-radius:3px;margin-left:5px;vertical-align:middle}
-.tag img{vertical-align:middle;margin-right:2px}
+.tag{display:inline-block;font-size:8px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;padding:2px 5px;border-radius:3px;margin-left:5px;vertical-align:middle}
+.tag img{vertical-align:middle;margin:0;display:block}
 .tag.bull{background:#fff3cf;color:#8a6a0a;border:1px solid #f0d77a}
 .tag.bear{background:#e7eef9;color:#274b86;border:1px solid #c4d5ef}
 .legend-row{margin-top:13px;font-size:10px;color:var(--muted);display:flex;gap:18px;flex-wrap:wrap;align-items:center}
@@ -4235,8 +4238,8 @@ html,body{background:#aeb6c4;color:var(--ink);font-family:'IBM Plex Sans',sans-s
       <div class="kpi alt"><div class="l">YTD-Performance</div><div class="v ${cls(d.ytdPct)}">${pct(d.ytdPct)}</div><div class="s">seit 31.12. Vorjahr</div></div>
       <div class="kpi alt"><div class="l">Gewinn YTD</div><div class="v ${cls(d.ytdAbs)}">${seur0(d.ytdAbs)}</div><div class="s">Gewinn / Verlust</div></div>
       <div class="kpi alt"><div class="l">Perf. p. a. (Alltime)</div><div class="v ${cls(d.clubXirr)}">${pct(d.clubXirr)}</div><div class="s">interner Zinsfuß seit Start</div></div>
-      <div class="kpi"><div class="l">Cashanteil</div><div class="v">${anteilPct(d.cashAnteil)}</div><div class="s">Comdirect-Gesamtstand</div></div>
       <div class="kpi alt"><div class="l">Gewinn Alltime</div><div class="v ${cls(d.gesamtGewinnAt)}">${seur0(d.gesamtGewinnAt)}</div><div class="s">neutralisiert seit Start</div></div>
+      <div class="kpi"><div class="l">Cashanteil</div><div class="v">${anteilPct(d.cashAnteil)}</div><div class="s">Comdirect-Gesamtstand</div></div>
       <div class="kpi"><div class="l">Stichtag</div><div class="v" style="font-size:16px">${heute}</div><div class="s">App-Datenstand</div></div>
     </div>
     <div style="margin-top:22px">
