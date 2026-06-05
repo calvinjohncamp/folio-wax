@@ -252,7 +252,7 @@ body::-webkit-scrollbar {
 
 <script>
 // Cache-Bereinigung ohne aggressive Storage-Resets
-const WAX_BUILD = '1778547400000-report-archive-save-fix2-20260605';
+const WAX_BUILD = '1778547400000-report-archive-save-fix3-repr-20260605';
 try {
   sessionStorage.setItem('wax_build_seen', WAX_BUILD);
 } catch(e) {}
@@ -4692,8 +4692,8 @@ html,body{background:#aeb6c4;color:var(--ink);font-family:'IBM Plex Sans',sans-s
     function directSave(){
       // Fallback direkt aus dem Bericht-Fenster. Das hilft, wenn der Browser window.opener kappt
       // oder die App inzwischen neu geladen/geschlossen wurde.
-      var SB_URL=${repr('https://ywfpzdniicfrhnrvfqfe.supabase.co')};
-      var SB_KEY=${repr('eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inl3ZnB6ZG5paWNmcmhucnZmcWZlIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzU0Mjc4ODcsImV4cCI6MjA5MTAwMzg4N30.St-f48-kfbmlN_QlAKtv-JbbLQYu5IaPmiPO7pyYQ9A')};
+      var SB_URL="https://ywfpzdniicfrhnrvfqfe.supabase.co";
+      var SB_KEY="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inl3ZnB6ZG5paWNmcmhucnZmcWZlIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzU0Mjc4ODcsImV4cCI6MjA5MTAwMzg4N30.St-f48-kfbmlN_QlAKtv-JbbLQYu5IaPmiPO7pyYQ9A";
       function post(payload){
         return fetch(SB_URL+'/rest/v1/berichte',{
           method:'POST',
