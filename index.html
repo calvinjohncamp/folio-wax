@@ -4092,7 +4092,8 @@ html,body{background:#aeb6c4;color:var(--ink);font-family:'IBM Plex Sans',sans-s
 .cover-sub{margin-top:16px;font-size:15px;color:#d7e1f2;max-width:64%;line-height:1.5}
 .cover-date{margin-top:26px;display:inline-flex;align-items:center;gap:13px;font-size:13px;color:#cdd9ee;flex-wrap:wrap}
 .cover-date .pill{font-family:'IBM Plex Mono',monospace;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.18);padding:7px 13px;border-radius:3px;color:#fff;letter-spacing:.04em}
-.cover-hero{margin-top:34px;position:relative;z-index:2;border-top:1px solid rgba(255,255,255,.16);padding-top:24px;display:flex;gap:42px;flex-wrap:wrap}
+.cover-hero{margin-top:34px;position:relative;z-index:2;border-top:1px solid rgba(255,255,255,.16);padding-top:24px;display:flex;gap:26px 34px;flex-wrap:wrap}
+.hero-item{min-width:150px}
 .hero-item .l{font-size:10px;letter-spacing:.2em;text-transform:uppercase;color:var(--blue-soft);margin-bottom:9px}
 .hero-item .v{font-family:'IBM Plex Mono',monospace;font-size:32px;font-weight:500;line-height:1}
 .hero-item .v.big{font-size:42px;color:#fff}
@@ -4206,12 +4207,13 @@ html,body{background:#aeb6c4;color:var(--ink);font-family:'IBM Plex Sans',sans-s
 <div class="doc">
 
   <section class="page cover"><div class="cover-inner"><div class="cover-grain"></div>
-    <div class="cover-top"><div class="wordmark">Folio<span class="dot">.</span>wax<small>Aktienclub</small></div><div class="conf">Vertraulich · Nur für Mitglieder</div></div>
+    <div class="cover-top"><div class="wordmark">Folio<span class="dot">.</span>wax<small>Aktienclub seit 2000</small></div><div class="conf">Vertraulich · Nur für Mitglieder</div></div>
     <div class="cover-mid"><div class="ey">Monatsbericht</div><h1>Management-<br><em>Bericht</em></h1>
       <p class="cover-sub">Stand der Dinge im Gesamtdepot und in den sechs Einzeldepots — eingefroren, dokumentiert und kommentiert zum Stichtag.</p>
       <div class="cover-date"><span>Stichtag</span><span class="pill">${heute}</span><span>Geschäftsjahr</span><span class="pill">${gj}</span></div></div>
     <div class="cover-hero">
-      <div class="hero-item"><div class="l">Gesamtwert</div><div class="v big">${eur0(d.gesamtEinzeldepots)}</div><div class="d ${updown(d.ytdAbs)}">${seur0(d.ytdAbs)} seit 31.12.</div></div>
+      <div class="hero-item"><div class="l">Gesamtwert</div><div class="v big">${eur0(d.gesamtEcht)}</div><div class="d ${updown(d.ytdAbs)}">${seur0(d.ytdAbs)} seit 31.12.</div></div>
+      <div class="hero-item"><div class="l">Ø pro Person</div><div class="v">${eur0(d.proPerson)}</div><div class="d">echter Wert / 6 Mitglieder</div></div>
       <div class="hero-item"><div class="l">Performance lfd. Jahr</div><div class="v ${updown(d.ytdPct)}">${pct(d.ytdPct)}</div><div class="d">ggü. Jahresabschluss ${refJahr}</div></div>
       <div class="hero-item"><div class="l">Alltime p. a.</div><div class="v ${updown(d.clubXirr)}">${pct(d.clubXirr)}</div><div class="d ${updown(d.gesamtGewinnAt)}">${seur0(d.gesamtGewinnAt)} seit Start</div></div></div>
     <div class="cover-foot"><span>Folio.wax · folio-wax.de</span><span>Erstellt von Jörn · Stand ${heuteLang}</span></div></div></section>
@@ -4228,8 +4230,8 @@ html,body{background:#aeb6c4;color:var(--ink);font-family:'IBM Plex Sans',sans-s
   <section class="page"><div class="runhead"><span><b>Folio.wax</b> · Gesamtübersicht</span><span>${heute}</span></div>
     <div class="sec-head"><div class="kicker"><span class="num">02</span> WAX Aktienclub ${gj}</div><h2>Gesamtübersicht &amp; Ranking</h2><div class="rule"></div></div>
     <div class="kpis7">
-      <div class="kpi"><div class="l">Gesamtwert (Einzeldepots)</div><div class="v">${eur(d.gesamtEinzeldepots)}</div><div class="s">App-Headline inkl. Cash-Puffer: ${eur(d.gesamtEcht)}</div></div>
-      <div class="kpi"><div class="l">Ø pro Person</div><div class="v">${eur(d.gesamtEinzeldepots/6)}</div><div class="s">Mittelwert aktuell</div></div>
+      <div class="kpi"><div class="l">Gesamtwert (echt, inkl. Puffer)</div><div class="v">${eur(d.gesamtEcht)}</div><div class="s">Σ Einzeldepots ${eur0(d.gesamtEinzeldepots)} · Korrektur ${seur0(d.puffer)}</div></div>
+      <div class="kpi"><div class="l">Ø pro Person</div><div class="v">${eur(d.proPerson)}</div><div class="s">echter Wert / 6 Mitglieder</div></div>
       <div class="kpi alt"><div class="l">YTD-Performance</div><div class="v ${cls(d.ytdPct)}">${pct(d.ytdPct)}</div><div class="s">seit 31.12. Vorjahr</div></div>
       <div class="kpi alt"><div class="l">Gewinn YTD</div><div class="v ${cls(d.ytdAbs)}">${seur0(d.ytdAbs)}</div><div class="s">Gewinn / Verlust</div></div>
       <div class="kpi alt"><div class="l">Perf. p. a. (Alltime)</div><div class="v ${cls(d.clubXirr)}">${pct(d.clubXirr)}</div><div class="s">interner Zinsfuß seit Start</div></div>
