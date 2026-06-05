@@ -3862,31 +3862,53 @@ function waxArchivToggle(){
   if(box.style.display==='none' || !box.style.display){ box.style.display='block'; waxArchivLaden(); }
   else { box.style.display='none'; }
 }
+let __waxArchivAlle = false;   // Ansicht-Schalter: false = nur neuester je Stichtag
+function waxArchivAlleToggle(){ __waxArchivAlle = !__waxArchivAlle; waxArchivLaden(); }
 async function waxArchivLaden(){
   const box=document.getElementById('waxArchivBox');
   if(!box) return;
   if(!isAdmin()){ box.innerHTML='<div style="color:#c8441a;font-size:12px">Archiv ist nur für den Admin sichtbar.</div>'; return; }
   box.innerHTML='<div style="color:#666;font-size:12px">Lade Archiv…</div>';
-  const ber = await sbGet('berichte','select=id,stichtag,created_at,created_by,status&order=created_at.desc&limit=200');
-  box.innerHTML = waxArchivHtml(Array.isArray(ber)?ber:[]);
+  const roh = await sbGet('berichte','select=id,stichtag,created_at,created_by,status&order=created_at.desc&limit=500');
+  const alle = Array.isArray(roh)?roh:[];   // bereits nach created_at absteigend sortiert
+  // Pro Stichtag den neuesten Eintrag bestimmen (erster je Datum = neuester, da desc sortiert)
+  const neuesteIds = new Set();
+  const gesehen = new Set();
+  alle.forEach(b=>{ if(!gesehen.has(b.stichtag)){ gesehen.add(b.stichtag); neuesteIds.add(b.id); } });
+  const liste = __waxArchivAlle ? alle : alle.filter(b=>neuesteIds.has(b.id));
+  const versteckt = alle.length - liste.length;
+  box.innerHTML = waxArchivHtml(liste, { alle:__waxArchivAlle, versteckt, gesamt:alle.length, neuesteIds });
 }
-function waxArchivHtml(ber){
+function waxArchivHtml(ber, opts){
+  opts = opts || {};
+  const neuesteIds = opts.neuesteIds || new Set();
   const fdt=(s)=>{ try{ return new Date(s).toLocaleString('de-DE'); }catch(e){ return s||'—'; } };
   const fst=(s)=>{ try{ return new Date(String(s)+'T00:00:00').toLocaleDateString('de-DE'); }catch(e){ return s||'—'; } };
   const esc=(s)=>String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
   const rowCss='display:flex;align-items:center;gap:10px;padding:7px 9px;border:1px solid #e6e2db;border-radius:5px;margin-bottom:5px;font-size:12px;background:#fff';
   const btnCss='font-family:inherit;font-size:11px;cursor:pointer;border:1px solid #c8441a;background:#c8441a;color:#fff;padding:4px 10px;border-radius:4px;white-space:nowrap';
-  const berRows = ber.length ? ber.map(b=>`<div style="${rowCss}">
+  const linkCss='font-family:inherit;font-size:11px;cursor:pointer;border:none;background:none;color:#2f6fd6;text-decoration:underline;padding:0';
+  const berRows = ber.length ? ber.map(b=>{
+      const aelter = opts.alle && !neuesteIds.has(b.id);
+      const tag = aelter ? ' <span style="color:#b08400;font-weight:600">· ältere Fassung</span>' : '';
+      return `<div style="${rowCss}${aelter?';opacity:.62':''}">
       <span style="font-weight:600;min-width:90px">${fst(b.stichtag)}</span>
-      <span style="color:#666;flex:1">erstellt ${esc(fdt(b.created_at))}${b.created_by?(' · '+esc(b.created_by)):''}${(b.status&&b.status!=='final')?(' · '+esc(b.status)):''}</span>
+      <span style="color:#666;flex:1">erstellt ${esc(fdt(b.created_at))}${b.created_by?(' · '+esc(b.created_by)):''}${(b.status&&b.status!=='final')?(' · '+esc(b.status)):''}${tag}</span>
       <button style="${btnCss}" onclick="waxArchivBerichtOeffnen('${b.id}')">📄 Bericht öffnen</button>
-    </div>`).join('') : '<div style="color:#999;font-size:12px">Noch keine Berichte archiviert.</div>';
+    </div>`; }).join('') : '<div style="color:#999;font-size:12px">Noch keine Berichte archiviert.</div>';
+  let fuss = '';
+  if(opts.alle){
+    fuss = `<div style="margin-top:8px;font-size:11px;color:#666">Alle ${opts.gesamt} Fassungen sichtbar · <button style="${linkCss}" onclick="waxArchivAlleToggle()">nur neueste je Datum zeigen</button></div>`;
+  } else if(opts.versteckt>0){
+    fuss = `<div style="margin-top:8px;font-size:11px;color:#666">${opts.versteckt} ältere Fassung${opts.versteckt===1?'':'en'} ausgeblendet · <button style="${linkCss}" onclick="waxArchivAlleToggle()">alle Versionen anzeigen</button></div>`;
+  }
   return `<div style="border:1px solid #d8d4ce;border-radius:8px;padding:14px;background:#faf9f6">
     <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">
       <span style="font-weight:700;font-size:13px">📚 Bericht-Archiv (Supabase)</span>
       <button style="font-family:inherit;font-size:11px;cursor:pointer;border:1px solid #999;background:#fff;color:#444;padding:4px 10px;border-radius:4px" onclick="waxArchivLaden()">↻ Aktualisieren</button>
     </div>
     ${berRows}
+    ${fuss}
   </div>`;
 }
 async function waxArchivBerichtOeffnen(id){
