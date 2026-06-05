@@ -4160,7 +4160,6 @@ function waxBerichtHtml(d){
         <div class="mkpi"><div class="l">Cashanteil</div><div class="v">${anteilPct(m.cashAnteil)}</div></div>
       </div>
       <div class="mquip"><span class="edit-tag">✎ Deine Zeile zu ${esc(rufname(m.name))}</span>
-        <p class="editable" contenteditable="true" data-key="member-${m.id}">[Hier kommt dein persönlicher Kommentar zu ${esc(rufname(m.name))} — der Bericht füllt automatisch die Treiber ein.]</p>
       </div>
       <div class="colh">Aktive Positionen</div>
       <table class="pos-tbl">
@@ -4199,8 +4198,8 @@ html,body{background:#aeb6c4;color:var(--ink);font-family:'IBM Plex Sans',sans-s
 .toolbar .sp{flex:1}.toolbar .hint{font-size:11.5px;color:var(--blue-soft)}
 .btn{font-family:inherit;font-size:12.5px;font-weight:600;letter-spacing:.03em;cursor:pointer;border:1px solid var(--gold);background:var(--gold);color:var(--navy);padding:8px 16px;border-radius:3px}
 .btn:hover{background:var(--gold-soft);border-color:var(--gold-soft)}
-.doc{max-width:840px;margin:18px auto;display:flex;flex-direction:column;gap:18px}
-.page{background:var(--paper);width:100%;min-height:1188px;padding:50px 52px 60px;box-shadow:var(--shadow);position:relative;overflow:hidden}
+.doc{width:210mm;max-width:210mm;margin:18px auto;display:flex;flex-direction:column;gap:18px}
+.page{background:var(--paper);width:210mm;height:297mm;min-height:297mm;padding:16mm 14mm 14mm;box-shadow:var(--shadow);position:relative;overflow:hidden}
 .page.cover{padding:0}
 .kicker{font-size:11px;font-weight:600;letter-spacing:.22em;text-transform:uppercase;color:var(--gold);display:flex;align-items:center;gap:10px}
 .kicker .num{font-family:'IBM Plex Mono',monospace;color:var(--blue)}
@@ -4211,7 +4210,7 @@ html,body{background:#aeb6c4;color:var(--ink);font-family:'IBM Plex Sans',sans-s
 .runhead b{color:var(--navy);font-weight:600}
 .pagenum{position:absolute;bottom:24px;right:52px;font-family:'IBM Plex Mono',monospace;font-size:10px;color:var(--muted)}
 .pagefoot{position:absolute;bottom:24px;left:52px;font-size:9.5px;letter-spacing:.1em;text-transform:uppercase;color:var(--muted)}
-.cover-inner{background:radial-gradient(120% 80% at 85% -10%, rgba(47,111,214,.35), transparent 55%),radial-gradient(90% 70% at 0% 110%, rgba(242,183,5,.16), transparent 55%),linear-gradient(160deg,var(--navy) 0%, var(--navy-2) 55%, #0b2350 100%);color:#fff;min-height:1188px;padding:62px 60px 104px;position:relative;display:flex;flex-direction:column}
+.cover-inner{background:radial-gradient(120% 80% at 85% -10%, rgba(47,111,214,.35), transparent 55%),radial-gradient(90% 70% at 0% 110%, rgba(242,183,5,.16), transparent 55%),linear-gradient(160deg,var(--navy) 0%, var(--navy-2) 55%, #0b2350 100%);color:#fff;height:297mm;min-height:297mm;padding:62px 60px 104px;position:relative;display:flex;flex-direction:column}
 .cover-inner::before{content:"";position:absolute;inset:24px;border:1px solid rgba(255,210,63,.28);pointer-events:none}
 .cover-grain{position:absolute;inset:0;opacity:.05;pointer-events:none;background-image:radial-gradient(rgba(255,255,255,.7) .5px, transparent .6px);background-size:4px 4px}
 .cover-top{display:flex;justify-content:space-between;align-items:flex-start;position:relative;z-index:2}
@@ -4242,14 +4241,16 @@ html,body{background:#aeb6c4;color:var(--ink);font-family:'IBM Plex Sans',sans-s
 .editorial p.lead{font-size:16px;line-height:1.6;color:var(--navy)}
 .editorial p.lead .drop{font-family:'IBM Plex Serif',serif;float:left;font-size:54px;line-height:.78;font-weight:600;color:var(--gold);margin:4px 11px 0 0}
 .sign{font-family:'IBM Plex Serif',serif;font-style:italic;font-size:16px;color:var(--navy);margin-top:6px}
- .brief-hint{font-size:10.5px;line-height:1.45;color:var(--muted);margin:-8px 0 14px 0}
-.brief-card{height:946px;border:1px solid var(--line);border-left:4px solid var(--gold);background:linear-gradient(180deg,#fff,#fbfcff);border-radius:6px;padding:26px 34px 26px;box-shadow:0 8px 24px rgba(10,31,68,.04);display:flex;flex-direction:column;overflow:hidden;font-family:'IBM Plex Sans',sans-serif;color:#26364d;letter-spacing:.005em}
-.brief-fixed{font-family:'IBM Plex Serif',serif;font-size:15.5px;line-height:1.35;font-weight:700;color:var(--navy)}
-.brief-salute{margin-bottom:14px}.brief-close{margin-top:14px}.brief-name{margin-top:6px;color:#9a7400}
-.brief-body{flex:1;min-height:0;overflow:hidden;white-space:pre-wrap;font-family:'IBM Plex Sans',sans-serif;font-size:12px;line-height:1.43;color:#26364d;font-weight:400;outline:none;padding:0 1px}
-.brief-body p,.brief-body div{margin:0 0 7px 0}.brief-body ul,.brief-body ol{margin:0 0 7px 18px}.brief-body li{margin:0 0 4px 0}
+ .brief-hint{font-size:10.5px;line-height:1.45;color:var(--muted);margin:-8px 0 10px 0}
+.brief-card{height:219mm;border:1px solid var(--line);border-left:4px solid var(--gold);background:linear-gradient(180deg,#fff,#fbfcff);border-radius:6px;padding:8.5mm 10mm 7.5mm;box-shadow:0 8px 24px rgba(10,31,68,.04);display:flex;flex-direction:column;overflow:hidden;font-family:'IBM Plex Sans',sans-serif;color:#26364d;letter-spacing:0}
+.brief-fixed{font-family:'IBM Plex Serif',serif!important;font-size:14px;line-height:1.28;font-weight:700;color:var(--navy)}
+.brief-salute{margin-bottom:10px}.brief-close{margin-top:10px}.brief-name{margin-top:5px;color:#9a7400}
+.brief-body{flex:1;min-height:0;overflow:hidden;white-space:pre-wrap;font-family:'IBM Plex Sans',sans-serif!important;font-size:10.8px!important;line-height:1.38!important;color:#26364d!important;font-weight:400!important;outline:none;padding:0 1px;letter-spacing:0!important}
+.brief-body *{font-family:'IBM Plex Sans',sans-serif!important;font-size:10.8px!important;line-height:1.38!important;color:#26364d!important;font-weight:400!important;letter-spacing:0!important;background:transparent!important}
+.brief-body b,.brief-body strong{font-weight:600!important;color:var(--navy)!important}
+.brief-body p,.brief-body div{margin:0 0 5.5px 0!important}.brief-body ul,.brief-body ol{margin:0 0 5.5px 16px!important}.brief-body li{margin:0 0 3.5px 0!important}
 .brief-body:empty:before{content:"Hier den eigentlichen Brieftext einfügen …";color:var(--muted)}
-.brief-meta{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-top:10px;font-size:10px;color:var(--muted);line-height:1.4}
+.brief-meta{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-top:7px;font-size:9.5px;color:var(--muted);line-height:1.35}
 .brief-count{font-family:'IBM Plex Mono',monospace}.brief-count.ok{color:var(--pos)}.brief-count.warn{color:#b8860b}.brief-count.high{color:var(--neg);font-weight:700}
 /* --- V8 Marktkommentar-Seite --- */
 .mk-period{font-size:11px;line-height:1.55;color:var(--muted);background:var(--paper-2);border:1px solid var(--line);border-left:3px solid var(--gold);border-radius:4px;padding:10px 13px;margin-bottom:18px}
@@ -4400,7 +4401,7 @@ html,body{background:#aeb6c4;color:var(--ink);font-family:'IBM Plex Sans',sans-s
 .pkampf-body p{margin-bottom:9px}
 .pkampf-body p:last-child{margin-bottom:0}
 .pkampf-body .num{font-family:'IBM Plex Mono',monospace;color:var(--blue);font-weight:600;margin-right:3px}
-.back-cover .cover-inner{min-height:1188px;background:radial-gradient(circle at 18% 12%,rgba(242,183,5,.18),transparent 32%),linear-gradient(135deg,var(--navy),#06152f 72%);position:relative;color:#fff;overflow:hidden;padding:60px}
+.back-cover .cover-inner{height:297mm;min-height:297mm;background:radial-gradient(circle at 18% 12%,rgba(242,183,5,.18),transparent 32%),linear-gradient(135deg,var(--navy),#06152f 72%);position:relative;color:#fff;overflow:hidden;padding:60px}
 .back-cover .back-mid{position:absolute;left:60px;right:60px;top:50%;transform:translateY(-50%);text-align:center}
 .back-cover .back-mid .wax{font-family:'IBM Plex Serif',serif;font-size:74px;font-weight:700;letter-spacing:.03em}.back-cover .back-mid .dot{color:var(--gold)}
 .back-cover .back-mid .date{margin-top:18px;font-family:'IBM Plex Mono',monospace;font-size:13px;letter-spacing:.08em;color:#dce7fa}
@@ -4410,7 +4411,7 @@ html,body{background:#aeb6c4;color:var(--ink);font-family:'IBM Plex Sans',sans-s
   html,body{background:#fff}
   .toolbar{display:none!important}
   .doc{margin:0;max-width:none;gap:0}
-  .page{box-shadow:none;margin:0;page-break-after:always;min-height:auto;height:297mm;width:210mm;padding:16mm 14mm 14mm}
+  .page{box-shadow:none;margin:0;page-break-after:always;min-height:297mm;height:297mm;width:210mm;padding:16mm 14mm 14mm}
   .page.cover{padding:0}
   .page.cover .cover-inner{min-height:0;height:297mm;padding-bottom:104px}
   .page.cover .cover-foot{bottom:30px}
@@ -4518,7 +4519,7 @@ html,body{background:#aeb6c4;color:var(--ink);font-family:'IBM Plex Sans',sans-s
       <div id="briefEditor" class="editable brief-body" contenteditable="true" data-key="brief-aktionaere"></div>
       <div class="brief-fixed brief-close">Ne schöne Jrooß<div class="brief-name">Jörn</div></div>
     </div>
-    <div class="brief-meta"><span>Empfehlung: ca. 1.900–2.000 Zeichen inkl. Leerzeichen, Warnung ab 2.000, Obergrenze ca. 2.100.</span><span id="briefCount" class="brief-count">0 Zeichen</span></div>
+    <div class="brief-meta"><span>Empfehlung: ca. 2.300–2.500 Zeichen inkl. Leerzeichen, Warnung ab 2.500, Obergrenze ca. 2.650.</span><span id="briefCount" class="brief-count">0 Zeichen</span></div>
     <div class="pagefoot">Vertraulich · Folio.wax</div><div class="pagenum"></div></section>
 
   <section class="page"><div class="runhead"><span><b>Folio.wax</b> · Depot-Analyse</span><span>${heute}</span></div>
@@ -4586,11 +4587,12 @@ html,body{background:#aeb6c4;color:var(--ink);font-family:'IBM Plex Sans',sans-s
     if(!editor || !c) return;
     var n=briefPlainText(editor).length;
     c.textContent=n.toLocaleString('de-DE')+' Zeichen';
-    c.className='brief-count '+(n<=2000?'ok':(n<=2100?'warn':'high'));
+    c.className='brief-count '+(n<=2500?'ok':(n<=2650?'warn':'high'));
   }
   (function initBriefEditor(){
     var editor=document.getElementById('briefEditor');
     if(!editor){ updatePageNumbers(); return; }
+    editor.innerHTML=briefNormalizeHtml(editor.innerHTML);
     editor.addEventListener('input',updateBriefCount);
     editor.addEventListener('paste',function(){ setTimeout(function(){ editor.innerHTML=briefNormalizeHtml(editor.innerHTML); updateBriefCount(); },0); });
     updateBriefCount(); updatePageNumbers();
@@ -4636,11 +4638,11 @@ html,body{background:#aeb6c4;color:var(--ink);font-family:'IBM Plex Sans',sans-s
       arr.forEach(function(o){ if(o && o.key!=null) map[o.key]=o.html; });
       els.forEach(function(e){
         var k=e.getAttribute('data-key');
-        if(k!=null && map[k]!=null){ e.innerHTML=map[k]; e.dataset.orig=map[k]; }
+        if(k!=null && map[k]!=null){ var __html=(k==='brief-aktionaere' && typeof briefNormalizeHtml==='function')?briefNormalizeHtml(map[k]):map[k]; e.innerHTML=__html; e.dataset.orig=__html; }
       });
     } else {
       // Legacy (Altbericht): reines String-Array, per Index zuordnen.
-      els.forEach(function(e,i){ if(arr[i]!=null){ e.innerHTML=arr[i]; e.dataset.orig=arr[i]; } });
+      els.forEach(function(e,i){ if(arr[i]!=null){ var k=e.getAttribute('data-key'); var __html=(k==='brief-aktionaere' && typeof briefNormalizeHtml==='function')?briefNormalizeHtml(arr[i]):arr[i]; e.innerHTML=__html; e.dataset.orig=__html; } });
     }
     try{ recalc(); }catch(e){}
     try{ updateBriefCount(); updatePageNumbers(); }catch(e){}
