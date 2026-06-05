@@ -3973,6 +3973,7 @@ function waxBerichtHtml(d){
   const rufname=(s)=> RUF[nachname(s).toLowerCase()] || vorname(s) || nachname(s);
   const rufLong=(s)=> nachname(s).toLowerCase()==='hallwig' ? 'Heinzi / Heinz' : rufname(s);
   const heute     = new Date().toLocaleDateString('de-DE',{day:'2-digit',month:'2-digit',year:'numeric'});
+  const heuteFile = heute.split('.').reverse().join('');  // "05.06.2026" -> "20260605" (für PDF-Dateinamen)
   const heuteLang = new Date().toLocaleDateString('de-DE',{day:'2-digit',month:'long',year:'numeric'});
   const gj        = new Date().getFullYear();
   const refJahr   = (typeof REF_JAHR!=='undefined') ? REF_JAHR : 2025;
@@ -4059,7 +4060,7 @@ function waxBerichtHtml(d){
 
   return `<!DOCTYPE html><html lang="de"><head><meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Folio.wax · Management-Bericht ${heute}</title>
+<title>WAX-MIS-${heuteFile}</title>
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Serif:ital,wght@0,400;0,500;0,600;0,700;1,400&family=IBM+Plex+Sans:wght@300;400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
 <style>
