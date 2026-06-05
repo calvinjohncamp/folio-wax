@@ -252,7 +252,7 @@ body::-webkit-scrollbar {
 
 <script>
 // Cache-Bereinigung ohne aggressive Storage-Resets
-const WAX_BUILD = '1778547400000-report-import-preview-fix3-20260605';
+const WAX_BUILD = '1778547400000-report-archive-save-fix-20260605';
 try {
   sessionStorage.setItem('wax_build_seen', WAX_BUILD);
 } catch(e) {}
@@ -3838,15 +3838,33 @@ function waxStichtagISO(d = new Date()){
 // Bericht (eingefrorene Daten d + editierbare Texte) ins Archiv schreiben.
 async function waxArchivBericht(d, textArr, status='final'){
   if(!isAdmin()) return { ok:false, error:'kein Admin – Archiv übersprungen', skipped:true };
+  const payload = {
+    stichtag: waxStichtagISO(),
+    created_by: currentUser ? currentUser.name : null,
+    status: status || 'final',
+    snapshot_json: d,
+    text_json: Array.isArray(textArr) ? textArr : []
+  };
   try{
-    return await sbPostRow('berichte', {
-      stichtag: waxStichtagISO(),
-      created_by: currentUser ? currentUser.name : null,
-      created_by_key: currentUserKey || null,
-      status: status || 'final',
-      snapshot_json: d,
-      text_json: Array.isArray(textArr) ? textArr : []
-    });
+    // Wichtig: Nur Spalten senden, die im dokumentierten Supabase-Schema der Tabelle
+    // "berichte" existieren. Das frühere Feld created_by_key verhinderte den INSERT.
+    let res = await sbPostRow('berichte', payload);
+
+    // Robuster Fallback, falls die Tabelle in Supabase noch ohne status-Spalte angelegt wurde.
+    if(!res.ok && /status/i.test(String(res.error||''))){
+      const fallback = { ...payload };
+      delete fallback.status;
+      res = await sbPostRow('berichte', fallback);
+    }
+
+    // Wenn die Archivbox geöffnet ist, nach erfolgreichem Speichern sofort aktualisieren.
+    if(res && res.ok){
+      try{
+        const box = document.getElementById('waxArchivBox');
+        if(box && box.style.display !== 'none') setTimeout(()=>waxArchivLaden(), 250);
+      }catch(_e){}
+    }
+    return res;
   }catch(e){ return { ok:false, error:String(e) }; }
 }
 
