@@ -252,7 +252,7 @@ body::-webkit-scrollbar {
 
 <script>
 // Cache-Bereinigung ohne aggressive Storage-Resets
-const WAX_BUILD = '1778547400000-report-archive-save-fix4-close-iife-20260605';
+const WAX_BUILD = '1778547400000-report-archive-save-fix5-faildiag-20260605';
 try {
   sessionStorage.setItem('wax_build_seen', WAX_BUILD);
 } catch(e) {}
@@ -4462,7 +4462,7 @@ html,body{background:#aeb6c4;color:var(--ink);font-family:'IBM Plex Sans',sans-s
   *{-webkit-print-color-adjust:exact;print-color-adjust:exact}
 }
 </style></head><body>
-<div class="toolbar"><span class="tt">Folio.wax · Management-Bericht</span><span class="hint">Stand ${heute}</span><span class="sp"></span><span id="archStatus" style="font-size:11.5px;margin-right:8px;color:var(--blue-soft)"></span><button type="button" class="btn" id="mkImportBtn" onclick="window.waxMkImportOpen?window.waxMkImportOpen():(function(){var o=document.getElementById('mkImportOverlay');if(o){o.classList.add('open');setTimeout(function(){var t=document.getElementById('mkImpText');if(t)t.focus();},0)}})()" style="background:transparent;color:#fff;border:1px solid var(--blue-soft)">✨ Text importieren</button><button class="btn" style="background:transparent;color:#fff;border:1px solid var(--gold)" onclick="window.waxBerichtArchivieren&&window.waxBerichtArchivieren()">📥 In Archiv speichern</button><button class="btn" onclick="window.print()">⤓ Als PDF speichern</button></div>
+<div class="toolbar"><span class="tt">Folio.wax · Management-Bericht</span><span class="hint">Stand ${heute}</span><span class="sp"></span><span id="archStatus" style="font-size:11.5px;margin-right:8px;color:var(--blue-soft)"></span><button type="button" class="btn" id="mkImportBtn" onclick="window.waxMkImportOpen?window.waxMkImportOpen():(function(){var o=document.getElementById('mkImportOverlay');if(o){o.classList.add('open');setTimeout(function(){var t=document.getElementById('mkImpText');if(t)t.focus();},0)}})()" style="background:transparent;color:#fff;border:1px solid var(--blue-soft)">✨ Text importieren</button><button class="btn" style="background:transparent;color:#fff;border:1px solid var(--gold)" onclick="if(window.waxBerichtArchivieren){window.waxBerichtArchivieren();}else{alert('\u26a0 Die Speicher-Funktion ist im Bericht-Fenster nicht geladen \u2013 es liegt ein Script-Fehler vor. Bitte den roten Hinweis in der Kopfzeile bzw. die Konsole pr\u00fcfen.');}">📥 In Archiv speichern</button><button class="btn" onclick="window.print()">⤓ Als PDF speichern</button></div>
 <div class="doc">
 
   <section class="page cover"><div class="cover-inner"><div class="cover-grain"></div>
@@ -4604,6 +4604,10 @@ html,body{background:#aeb6c4;color:var(--ink);font-family:'IBM Plex Sans',sans-s
 </div>
 <script>
 (function(){
+  // fix5-Diagnose: jeden Script-Fehler im Bericht-Fenster sichtbar machen (statt stiller Button).
+  window.addEventListener('error', function(ev){
+    try{ var a=document.getElementById('archStatus'); if(a){ a.textContent='\u26a0 JS-Fehler im Bericht: '+(ev && ev.message ? ev.message : ev); a.style.color='#ff6b6b'; } }catch(_e){}
+  });
   document.querySelectorAll('.editable').forEach(function(e){ e.dataset.orig=e.innerHTML; });
   function updatePageNumbers(){
     var pages=[].slice.call(document.querySelectorAll('.doc > .page'));
@@ -4728,11 +4732,12 @@ html,body{background:#aeb6c4;color:var(--ink);font-family:'IBM Plex Sans',sans-s
     p.then(function(res){
       if(res && res.ok){
         setStatus('\u2713 Im Archiv gesichert','#7bd88f');
+        alert('\u2713 Bericht wurde im Archiv gespeichert.');
         try{ if(window.opener && typeof window.opener.waxArchivLaden==='function') window.opener.waxArchivLaden(); }catch(e){}
       }
-      else if(res && res.skipped){ setStatus('\u26a0 Nur der Admin kann archivieren.','#ffd27a'); }
-      else { setStatus('\u26a0 '+((res&&res.error)||'nicht gespeichert'),'#ffd27a'); }
-    }).catch(function(e){ setStatus('\u26a0 '+e,'#ffd27a'); });
+      else if(res && res.skipped){ setStatus('\u26a0 Nur der Admin kann archivieren.','#ffd27a'); alert('\u26a0 Nicht gespeichert: nur der Admin kann archivieren.\n\nBitte in der App zuerst als Admin anmelden und den Bericht erneut erzeugen.'); }
+      else { var em=((res&&res.error)||'nicht gespeichert'); setStatus('\u26a0 '+em,'#ffd27a'); alert('\u26a0 Speichern fehlgeschlagen:\n\n'+em); }
+    }).catch(function(e){ setStatus('\u26a0 '+e,'#ffd27a'); alert('\u26a0 Fehler beim Speichern:\n\n'+e); });
   };
 
 })();
