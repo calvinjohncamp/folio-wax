@@ -537,6 +537,9 @@ if (window.caches && caches.keys) {
     <div class="kpi" style="cursor:pointer;border:1px solid #d8d4ce" onclick="timeMachineSnapshotRestore()">
       <div class="kpi-l">Time Machine</div><div class="kpi-v" style="font-size:14px">↩ Snapshot wiederherstellen</div><div class="kpi-s">früheren Stand zurückholen</div>
     </div>
+    <div class="kpi" style="cursor:pointer;border:1px solid #d8d4ce" onclick="waxBerichtErzeugen()">
+      <div class="kpi-l">Management-Bericht</div><div class="kpi-v" style="font-size:14px">📄 Bericht erzeugen</div><div class="kpi-s">aktueller Stand → Druck/PDF</div>
+    </div>
   </div>
   <div id="timeMachineInfo" style="font-size:12px;color:#666;margin-bottom:18px"></div>
 
@@ -3812,6 +3815,268 @@ async function tmBuildSnapshot(){
   };
   return snapshot;
 }
+// ============================================================
+// Folio.wax · Management-Bericht (Option 1 — fest in der App)
+// Nutzt die vorhandene Engine: getDepotwert / getInvestwert / getCash /
+// getComdirectCashTotal / getComdirectPuffer / calcAlltimeLive / calcClubXIRR /
+// REF / EINSATZ_PP / SECURITY_MASTER_DEFAULTS / getSecurityMasterDefault / num / f
+// Bewusst KEINE base64-Bilder (Medaillen = Emoji/CSS), damit die Datei schlank bleibt.
+// ============================================================
+function waxBerichtDaten(){
+  const M = [...db.mitglieder].sort((a,b)=>((a.sortierung||a.id)-(b.sortierung||b.id)));
+  const sumCash = M.reduce((s,m)=>s+getCash(m.id),0);
+  const gesamtEinzeldepots = M.reduce((s,m)=>s+getDepotwert(m.id),0);
+  const gesamtInvest = (typeof getInvestwert==='function')
+    ? M.reduce((s,m)=>s+getInvestwert(m.id),0)
+    : (gesamtEinzeldepots - sumCash);
+  const comdirect = getComdirectCashTotal();
+  const puffer = (typeof getComdirectPuffer==='function') ? getComdirectPuffer() : (comdirect - sumCash);
+  const gesamtEcht = gesamtInvest + comdirect;
+  const proPerson = gesamtEcht/6;
+  const cashAnteil = gesamtEcht>0 ? comdirect/gesamtEcht : 0;
+  const ref2025 = Object.values(REF).reduce((s,r)=>s+(r.total||0),0);
+  const ytdPct = ref2025>0 ? (gesamtEinzeldepots-ref2025)/ref2025 : 0;
+  const ytdAbs = gesamtEinzeldepots-ref2025;
+  const clubXirr = calcClubXIRR()||0;
+
+  const secDef = (wkn)=> (typeof getSecurityMasterDefault==='function'
+      ? getSecurityMasterDefault(wkn)
+      : (SECURITY_MASTER_DEFAULTS[wkn]||{})) || {};
+
+  const mitglieder = M.map(m=>{
+    const depot = getDepotwert(m.id);
+    const cash  = getCash(m.id);
+    const ref   = (REF[m.id] && REF[m.id].total) || 0;
+    const at    = calcAlltimeLive(m.id) || {wert_echt:depot, perf_pa:0};
+    const gewinnAt = at.wert_echt - (typeof EINSATZ_PP!=='undefined' ? EINSATZ_PP : 0);
+    const pos = db.positionen.filter(p=>p.mitglied_id===m.id && !p.verkauft && num(p.stueck)>0)
+      .map(p=>{
+        const k = liveKurse[p.wkn];
+        const w = (k!=null && !isNaN(k)) ? k*num(p.stueck) : num(p.wert_ref||p.kaufwert);
+        const def = secDef(p.wkn);
+        return { wkn:p.wkn, name:(def.name||p.wkn), category:(def.category||'Sonstige'), wert:w };
+      });
+    const investWP = pos.reduce((s,p)=>s+p.wert,0);
+    const cats = {};
+    pos.forEach(p=>{ cats[p.category]=(cats[p.category]||0)+p.wert; });
+    const top = [...pos].sort((a,b)=>b.wert-a.wert).slice(0,5);
+    return { id:m.id, name:m.name, depot, cash, investWP, ref,
+             ytdPct: ref>0?(depot-ref)/ref:0, ytdAbs: depot-ref,
+             perfPa: at.perf_pa, wertEcht: at.wert_echt, gewinnAt,
+             cats, top };
+  });
+
+  // Gesamtdepot-Kategorien (über alle Mitglieder)
+  const catsGesamt = {};
+  mitglieder.forEach(m=>{ for(const k in m.cats){ catsGesamt[k]=(catsGesamt[k]||0)+m.cats[k]; } });
+
+  const byYtd = [...mitglieder].sort((a,b)=>b.ytdPct-a.ytdPct);
+  return { ref2025, gesamtEinzeldepots, gesamtInvest, comdirect, puffer, gesamtEcht,
+           proPerson, cashAnteil, ytdPct, ytdAbs, clubXirr, sumCash,
+           mitglieder, catsGesamt, ranking:byYtd,
+           matador: byYtd[0], baer: byYtd[byYtd.length-1] };
+}
+
+function waxBerichtHtml(d){
+  const eur  = (n)=> f(n,2)+' €';
+  const eur0 = (n)=> f(Math.round(n),0)+' €';
+  const pct  = (n)=> (n>=0?'+':'')+f(n*100,2)+' %';
+  const seur = (n)=> (n>=0?'+':'')+f(n,2)+' €';
+  const cls  = (n)=> n>=0 ? 'pos' : 'neg';
+  const nachname = (s)=> String(s||'').split(',')[0].trim();
+  const heute = new Date().toLocaleDateString('de-DE',{day:'2-digit',month:'long',year:'numeric'});
+  const refJahr = (typeof REF_JAHR!=='undefined') ? REF_JAHR : 2025;
+
+  const catRows = (catsObj, basis)=>{
+    const entries = Object.entries(catsObj).sort((a,b)=>b[1]-a[1]);
+    return entries.map(([k,v])=>{
+      const p = basis>0 ? v/basis : 0;
+      return `<div class="catrow"><div class="catname">${k}</div>`
+        +`<div class="catbar"><span style="width:${(p*100).toFixed(1)}%"></span></div>`
+        +`<div class="catval">${eur0(v)} · ${(p*100).toFixed(1)}%</div></div>`;
+    }).join('');
+  };
+
+  const rankingRows = d.ranking.map((m,i)=>{
+    const medal = i===0?'🥇':i===1?'🥈':i===2?'🥉':'';
+    return `<tr><td>${i+1} ${medal}</td><td>${nachname(m.name)}</td>`
+      +`<td class="r">${eur0(m.depot)}</td>`
+      +`<td class="r ${cls(m.ytdPct)}">${pct(m.ytdPct)}</td>`
+      +`<td class="r ${cls(m.ytdAbs)}">${seur(m.ytdAbs)}</td>`
+      +`<td class="r ${cls(m.perfPa)}">${pct(m.perfPa)}</td></tr>`;
+  }).join('');
+
+  const memberPages = d.mitglieder.map(m=>{
+    const kachel = (label,val,c='')=>`<div class="mk"><div class="mk-l">${label}</div><div class="mk-v ${c}">${val}</div></div>`;
+    const top = m.top.map(p=>{
+      const w = m.depot>0 ? p.wert/m.depot : 0;
+      return `<tr><td>${p.name}</td><td class="r">${eur0(p.wert)}</td><td class="r">${(w*100).toFixed(1)}%</td></tr>`;
+    }).join('');
+    return `<section class="page">
+      <div class="m-head"><div class="m-name">${m.name}</div>
+        <div class="m-depot">${eur(m.depot)}<span class="m-depot-s">Einzeldepot inkl. Cash</span></div></div>
+      <div class="mk-row">
+        ${kachel('YTD '+refJahr,pct(m.ytdPct),cls(m.ytdPct))}
+        ${kachel('YTD '+refJahr+' (€)',seur(m.ytdAbs),cls(m.ytdAbs))}
+        ${kachel('Performance p.a. (Alltime)',pct(m.perfPa),cls(m.perfPa))}
+        ${kachel('Gewinn Alltime',seur(m.gewinnAt),cls(m.gewinnAt))}
+      </div>
+      <h3>Depotstruktur nach Anlageklassen</h3>
+      <div class="cats">${catRows(m.cats, m.depot - m.cash) || '<div class="muted">Keine aktiven Positionen.</div>'}</div>
+      <h3>Größte Positionen</h3>
+      <table class="t"><thead><tr><th>Wertpapier</th><th class="r">Wert</th><th class="r">Anteil</th></tr></thead>
+        <tbody>${top || '<tr><td colspan="3" class="muted">—</td></tr>'}</tbody></table>
+      <div class="m-foot">Cash-Position: ${eur(m.cash)} · Wertpapiere: ${eur(m.investWP)}</div>
+    </section>`;
+  }).join('');
+
+  return `<!DOCTYPE html><html lang="de"><head><meta charset="utf-8">
+<title>Folio.wax · Management-Bericht ${heute}</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Serif:wght@400;600;700&family=IBM+Plex+Mono:wght@500&display=swap" rel="stylesheet">
+<style>
+  :root{ --navy:#0a1f44; --gold:#f2b705; --ink:#1a2330; --muted:#6b7280; --line:#e3e6ec; --bg:#fff; }
+  *{box-sizing:border-box;} 
+  body{margin:0;background:#525659;font-family:'IBM Plex Sans',system-ui,sans-serif;color:var(--ink);}
+  .toolbar{position:sticky;top:0;background:var(--navy);color:#fff;padding:10px 16px;display:flex;gap:10px;align-items:center;z-index:9;}
+  .toolbar b{font-family:'IBM Plex Serif',serif;}
+  .toolbar button{background:var(--gold);color:var(--navy);border:0;border-radius:6px;padding:8px 14px;font-weight:600;cursor:pointer;font-family:inherit;}
+  .page{background:var(--bg);width:210mm;min-height:297mm;margin:14px auto;padding:24mm 22mm;box-shadow:0 2px 14px rgba(0,0,0,.35);position:relative;}
+  h1,h2,h3{font-family:'IBM Plex Serif',serif;color:var(--navy);margin:0 0 10px;}
+  h3{font-size:14px;margin:22px 0 8px;border-bottom:2px solid var(--gold);padding-bottom:4px;display:inline-block;}
+  .muted{color:var(--muted);} .pos{color:#117a3a;} .neg{color:#c8441a;} .r{text-align:right;}
+  /* Deckblatt */
+  .cover{display:flex;flex-direction:column;justify-content:center;min-height:249mm;}
+  .cover .kicker{letter-spacing:3px;text-transform:uppercase;color:var(--gold);font-weight:600;font-size:12px;}
+  .cover h1{font-size:42px;line-height:1.1;margin:8px 0 4px;}
+  .cover .sub{color:var(--muted);font-size:15px;margin-bottom:34px;}
+  .cover-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-top:8px;}
+  .big{border:1px solid var(--line);border-top:3px solid var(--navy);border-radius:8px;padding:16px 18px;}
+  .big .l{color:var(--muted);font-size:12px;text-transform:uppercase;letter-spacing:1px;}
+  .big .v{font-family:'IBM Plex Mono',monospace;font-size:26px;color:var(--navy);font-weight:500;margin-top:4px;}
+  .big .s{color:var(--muted);font-size:12px;margin-top:4px;}
+  .cover-foot{margin-top:auto;color:var(--muted);font-size:12px;border-top:1px solid var(--line);padding-top:10px;}
+  /* Editorial */
+  .edit{border:1px dashed var(--line);border-radius:8px;padding:14px 16px;min-height:120px;line-height:1.6;font-size:14px;outline:none;}
+  .edit:focus{border-color:var(--gold);}
+  .hint{color:var(--muted);font-size:11px;margin:6px 0 0;}
+  /* KPIs / Ranking */
+  .kpis{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin:14px 0 4px;}
+  .kpi{border:1px solid var(--line);border-radius:8px;padding:12px 14px;}
+  .kpi .l{color:var(--muted);font-size:11px;text-transform:uppercase;letter-spacing:1px;}
+  .kpi .v{font-family:'IBM Plex Mono',monospace;font-size:20px;color:var(--navy);margin-top:3px;}
+  .kpi .s{color:var(--muted);font-size:11px;margin-top:3px;}
+  table.t{width:100%;border-collapse:collapse;font-size:13px;margin-top:6px;}
+  table.t th{background:var(--navy);color:#fff;text-align:left;padding:7px 9px;font-weight:600;font-size:12px;}
+  table.t td{padding:7px 9px;border-bottom:1px solid var(--line);}
+  table.t tbody tr:nth-child(even){background:#f7f8fa;}
+  .award{display:flex;gap:12px;margin-top:14px;}
+  .award .a{flex:1;border:1px solid var(--line);border-radius:8px;padding:12px 14px;}
+  .award .a .t{font-weight:600;color:var(--navy);} .award .a .n{font-size:18px;margin:4px 0;font-family:'IBM Plex Serif',serif;}
+  /* Kategorien-Balken */
+  .cats{margin-top:4px;}
+  .catrow{display:grid;grid-template-columns:160px 1fr 150px;gap:10px;align-items:center;margin:6px 0;font-size:12px;}
+  .catbar{background:#eef0f4;border-radius:5px;height:12px;overflow:hidden;}
+  .catbar span{display:block;height:100%;background:var(--navy);}
+  .catval{text-align:right;color:var(--muted);font-family:'IBM Plex Mono',monospace;}
+  /* Mitglied */
+  .m-head{display:flex;justify-content:space-between;align-items:flex-end;border-bottom:3px solid var(--gold);padding-bottom:10px;}
+  .m-name{font-family:'IBM Plex Serif',serif;font-size:26px;color:var(--navy);font-weight:700;}
+  .m-depot{font-family:'IBM Plex Mono',monospace;font-size:24px;color:var(--navy);text-align:right;}
+  .m-depot-s{display:block;font-family:'IBM Plex Sans';font-size:11px;color:var(--muted);}
+  .mk-row{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin:16px 0 4px;}
+  .mk{border:1px solid var(--line);border-radius:8px;padding:10px 12px;}
+  .mk-l{color:var(--muted);font-size:10px;text-transform:uppercase;letter-spacing:.5px;}
+  .mk-v{font-family:'IBM Plex Mono',monospace;font-size:17px;color:var(--navy);margin-top:3px;}
+  .m-foot{position:absolute;bottom:18mm;left:22mm;right:22mm;color:var(--muted);font-size:11px;border-top:1px solid var(--line);padding-top:8px;}
+  @media print{ body{background:#fff;} .toolbar{display:none;} .page{margin:0;box-shadow:none;width:auto;min-height:auto;page-break-after:always;} .edit{border-color:transparent;} }
+  @page{ size:A4; margin:0; }
+</style></head><body>
+<div class="toolbar"><b>Folio.wax · Management-Bericht</b> <span style="opacity:.7">${heute}</span>
+  <span style="flex:1"></span>
+  <button onclick="window.print()">Drucken / Als PDF speichern</button></div>
+
+<!-- 1 · Deckblatt -->
+<section class="page"><div class="cover">
+  <div class="kicker">WAX Aktienclub · seit Januar 2000</div>
+  <h1>Management-Bericht</h1>
+  <div class="sub">Stand ${heute} · Referenzjahr ${refJahr}</div>
+  <div class="cover-grid">
+    <div class="big"><div class="l">Gesamtwert (echt, inkl. Puffer)</div><div class="v">${eur(d.gesamtEcht)}</div><div class="s">Wertpapiere ${eur0(d.gesamtInvest)} + Comdirect-Cash ${eur0(d.comdirect)}</div></div>
+    <div class="big"><div class="l">Ø pro Person</div><div class="v">${eur(d.proPerson)}</div><div class="s">Gesamtwert / 6 Mitglieder</div></div>
+    <div class="big"><div class="l">Performance ${refJahr} (YTD)</div><div class="v ${cls(d.ytdPct)}">${pct(d.ytdPct)}</div><div class="s">${seur(d.ytdAbs)} ggü. Jahresabschluss · Einzeldepot-Basis</div></div>
+    <div class="big"><div class="l">Rendite p.a. (Alltime / XIRR)</div><div class="v ${cls(d.clubXirr)}">${pct(d.clubXirr)}</div><div class="s">Cashanteil ${f(d.cashAnteil*100,1)}% · Puffer ${seur(d.puffer)}</div></div>
+  </div>
+  <div class="cover-foot">Erstellt aus dem App-Datenstand (index.html-Engine). Performance auf sauberer Einzeldepot-Basis; Gesamtwert &amp; Ø pro Person inkl. realem Comdirect-Puffer.</div>
+</div></section>
+
+<!-- 2 · Marktkommentar -->
+<section class="page">
+  <h2>Marktkommentar</h2>
+  <p class="hint">Frei editierbar — vor dem Speichern/Drucken hier den Kommentar eintragen.</p>
+  <div class="edit" contenteditable="true">Hier Marktkommentar eintragen …</div>
+</section>
+
+<!-- 3 · Gesamtübersicht + Ranking -->
+<section class="page">
+  <h2>Gesamtübersicht</h2>
+  <div class="kpis">
+    <div class="kpi"><div class="l">Gesamtwert (echt)</div><div class="v">${eur0(d.gesamtEcht)}</div><div class="s">Σ Einzeldepots ${eur0(d.gesamtEinzeldepots)} · Puffer ${seur(d.puffer)}</div></div>
+    <div class="kpi"><div class="l">Ø pro Person</div><div class="v">${eur0(d.proPerson)}</div><div class="s">echter Wert / 6</div></div>
+    <div class="kpi"><div class="l">Comdirect-Cash</div><div class="v">${eur0(d.comdirect)}</div><div class="s">Cashanteil ${f(d.cashAnteil*100,1)}%</div></div>
+    <div class="kpi"><div class="l">YTD ${refJahr}</div><div class="v ${cls(d.ytdPct)}">${pct(d.ytdPct)}</div><div class="s">${seur(d.ytdAbs)}</div></div>
+    <div class="kpi"><div class="l">Σ Einzel-Cash</div><div class="v">${eur0(d.sumCash)}</div><div class="s">virtuelle Depots</div></div>
+    <div class="kpi"><div class="l">Rendite p.a. (Alltime)</div><div class="v ${cls(d.clubXirr)}">${pct(d.clubXirr)}</div><div class="s">Club-XIRR</div></div>
+  </div>
+  <h3>Ranking nach YTD ${refJahr}</h3>
+  <table class="t"><thead><tr><th>#</th><th>Mitglied</th><th class="r">Depot</th><th class="r">YTD %</th><th class="r">YTD €</th><th class="r">p.a.</th></tr></thead>
+    <tbody>${rankingRows}</tbody>
+    <tfoot><tr style="font-weight:600;border-top:2px solid var(--navy)">
+      <td></td><td>Gesamt (Einzeldepots)</td><td class="r">${eur0(d.gesamtEinzeldepots)}</td>
+      <td class="r ${cls(d.ytdPct)}">${pct(d.ytdPct)}</td><td class="r ${cls(d.ytdAbs)}">${seur(d.ytdAbs)}</td>
+      <td class="r ${cls(d.clubXirr)}">${pct(d.clubXirr)}</td></tr></tfoot>
+  </table>
+  <p class="hint">Fußnote: Ranking-/YTD-Basis = Summe der sechs Einzeldepots (${eur0(d.gesamtEinzeldepots)}). Echter Gesamtwert inkl. Puffer = ${eur0(d.gesamtEcht)}.</p>
+  <div class="award">
+    <div class="a"><div class="t">🥇 Matador des Jahres</div><div class="n">${nachname(d.matador.name)}</div><div class="${cls(d.matador.ytdPct)}">${pct(d.matador.ytdPct)} YTD</div></div>
+    <div class="a"><div class="t">🐻 Bär des Jahres</div><div class="n">${nachname(d.baer.name)}</div><div class="${cls(d.baer.ytdPct)}">${pct(d.baer.ytdPct)} YTD</div></div>
+  </div>
+</section>
+
+<!-- 4 · Gesamtdepot-Analyse -->
+<section class="page">
+  <h2>Gesamtdepot-Analyse</h2>
+  <p class="hint">Anlageklassen über alle sechs Einzeldepots (Wertpapierwerte, ohne Cash).</p>
+  <div class="cats">${catRows(d.catsGesamt, Object.values(d.catsGesamt).reduce((s,v)=>s+v,0))}</div>
+</section>
+
+<!-- 5–10 · Einzeldepots -->
+${memberPages}
+
+<!-- 11 · Schlusswort -->
+<section class="page">
+  <h2>Schlusswort</h2>
+  <p class="hint">Frei editierbar.</p>
+  <div class="edit" contenteditable="true">Hier Schlusswort eintragen …</div>
+</section>
+</body></html>`;
+}
+
+function waxBerichtErzeugen(){
+  const info = document.getElementById('timeMachineInfo');
+  try{
+    const d = waxBerichtDaten();
+    const html = waxBerichtHtml(d);
+    const w = window.open('', '_blank');
+    if(!w){ if(info){info.textContent='Bitte Popups für diese Seite erlauben, um den Bericht zu öffnen.';info.style.color='#c8441a';} return; }
+    w.document.open(); w.document.write(html); w.document.close();
+    if(info){ info.innerHTML='✓ Bericht in neuem Fenster geöffnet — dort über „Drucken → Als PDF speichern" sichern.'; info.style.color='#1a6e3a'; }
+  }catch(e){
+    if(info){ info.textContent='Fehler beim Bericht: '+e.message; info.style.color='#c8441a'; }
+    alert('Bericht konnte nicht erzeugt werden.\n\n'+e.message);
+  }
+}
+
 function tmRenderSnapshotInfo(snapshot, prefix=''){
   const counts = snapshot.counts || {};
   const created = snapshot.created_at ? new Date(snapshot.created_at).toLocaleString('de-DE') : '—';
