@@ -252,7 +252,7 @@ body::-webkit-scrollbar {
 
 <script>
 // Cache-Bereinigung ohne aggressive Storage-Resets
-const WAX_BUILD = '1778542600000-report-import-fix-20260605';
+const WAX_BUILD = '1778547400000-report-import-preview-fix3-20260605';
 try {
   sessionStorage.setItem('wax_build_seen', WAX_BUILD);
 } catch(e) {}
@@ -4790,64 +4790,16 @@ html,body{background:#aeb6c4;color:var(--ink);font-family:'IBM Plex Sans',sans-s
 
 
 <\/script>
-<script>
-(function(){
-  function ready(fn){ if(document.readyState==='loading') document.addEventListener('DOMContentLoaded',fn); else fn(); }
-  ready(function(){
-    var ov=document.getElementById('mkImportOverlay'), btn=document.getElementById('mkImportBtn'), ta=document.getElementById('mkImpText'), box=document.getElementById('mkImpPreviewBox'), stat=document.getElementById('mkImpStatus'), apply=document.getElementById('mkImpApply');
-    if(!ov || ov.__waxImportFallback) return; ov.__waxImportFallback=true;
-    function esc(s){ return String(s||'').replace(/[&<>"']/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];}); }
-    function clean(s){ return String(s||'').replace(/^\s*(?:[•‣◦⁃∙–—*-]+|\d+[.)]|[①②③④⑤])\s*/,'').trim(); }
-    function parse(raw){
-      var out={'mk-kern':[],'mk-politik':[],'mk-wirtschaft':[],'mk-unternehmen':[],'mk-depot':[]}, unmatched=[], cur=null;
-      var rules=[['mk-kern',/kernaussage/i],['mk-politik',/politik|geopolit/i],['mk-wirtschaft',/wirtschaft|zinsen|notenbank|inflation|konjunktur/i],['mk-unternehmen',/unternehmen|technologie|ki|earnings|tech/i],['mk-depot',/depot|wax|auswirkung/i]];
-      String(raw||'').split(/\r?\n/).forEach(function(line){
-        var s=line.trim(); if(!s) return;
-        var hit=null; rules.some(function(r){ if(r[1].test(s)){ hit=r[0]; return true; } return false; });
-        if(hit && s.length<90){ cur=hit; return; }
-        s=clean(s); if(!s) return;
-        if(cur) out[cur].push(s); else unmatched.push(s);
-      });
-      return {out:out, unmatched:unmatched};
-    }
-    function open(){ ov.classList.add('open'); setTimeout(function(){ if(ta) ta.focus(); },0); }
-    function close(){ ov.classList.remove('open'); }
-    function preview(){
-      var p=parse(ta?ta.value:''); window.__waxMkLast=p;
-      var labels={'mk-kern':'Kernaussagen','mk-politik':'① Politik & Geopolitik','mk-wirtschaft':'② Wirtschaft & Zinsen','mk-unternehmen':'③ Unternehmen & Technologie','mk-depot':'④ Auswirkungen auf unser Depot'};
-      var order=['mk-kern','mk-politik','mk-wirtschaft','mk-unternehmen','mk-depot'], total=0, html='';
-      order.forEach(function(k){ var arr=p.out[k]; total+=arr.length; var tag=k==='mk-kern'?'ol':'ul'; html+='<div class="mk-imp-pcol '+(k==='mk-kern'?'kern ':'')+(arr.length?'':'empty')+'"><h4>'+labels[k]+' · '+arr.length+'</h4><'+tag+'>'+(arr.length?arr.map(function(x){return '<li>'+esc(x)+'</li>';}).join(''):'<li>— nichts erkannt —</li>')+'</'+tag+'></div>'; });
-      if(p.unmatched.length) html+='<div class="mk-imp-warn"><b>'+p.unmatched.length+' Zeile(n) ohne erkannte Überschrift</b> — werden nicht übernommen.</div>';
-      if(box) box.innerHTML=html; if(apply) apply.disabled=!total; if(stat) stat.textContent=total?total+' Bulletpoint(s) erkannt':'Noch nichts erkannt';
-    }
-    function put(key, html){ var el=document.querySelector('.editable[data-key="'+key+'"]'); if(el){ el.innerHTML=html; el.dataset.orig=html; } }
-    function doApply(){
-      var p=window.__waxMkLast || parse(ta?ta.value:'');
-      (p.out['mk-kern']||[]).slice(0,3).forEach(function(x,i){ put('mk-kern-'+(i+1), esc(x)); });
-      ['mk-politik','mk-wirtschaft','mk-unternehmen','mk-depot'].forEach(function(k){ var arr=p.out[k]||[]; if(arr.length) put(k, arr.map(function(x){return '<li>'+esc(x)+'</li>';}).join('')); });
-      close(); var as=document.getElementById('archStatus'); if(as){ as.textContent='✓ Marktkommentar aus Text übernommen'; as.style.color='#7bd88f'; }
-    }
-    if(btn) btn.addEventListener('click',open);
-    var pre=document.getElementById('mkImpPreview'); if(pre) pre.addEventListener('click',preview);
-    var can=document.getElementById('mkImpCancel'); if(can) can.addEventListener('click',close);
-    var x=document.getElementById('mkImpClose'); if(x) x.addEventListener('click',close);
-    if(apply) apply.addEventListener('click',doApply);
-    if(ta) ta.addEventListener('input',function(){ if(apply) apply.disabled=true; if(stat) stat.textContent=''; });
-    ov.addEventListener('click',function(e){ if(e.target===ov) close(); });
-    document.addEventListener('keydown',function(e){ if(e.key==='Escape' && ov.classList.contains('open')) close(); });
-  });
-})();
-<\/script>
 
 <script>
 (function(){
-  // V8.3 robuster Import-Assistent: Klick, Vorschau und Übernahme unabhängig von älteren Handlern.
+  // V8.4 robuster Import-Assistent: keine ungeschützten Backslashes im Bericht-Template.
   function byId(id){ return document.getElementById(id); }
   function esc(s){ return String(s==null?'':s).replace(/[&<>"']/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];}); }
   function stripBullet(s){
     return String(s||'')
-      .replace(/^\s*(?:[•‣◦⁃∙–—*-]+|\d+[.)]|[①②③④⑤])\s*/,'')
-      .replace(/\s+/g,' ')
+      .replace(/^\\s*(?:[•‣◦⁃∙–—*-]+|\\d+[.)]|[①②③④⑤])\\s*/,'')
+      .replace(/\\s+/g,' ')
       .trim();
   }
   var order=['mk-kern','mk-politik','mk-wirtschaft','mk-unternehmen','mk-depot'];
@@ -4859,11 +4811,11 @@ html,body{background:#aeb6c4;color:var(--ink);font-family:'IBM Plex Sans',sans-s
     'mk-depot':'④ Auswirkungen auf unser Depot'
   };
   var rules=[
-    ['mk-kern',/^(?:\d+[.)]?\s*)?(?:kernaussagen?|hauptaussagen?|executive summary)\b/i],
-    ['mk-politik',/^(?:\d+[.)]?\s*)?(?:[①1]\s*)?(?:politik|geopolitik|politik & geopolitik)\b/i],
-    ['mk-wirtschaft',/^(?:\d+[.)]?\s*)?(?:[②2]\s*)?(?:wirtschaft|zinsen|wirtschaft & zinsen|inflation|notenbanken|konjunktur)\b/i],
-    ['mk-unternehmen',/^(?:\d+[.)]?\s*)?(?:[③3]\s*)?(?:unternehmen|technologie|unternehmen & technologie|ki|earnings|märkte|maerkte)\b/i],
-    ['mk-depot',/^(?:\d+[.)]?\s*)?(?:[④4]\s*)?(?:auswirkungen? auf unser depot|auswirkung|depot|wax)\b/i]
+    ['mk-kern',/^(?:\\d+[.)]?\\s*)?(?:kernaussagen?|hauptaussagen?|executive summary)\\b/i],
+    ['mk-politik',/^(?:\\d+[.)]?\\s*)?(?:[①1]\\s*)?(?:politik|geopolitik|politik & geopolitik)\\b/i],
+    ['mk-wirtschaft',/^(?:\\d+[.)]?\\s*)?(?:[②2]\\s*)?(?:wirtschaft|zinsen|wirtschaft & zinsen|inflation|notenbanken|konjunktur)\\b/i],
+    ['mk-unternehmen',/^(?:\\d+[.)]?\\s*)?(?:[③3]\\s*)?(?:unternehmen|technologie|unternehmen & technologie|ki|earnings|märkte|maerkte|neueste entwicklungen)\\b/i],
+    ['mk-depot',/^(?:\\d+[.)]?\\s*)?(?:[④4]\\s*)?(?:auswirkungen? auf unser depot|auswirkung|depot|wax)\\b/i]
   ];
   function headerKey(line){
     var t=stripBullet(line).replace(/[:：]+$/,'').trim();
@@ -4872,12 +4824,12 @@ html,body{background:#aeb6c4;color:var(--ink);font-family:'IBM Plex Sans',sans-s
     return null;
   }
   function splitInlineBullets(line){
-    return String(line||'').split(/\s*[•‣◦⁃∙]\s+/).map(function(x){return x.trim();}).filter(Boolean);
+    return String(line||'').split(/\\s*[•‣◦⁃∙]\\s+/).map(function(x){return x.trim();}).filter(Boolean);
   }
   function parse(raw){
     var out={'mk-kern':[],'mk-politik':[],'mk-wirtschaft':[],'mk-unternehmen':[],'mk-depot':[]};
     var unmatched=[], cur=null;
-    String(raw||'').replace(/\r/g,'').split('\n').forEach(function(line){
+    String(raw||'').replace(/\\r/g,'').split('\\n').forEach(function(line){
       var s=line.trim(); if(!s) return;
       var parts=splitInlineBullets(s);
       if(parts.length>1){
