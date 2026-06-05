@@ -4045,13 +4045,22 @@ function waxBerichtDaten(){
   const benchVals = Object.values(bench).filter(v=>v!=null);
   const benchAvg = benchVals.length ? benchVals.reduce((s,v)=>s+v,0)/benchVals.length : null;
 
+  // 28-Tage-Berichtszeitraum (rollierend, bis = heute). Bewusst OHNE Historienlogik
+  // und ohne Bezug zum letzten Bericht. Hinweis: Die Depot-KPIs im Bericht sind YTD
+  // (seit 31.12.), nicht 28-tagesscharf — die Marktkommentar-Seite ist daher
+  // marktseitig/qualitativ und von den YTD-Zahlen entkoppelt.
+  const _bis = new Date();
+  const _von = new Date(_bis.getTime() - 28*24*60*60*1000);
+  const _fmtZ = (dt)=> dt.toLocaleDateString('de-DE',{day:'2-digit',month:'long',year:'numeric'});
+  const zeitraum = { von:_fmtZ(_von), bis:_fmtZ(_bis), tage:28 };
+
   return { ref2025, gesamtEinzeldepots, gesamtInvest, comdirect, puffer, gesamtEcht,
            proPerson, cashAnteil, ytdPct, ytdAbs, clubXirr, sumCash,
            gesamtGewinnAt, gesamtAlltimeWert, investGesamt,
            mitglieder, catsGesamt, topHoldings, ranking:byYtd, nMit: mitglieder.length,
            matador: byYtd[0], baer: byYtd[byYtd.length-1],
            atBulle: byPa[0], atBaer: byPa[byPa.length-1],
-           bench, benchAvg };
+           bench, benchAvg, zeitraum };
 }
 
 function waxBerichtHtml(d){
@@ -4119,6 +4128,12 @@ function waxBerichtHtml(d){
     `<tr><td>${i+1}</td><td>${esc(h.name)}</td><td>${esc(h.wkn)}</td><td>${eur(h.wert)}</td><td>${anteilPct(h.anteil)}</td><td>${anteilPct(h.kumuliert)}</td></tr>`
   ).join('') || '<tr><td colspan="6" style="text-align:center;color:var(--muted)">—</td></tr>';
 
+  // Seed-Bullets für den Marktkommentar-Block "Auswirkungen auf unser Depot"
+  // (größte Positionen als Aufhänger; in V8 reiner Platzhalter, in V9 KI-Kontext).
+  const mkDepotSeed = d.topHoldings.slice(0,3).map(h=>
+    `<li>${esc(h.name)} <span style="color:var(--muted)">(${anteilPct(h.anteil)} des WP-Bestands)</span> — [Einordnung / Treiber im Zeitraum].</li>`
+  ).join('') || '<li>[Auswirkungen der letzten Wochen auf unsere größten Positionen …]</li>';
+
   // Einzeldepot-Seiten — absteigend nach Position im aktuellen Jahr (YTD)
   const memberPages = [...d.mitglieder].sort((a,b)=>a.ytdRank-b.ytdRank).map((m,i)=>{
     const k = i+1;
@@ -4145,7 +4160,7 @@ function waxBerichtHtml(d){
         <div class="mkpi"><div class="l">Cashanteil</div><div class="v">${anteilPct(m.cashAnteil)}</div></div>
       </div>
       <div class="mquip"><span class="edit-tag">✎ Deine Zeile zu ${esc(rufname(m.name))}</span>
-        <p class="editable" contenteditable="true">[Hier kommt dein persönlicher Kommentar zu ${esc(rufname(m.name))} — der Bericht füllt automatisch die Treiber ein.]</p>
+        <p class="editable" contenteditable="true" data-key="member-${m.id}">[Hier kommt dein persönlicher Kommentar zu ${esc(rufname(m.name))} — der Bericht füllt automatisch die Treiber ein.]</p>
       </div>
       <div class="colh">Aktive Positionen</div>
       <table class="pos-tbl">
@@ -4227,6 +4242,29 @@ html,body{background:#aeb6c4;color:var(--ink);font-family:'IBM Plex Sans',sans-s
 .editorial p.lead{font-size:16px;line-height:1.6;color:var(--navy)}
 .editorial p.lead .drop{font-family:'IBM Plex Serif',serif;float:left;font-size:54px;line-height:.78;font-weight:600;color:var(--gold);margin:4px 11px 0 0}
 .sign{font-family:'IBM Plex Serif',serif;font-style:italic;font-size:16px;color:var(--navy);margin-top:6px}
+/* --- V8 Marktkommentar-Seite --- */
+.mk-period{font-size:11px;line-height:1.55;color:var(--muted);background:var(--paper-2);border:1px solid var(--line);border-left:3px solid var(--gold);border-radius:4px;padding:10px 13px;margin-bottom:18px}
+.mk-period b{color:var(--navy);font-weight:600}
+.mk-kern{background:linear-gradient(160deg,#0a1f44,#11294f);color:#fff;border-radius:6px;padding:18px 20px 16px;margin-bottom:20px;position:relative;overflow:hidden}
+.mk-kern::before{content:"";position:absolute;left:0;top:0;bottom:0;width:4px;background:var(--gold)}
+.mk-kern-h{margin-bottom:10px}
+.mk-kern-h .edit-tag{color:var(--gold-soft);border-color:rgba(255,210,63,.45);background:rgba(255,210,63,.08)}
+.mk-kern-list{list-style:none;counter-reset:kern;margin:0;padding:0}
+.mk-kern-list li{counter-increment:kern;position:relative;padding:8px 0 8px 34px;font-size:13.5px;line-height:1.5;color:#eaf0fb;border-bottom:1px solid rgba(255,255,255,.1)}
+.mk-kern-list li:last-child{border-bottom:none}
+.mk-kern-list li::before{content:counter(kern);position:absolute;left:0;top:7px;width:22px;height:22px;border-radius:50%;background:var(--gold);color:var(--navy);font-family:'IBM Plex Mono',monospace;font-weight:600;font-size:12px;display:flex;align-items:center;justify-content:center}
+.mk-kern-list li.editable:hover{background:rgba(242,183,5,.1)}
+.mk-kern-list li.editable:focus{outline:1px solid var(--gold);background:rgba(242,183,5,.14)}
+.mk-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+.mk-blk{background:var(--paper-2);border:1px solid var(--line);border-radius:5px;padding:14px 16px}
+.mk-blk h3{font-family:'IBM Plex Sans',sans-serif;font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:var(--navy);font-weight:700;margin-bottom:10px;display:flex;align-items:center;gap:8px}
+.mk-blk .mk-no{color:var(--blue);font-size:15px}
+.mk-blk.mk-depot{border-left:3px solid var(--gold)}
+.mk-blk.mk-depot h3{color:#9a7400}
+.mk-list{list-style:disc;margin:0;padding-left:18px}
+.mk-list li{font-size:11.5px;line-height:1.5;color:#33445e;margin-bottom:6px}
+.mk-list li:last-child{margin-bottom:0}
+.mk-list li::marker{color:var(--gold)}
 .kpis7{display:grid;grid-template-columns:repeat(4,1fr);gap:11px}
 .kpi{background:var(--paper-2);border:1px solid var(--line);border-left:3px solid var(--gold);border-radius:4px;padding:13px 14px}
 .kpi.alt{border-left-color:var(--blue)}
@@ -4340,14 +4378,53 @@ html,body{background:#aeb6c4;color:var(--ink);font-family:'IBM Plex Sans',sans-s
       <div class="hero-item"><div class="l">Alltime p. a.</div><div class="v ${updown(d.clubXirr)}">${pct(d.clubXirr)}</div><div class="d ${updown(d.gesamtGewinnAt)}">${seur0(d.gesamtGewinnAt)} seit Start</div></div></div>
     <div class="cover-foot"><span>folio-wax.de</span><span>Erstellt von Jörn</span></div></div></section>
 
-  <section class="page"><div class="runhead"><span><b>Folio.wax</b> · Management-Bericht</span><span>${heute}</span></div>
-    <div class="sec-head"><div class="kicker"><span class="num">01</span> Zur Lage</div><h2>Marktkommentar</h2><div class="rule"></div></div>
-    <div class="editorial"><span class="edit-tag">✎ Dein Einstieg — frei bearbeitbar</span>
-      <div class="editable" contenteditable="true">
-        <p class="lead"><span class="drop">M</span>oin WAX, hier kommt unser Update zum Stichtag. Der Club steht YTD bei ${pct(d.ytdPct)} (${seur0(d.ytdAbs)}).</p>
-        <p>[Dein Markt-/Stimmungskommentar — hier füllst du Trump, KI-Rally, Zölle &amp; Co. mit deiner gewohnten Würze.]</p>
-        <p>Unterm Strich stehen wir Alltime weiter bei ${pct(d.clubXirr)} p. a. und ${seur0(d.gesamtGewinnAt)} seit Start. Hier die Details.</p>
-      </div></div></section>
+  <section class="page"><div class="runhead"><span><b>Folio.wax</b> · Marktkommentar</span><span>${heute}</span></div>
+    <div class="sec-head"><div class="kicker"><span class="num">01</span> Zur Lage</div><h2>Marktkommentar &amp; Monats-Update</h2><div class="rule"></div></div>
+    <div class="mk-period">Marktgeschehen im Zeitraum <b>${d.zeitraum.von}</b> &ndash; <b>${d.zeitraum.bis}</b> (rollierende ${d.zeitraum.tage} Tage). Die Depot-Kennzahlen im weiteren Bericht sind <b>YTD</b> (seit 31.12.) — diese Seite ordnet das Marktumfeld qualitativ ein.</div>
+
+    <div class="mk-kern">
+      <div class="mk-kern-h"><span class="edit-tag">✎ 3 Kernaussagen — das Wichtigste zuerst</span></div>
+      <ol class="mk-kern-list">
+        <li class="editable" contenteditable="true" data-key="mk-kern-1">[Kernaussage 1 — übergeordnetes Marktbild der letzten vier Wochen in einem Satz.]</li>
+        <li class="editable" contenteditable="true" data-key="mk-kern-2">[Kernaussage 2 — wichtigster Treiber oder Risiko für unser Depot.]</li>
+        <li class="editable" contenteditable="true" data-key="mk-kern-3">[Kernaussage 3 — Einordnung für den Club. Stand YTD: ${pct(d.ytdPct)} (${seur0(d.ytdAbs)}), Alltime ${pct(d.clubXirr)} p. a.]</li>
+      </ol>
+    </div>
+
+    <div class="mk-grid">
+      <div class="mk-blk">
+        <h3><span class="mk-no">①</span> Politik &amp; Geopolitik</h3>
+        <ul class="editable mk-list" contenteditable="true" data-key="mk-politik">
+          <li>[Wahlen, Zölle, Handelspolitik, Konflikte …]</li>
+          <li>[Zweiter Punkt — max. 1–2 Zeilen.]</li>
+          <li>[Dritter Punkt.]</li>
+        </ul>
+      </div>
+      <div class="mk-blk">
+        <h3><span class="mk-no">②</span> Wirtschaft &amp; Zinsen</h3>
+        <ul class="editable mk-list" contenteditable="true" data-key="mk-wirtschaft">
+          <li>[Notenbanken, Zinsentscheid, Inflation …]</li>
+          <li>[Konjunktur, Arbeitsmarkt, Währungen.]</li>
+          <li>[Dritter Punkt.]</li>
+        </ul>
+      </div>
+      <div class="mk-blk">
+        <h3><span class="mk-no">③</span> Unternehmen &amp; Technologie</h3>
+        <ul class="editable mk-list" contenteditable="true" data-key="mk-unternehmen">
+          <li>[KI-Rally, Earnings, Big Tech …]</li>
+          <li>[Branchen-Highlights, Übernahmen.]</li>
+          <li>[Dritter Punkt.]</li>
+        </ul>
+      </div>
+      <div class="mk-blk mk-depot">
+        <h3><span class="mk-no">④</span> Auswirkungen auf unser Depot</h3>
+        <ul class="editable mk-list" contenteditable="true" data-key="mk-depot">
+          ${mkDepotSeed}
+          <li>[Was bedeutet das Marktumfeld konkret für uns?]</li>
+        </ul>
+      </div>
+    </div></section>
+
 
   <section class="page"><div class="runhead"><span><b>Folio.wax</b> · Gesamtübersicht</span><span>${heute}</span></div>
     <div class="sec-head"><div class="kicker"><span class="num">02</span> WAX Aktienclub ${gj}</div><h2>Gesamtübersicht &amp; Ranking</h2><div class="rule"></div></div>
@@ -4379,10 +4456,10 @@ html,body{background:#aeb6c4;color:var(--ink);font-family:'IBM Plex Sans',sans-s
       <div class="blk kat"><h3>Kategorien · ${eur0(d.investGesamt)} investiert</h3>${katRows}</div>
       <div class="blk bench"><h3>Benchmarks YTD</h3>
         <div class="row" id="benchClub" data-v="${(d.ytdPct*100).toFixed(2)}"><span class="nm" style="font-weight:700">WAX (Club)</span><div class="track"><span class="fill" style="background:linear-gradient(90deg,#2f6fd6,#0a1f44)"></span></div><span class="pc" style="color:var(--blue)">${pct(d.ytdPct)}</span></div>
-        <div class="row" data-idx><span class="nm">NASDAQ</span><div class="track"><span class="fill" style="background:linear-gradient(90deg,#39b06b,#1f8a4c)"></span></div><span class="pc editable" contenteditable="true">${d.bench.nasdaq!=null?pct(d.bench.nasdaq):'—'}</span></div>
-        <div class="row" data-idx><span class="nm">S&amp;P 500</span><div class="track"><span class="fill" style="background:linear-gradient(90deg,#39b06b,#1f8a4c)"></span></div><span class="pc editable" contenteditable="true">${d.bench.sp500!=null?pct(d.bench.sp500):'—'}</span></div>
-        <div class="row" data-idx><span class="nm">DAX</span><div class="track"><span class="fill" style="background:linear-gradient(90deg,#39b06b,#1f8a4c)"></span></div><span class="pc editable" contenteditable="true">${d.bench.dax!=null?pct(d.bench.dax):'—'}</span></div>
-        <div class="row" data-idx><span class="nm">Hang Seng</span><div class="track"><span class="fill" style="background:linear-gradient(90deg,#39b06b,#1f8a4c)"></span></div><span class="pc editable" contenteditable="true">${d.bench.hangseng!=null?pct(d.bench.hangseng):'—'}</span></div>
+        <div class="row" data-idx><span class="nm">NASDAQ</span><div class="track"><span class="fill" style="background:linear-gradient(90deg,#39b06b,#1f8a4c)"></span></div><span class="pc editable" contenteditable="true" data-key="bench-nasdaq">${d.bench.nasdaq!=null?pct(d.bench.nasdaq):'—'}</span></div>
+        <div class="row" data-idx><span class="nm">S&amp;P 500</span><div class="track"><span class="fill" style="background:linear-gradient(90deg,#39b06b,#1f8a4c)"></span></div><span class="pc editable" contenteditable="true" data-key="bench-sp500">${d.bench.sp500!=null?pct(d.bench.sp500):'—'}</span></div>
+        <div class="row" data-idx><span class="nm">DAX</span><div class="track"><span class="fill" style="background:linear-gradient(90deg,#39b06b,#1f8a4c)"></span></div><span class="pc editable" contenteditable="true" data-key="bench-dax">${d.bench.dax!=null?pct(d.bench.dax):'—'}</span></div>
+        <div class="row" data-idx><span class="nm">Hang Seng</span><div class="track"><span class="fill" style="background:linear-gradient(90deg,#39b06b,#1f8a4c)"></span></div><span class="pc editable" contenteditable="true" data-key="bench-hangseng">${d.bench.hangseng!=null?pct(d.bench.hangseng):'—'}</span></div>
         <div class="row" id="benchAvg"><span class="nm">Ø Benchmarks</span><div class="track"><span class="fill" style="background:linear-gradient(90deg,#f2b705,#9a7400)"></span></div><span class="pc" style="color:#9a7400">${d.benchAvg!=null?pct(d.benchAvg):'—'}</span></div>
         <p style="font-size:10px;color:var(--muted);margin-top:12px;line-height:1.5;border-top:1px solid var(--line);padding-top:11px"><span class="edit-tag">✎ überschreibbar</span><br>Index-Werte (NASDAQ, S&amp;P 500, DAX, Hang Seng) werden automatisch aus dem Live-Datenstand der App übernommen (Yahoo Finance, YTD gegen Jahresschluss). Der Ø rechnet sich automatisch — Werte bei Bedarf hier überschreibbar.</p></div>
     </div>
@@ -4396,7 +4473,7 @@ html,body{background:#aeb6c4;color:var(--ink);font-family:'IBM Plex Sans',sans-s
   <section class="page"><div class="runhead"><span><b>Folio.wax</b> · Management-Bericht</span><span>${heute}</span></div>
     <div class="sec-head"><div class="kicker"><span class="num">05</span> Ausblick</div><h2>Schlusswort</h2><div class="rule"></div></div>
     <div class="editorial"><span class="edit-tag">✎ Dein persönlicher Abschluss — frei bearbeitbar</span>
-      <div class="editable" contenteditable="true">
+      <div class="editable" contenteditable="true" data-key="schluss">
         <p style="font-size:14.5px;line-height:1.7">[Dein persönlicher Abschluss — Ausblick, nächstes Treffen, FC/SVW, Sommer …]</p>
         <p class="sign">Ne schöne Jrooß,<br>Jörn</p></div></div>
     <div style="position:absolute;left:52px;right:52px;bottom:38px;border-top:1px solid var(--line);padding-top:13px;display:flex;justify-content:space-between;font-size:10px;color:var(--muted);letter-spacing:.08em">
@@ -4430,13 +4507,29 @@ html,body{background:#aeb6c4;color:var(--ink);font-family:'IBM Plex Sans',sans-s
 
   // ---- DB-Archiv-Anbindung: editierbare Texte einsammeln / zurückschreiben ----
   var __d = JSON.parse(${dEmbed});
+  // text_json ist ab V8 schlüsselbasiert: Array aus {key, html}. Jedes .editable hat ein
+  // data-key (stabil über Layout-Änderungen hinweg). Altberichte (reines String-Array,
+  // reihenfolge-basiert) werden beim Öffnen weiterhin per Index gesetzt (Fallback).
   function sammleTexte(){
-    return [].slice.call(document.querySelectorAll('.editable')).map(function(e){ return e.innerHTML; });
+    return [].slice.call(document.querySelectorAll('.editable')).map(function(e){
+      return { key: e.getAttribute('data-key') || null, html: e.innerHTML };
+    });
   }
   window.waxBerichtTexteSetzen = function(arr){
     if(!arr || !arr.length) return;
     var els=[].slice.call(document.querySelectorAll('.editable'));
-    els.forEach(function(e,i){ if(arr[i]!=null){ e.innerHTML=arr[i]; e.dataset.orig=arr[i]; } });
+    var keyed = (typeof arr[0]==='object' && arr[0]!==null);
+    if(keyed){
+      var map={};
+      arr.forEach(function(o){ if(o && o.key!=null) map[o.key]=o.html; });
+      els.forEach(function(e){
+        var k=e.getAttribute('data-key');
+        if(k!=null && map[k]!=null){ e.innerHTML=map[k]; e.dataset.orig=map[k]; }
+      });
+    } else {
+      // Legacy (Altbericht): reines String-Array, per Index zuordnen.
+      els.forEach(function(e,i){ if(arr[i]!=null){ e.innerHTML=arr[i]; e.dataset.orig=arr[i]; } });
+    }
     try{ recalc(); }catch(e){}
   };
   window.waxBerichtArchivieren = function(){
