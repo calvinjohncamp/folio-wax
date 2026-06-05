@@ -4243,12 +4243,14 @@ html,body{background:#aeb6c4;color:var(--ink);font-family:'IBM Plex Sans',sans-s
 .editorial p.lead .drop{font-family:'IBM Plex Serif',serif;float:left;font-size:54px;line-height:.78;font-weight:600;color:var(--gold);margin:4px 11px 0 0}
 .sign{font-family:'IBM Plex Serif',serif;font-style:italic;font-size:16px;color:var(--navy);margin-top:6px}
  .brief-hint{font-size:10.5px;line-height:1.45;color:var(--muted);margin:-8px 0 14px 0}
-.brief-area{height:960px;overflow:hidden;border:1px solid var(--line);border-left:4px solid var(--gold);background:linear-gradient(180deg,#fff,#fbfcff);border-radius:6px;padding:24px 30px 26px;box-shadow:0 8px 24px rgba(10,31,68,.04)}
-.brief-edit{height:100%;overflow:hidden;white-space:pre-wrap;outline:none;font-family:'IBM Plex Sans',Arial,sans-serif!important;font-size:12.7px!important;line-height:1.58!important;font-weight:400!important;color:#27384f!important;letter-spacing:0!important}
-.brief-edit *{font-family:'IBM Plex Sans',Arial,sans-serif!important;font-size:inherit!important;line-height:inherit!important;color:inherit!important;background:transparent!important;margin:0!important;padding:0!important;font-weight:inherit!important}
-.brief-edit b,.brief-edit strong{font-weight:600!important;color:var(--navy)!important}
-.brief-edit:empty:before{content:"Moin WAX,\A\A[Brief an die Aktionäre hier einfügen …]\A\ANe schöne Jrooß, Jörn";white-space:pre-wrap;color:var(--muted)}
-.brief-store{display:none!important}
+.brief-card{height:946px;border:1px solid var(--line);border-left:4px solid var(--gold);background:linear-gradient(180deg,#fff,#fbfcff);border-radius:6px;padding:32px 36px 32px;box-shadow:0 8px 24px rgba(10,31,68,.04);display:flex;flex-direction:column;overflow:hidden;font-family:'IBM Plex Sans',sans-serif;color:#26364d;letter-spacing:.005em}
+.brief-fixed{font-family:'IBM Plex Serif',serif;font-size:16.5px;line-height:1.45;font-weight:700;color:var(--navy)}
+.brief-salute{margin-bottom:20px}.brief-close{margin-top:20px}.brief-name{margin-top:7px;color:#9a7400}
+.brief-body{flex:1;min-height:0;overflow:hidden;white-space:pre-wrap;font-family:'IBM Plex Sans',sans-serif;font-size:13.2px;line-height:1.58;color:#26364d;font-weight:400;outline:none;padding:0 1px}
+.brief-body p,.brief-body div{margin:0 0 10px 0}.brief-body ul,.brief-body ol{margin:0 0 10px 20px}.brief-body li{margin:0 0 5px 0}
+.brief-body:empty:before{content:"Hier den eigentlichen Brieftext einfügen …";color:var(--muted)}
+.brief-meta{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-top:10px;font-size:10px;color:var(--muted);line-height:1.4}
+.brief-count{font-family:'IBM Plex Mono',monospace}.brief-count.ok{color:var(--pos)}.brief-count.warn{color:#b8860b}.brief-count.high{color:var(--neg);font-weight:700}
 /* --- V8 Marktkommentar-Seite --- */
 .mk-period{font-size:11px;line-height:1.55;color:var(--muted);background:var(--paper-2);border:1px solid var(--line);border-left:3px solid var(--gold);border-radius:4px;padding:10px 13px;margin-bottom:18px}
 .mk-period b{color:var(--navy);font-weight:600}
@@ -4386,18 +4388,11 @@ html,body{background:#aeb6c4;color:var(--ink);font-family:'IBM Plex Sans',sans-s
 .mk-imp-pcol.empty li{color:var(--muted);font-style:italic;list-style:none;margin-left:-18px}
 .mk-imp-warn{grid-column:1/-1;background:#fff7e6;border:1px solid #f0d77a;border-radius:5px;padding:10px 13px;font-size:11.5px;color:#7a5a00;line-height:1.5}
 .mk-imp-warn b{color:#5a4200}
-/* --- V8.2 Positionskämpfe --- */
-.pkampf{margin-top:22px;border-top:2px solid var(--navy);padding-top:13px}
-.pkampf-head{display:flex;align-items:flex-start;justify-content:space-between;gap:14px;margin-bottom:9px}
-.mk-count{font-family:'IBM Plex Mono',monospace;font-size:10px;letter-spacing:.04em;color:var(--muted);white-space:nowrap;flex:none}
-.mk-count::after{content:" Zeichen"}
-.mk-count.ok{color:var(--pos)}
-.mk-count.low{color:#b8860b}
-.mk-count.high{color:var(--neg)}
-.pkampf-body{min-height:236px;font-size:12.5px;line-height:1.62;color:#27384f}
-.pkampf-body p{margin-bottom:9px}
-.pkampf-body p:last-child{margin-bottom:0}
-.pkampf-body .num{font-family:'IBM Plex Mono',monospace;color:var(--blue);font-weight:600;margin-right:3px}
+.back-cover .cover-inner{min-height:1188px;background:radial-gradient(circle at 18% 12%,rgba(242,183,5,.18),transparent 32%),linear-gradient(135deg,var(--navy),#06152f 72%);position:relative;color:#fff;overflow:hidden;padding:60px}
+.back-cover .back-mid{position:absolute;left:60px;right:60px;top:50%;transform:translateY(-50%);text-align:center}
+.back-cover .back-mid .wax{font-family:'IBM Plex Serif',serif;font-size:74px;font-weight:700;letter-spacing:.03em}.back-cover .back-mid .dot{color:var(--gold)}
+.back-cover .back-mid .date{margin-top:18px;font-family:'IBM Plex Mono',monospace;font-size:13px;letter-spacing:.08em;color:#dce7fa}
+.back-cover .back-foot{position:absolute;left:60px;right:60px;bottom:30px;text-align:center;font-size:10px;letter-spacing:.18em;text-transform:uppercase;color:#9fb1d0}
 @media print{
   @page{size:A4 portrait;margin:0}
   html,body{background:#fff}
@@ -4407,6 +4402,8 @@ html,body{background:#aeb6c4;color:var(--ink);font-family:'IBM Plex Sans',sans-s
   .page.cover{padding:0}
   .page.cover .cover-inner{min-height:0;height:297mm;padding-bottom:104px}
   .page.cover .cover-foot{bottom:30px}
+  .screen-only{display:none!important}
+  .back-cover .cover-inner{min-height:0;height:297mm}
   .page:last-child{page-break-after:auto}
   .editable{outline:none!important;background:transparent!important}
   .edit-tag{display:none!important}
@@ -4414,7 +4411,7 @@ html,body{background:#aeb6c4;color:var(--ink);font-family:'IBM Plex Sans',sans-s
   *{-webkit-print-color-adjust:exact;print-color-adjust:exact}
 }
 </style></head><body>
-<div class="toolbar"><span class="tt">Folio.wax · Management-Bericht</span><span class="hint">Stand ${heute}</span><span class="sp"></span><span id="archStatus" style="font-size:11.5px;margin-right:8px;color:var(--blue-soft)"></span><button class="btn" id="mkImportBtn" style="background:transparent;color:#fff;border:1px solid var(--blue-soft)">✨ Text importieren</button><button class="btn" style="background:transparent;color:#fff;border:1px solid var(--gold)" onclick="window.waxBerichtArchivieren&&window.waxBerichtArchivieren()">📥 In Archiv speichern</button><button class="btn" onclick="window.print()">⤓ Als PDF speichern</button></div>
+<div class="toolbar"><span class="tt">Folio.wax · Management-Bericht</span><span class="hint">Stand ${heute}</span><span class="sp"></span><span id="archStatus" style="font-size:11.5px;margin-right:8px;color:var(--blue-soft)"></span><button class="btn" style="background:transparent;color:#fff;border:1px solid var(--gold)" onclick="window.waxBerichtArchivieren&&window.waxBerichtArchivieren()">📥 In Archiv speichern</button><button class="btn" onclick="window.print()">⤓ Als PDF speichern</button></div>
 <div class="doc">
 
   <section class="page cover"><div class="cover-inner"><div class="cover-grain"></div>
@@ -4429,8 +4426,8 @@ html,body{background:#aeb6c4;color:var(--ink);font-family:'IBM Plex Sans',sans-s
       <div class="hero-item"><div class="l">Alltime p. a.</div><div class="v ${updown(d.clubXirr)}">${pct(d.clubXirr)}</div><div class="d ${updown(d.gesamtGewinnAt)}">${seur0(d.gesamtGewinnAt)} seit Start</div></div></div>
     <div class="cover-foot"><span>folio-wax.de</span><span>Erstellt von Jörn</span></div></div></section>
 
-  <section class="page"><div class="runhead"><span><b>Folio.wax</b> · WAX-Überblick + Ranking</span><span>${heute}</span></div>
-    <div class="sec-head"><div class="kicker"><span class="num">02</span> WAX Aktienclub ${gj}</div><h2>WAX-Überblick + Ranking</h2><div class="rule"></div></div>
+  <section class="page"><div class="runhead"><span><b>Folio.wax</b> · Ranking</span><span>${heute}</span></div>
+    <div class="sec-head"><div class="kicker"><span class="num">02</span> WAX Aktienclub ${gj}</div><h2>Ranking</h2><div class="rule"></div></div>
     <div class="kpis7">
       <div class="kpi"><div class="l">Gesamtwert (echt, inkl. Puffer)</div><div class="v">${eur(d.gesamtEcht)}</div><div class="s">Σ Einzeldepots ${eur0(d.gesamtEinzeldepots)} · Korrektur ${seur0(d.puffer)}</div></div>
       <div class="kpi"><div class="l">Ø pro Person</div><div class="v">${eur(d.proPerson)}</div><div class="s">echter Wert / 6 Mitglieder</div></div>
@@ -4453,8 +4450,16 @@ html,body{background:#aeb6c4;color:var(--ink);font-family:'IBM Plex Sans',sans-s
       <p style="font-size:9.5px;color:var(--muted);margin-top:9px;line-height:1.5">Aktuelle Werte &amp; YTD live aus dem App-Datenstand gerechnet (Basis: Summe der sechs Einzeldepots) · Differenz zum App-Gesamtwert durch den Comdirect-Cash-Puffer.</p>
     </div></section>
 
-  <div id="briefPages"></div>
-  <div class="editable brief-store" data-key="brief-aktionaere"></div>
+  <section class="page brief-page"><div class="runhead"><span><b>Folio.wax</b> · Brief an die Aktionäre</span><span>${heute}</span></div>
+    <div class="sec-head"><div class="kicker"><span class="num">03</span> Monatsbericht</div><h2>Brief an die Aktionäre</h2><div class="rule"></div></div>
+    <p class="brief-hint"><span class="edit-tag">✎ editierbar</span> Eine feste Seite: Anrede und Gruß sind verankert, nur der Mittelteil wird bearbeitet.</p>
+    <div class="brief-card">
+      <div class="brief-fixed brief-salute">Moin WAX,</div>
+      <div id="briefEditor" class="editable brief-body" contenteditable="true" data-key="brief-aktionaere"></div>
+      <div class="brief-fixed brief-close">Ne schöne Jrooß<div class="brief-name">Jörn</div></div>
+    </div>
+    <div class="brief-meta"><span>Empfehlung: ca. 1.750–1.950 Zeichen inkl. Leerzeichen, absolute Obergrenze ca. 2.150.</span><span id="briefCount" class="brief-count">0 Zeichen</span></div>
+    <div class="pagefoot">Vertraulich · Folio.wax</div><div class="pagenum"></div></section>
 
   <section class="page"><div class="runhead"><span><b>Folio.wax</b> · Depot-Analyse</span><span>${heute}</span></div>
     <div class="sec-head"><div class="kicker"><span class="num">04</span> Struktur &amp; Einordnung</div><h2>Depot-Analyse</h2><div class="rule"></div></div>
@@ -4476,6 +4481,10 @@ html,body{background:#aeb6c4;color:var(--ink);font-family:'IBM Plex Sans',sans-s
 
   ${memberPages}
 
+  <section class="page cover back-cover"><div class="cover-inner"><div class="cover-grain"></div>
+    <div class="back-mid"><div class="wax">WAX<span class="dot">.</span></div><div class="date">${heute}</div></div>
+    <div class="back-foot">Folio.wax · Management Information System</div>
+  </div><div class="pagenum"></div></section>
 
 </div>
 
@@ -4497,6 +4506,35 @@ html,body{background:#aeb6c4;color:var(--ink);font-family:'IBM Plex Sans',sans-s
 <script>
 (function(){
   document.querySelectorAll('.editable').forEach(function(e){ e.dataset.orig=e.innerHTML; });
+  function updatePageNumbers(){
+    var pages=[].slice.call(document.querySelectorAll('.doc > .page'));
+    var total=pages.length;
+    pages.forEach(function(p,i){ var n=p.querySelector('.pagenum'); if(n){ n.textContent=String(i+1).padStart(2,'0')+' / '+String(total).padStart(2,'0'); } });
+  }
+  function briefPlainText(el){ return (el && (el.innerText || el.textContent) || '').replace(/\n{3,}/g,'\n\n').trim(); }
+  function briefNormalizeHtml(html){
+    var tmp=document.createElement('div'); tmp.innerHTML=html||'';
+    tmp.querySelectorAll('script,style').forEach(function(n){n.remove();});
+    tmp.querySelectorAll('*').forEach(function(n){
+      n.removeAttribute('style'); n.removeAttribute('class'); n.removeAttribute('id');
+      if(n.tagName==='SPAN'){ var t=document.createTextNode(n.textContent||''); n.replaceWith(t); }
+    });
+    return tmp.innerHTML;
+  }
+  function updateBriefCount(){
+    var editor=document.getElementById('briefEditor'), c=document.getElementById('briefCount');
+    if(!editor || !c) return;
+    var n=briefPlainText(editor).length;
+    c.textContent=n.toLocaleString('de-DE')+' Zeichen';
+    c.className='brief-count '+(n<=1950?'ok':(n<=2150?'warn':'high'));
+  }
+  (function initBriefEditor(){
+    var editor=document.getElementById('briefEditor');
+    if(!editor){ updatePageNumbers(); return; }
+    editor.addEventListener('input',updateBriefCount);
+    editor.addEventListener('paste',function(){ setTimeout(function(){ editor.innerHTML=briefNormalizeHtml(editor.innerHTML); updateBriefCount(); },0); });
+    updateBriefCount(); updatePageNumbers();
+  })();
   function parsePct(s){ var v=parseFloat(String(s).replace('%','').replace(',', '.').replace(/[\\s+]/g,'')); return isNaN(v)?0:v; }
   function fmtPct(v){ return (v>=0?'+':'')+v.toFixed(2).replace('.',',')+' %'; }
   function recalc(){
@@ -4518,78 +4556,6 @@ html,body{background:#aeb6c4;color:var(--ink);font-family:'IBM Plex Sans',sans-s
     el.addEventListener('input',recalc); el.addEventListener('blur',recalc);
   });
   recalc();
-
-  // ---- Brief an die Aktionäre: automatische Seiten im Berichtslayout ----
-  var BRIEF_LIMIT = 2350;
-  function escHtmlBrief(t){ return String(t||'').replace(/[&<>]/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;'}[c];}); }
-  function normalizeBriefText(t){ return String(t||'').replace(/
-/g,'
-').replace(/ /g,' '); }
-  function splitBriefText(text){
-    text = normalizeBriefText(text).trim();
-    if(!text) return [''];
-    var paras = text.split(/
-{2,}/), pages=[], cur='';
-    paras.forEach(function(pa){
-      var block = pa.trim(); if(!block) return;
-      var add = cur ? cur+'
-
-'+block : block;
-      if(add.length <= BRIEF_LIMIT){ cur = add; return; }
-      if(cur){ pages.push(cur); cur=''; }
-      while(block.length > BRIEF_LIMIT){
-        var cut = block.lastIndexOf(' ', BRIEF_LIMIT); if(cut < BRIEF_LIMIT*0.55) cut = BRIEF_LIMIT;
-        pages.push(block.slice(0,cut).trim()); block = block.slice(cut).trim();
-      }
-      cur = block;
-    });
-    if(cur || !pages.length) pages.push(cur);
-    return pages;
-  }
-  function collectBriefText(){
-    var edits=[].slice.call(document.querySelectorAll('.brief-edit'));
-    return normalizeBriefText(edits.map(function(e){return e.innerText || e.textContent || '';}).join('
-
-')).trim();
-  }
-  function refreshPageNumbers(){
-    var pages=[].slice.call(document.querySelectorAll('.page'));
-    var total=pages.length;
-    pages.forEach(function(pg,i){ var pn=pg.querySelector('.pagenum'); if(pn) pn.textContent=String(i+1).padStart(2,'0')+' / '+String(total).padStart(2,'0'); });
-  }
-  function makeBriefPage(txt, idx, total){
-    var cont=document.createElement('section'); cont.className='page brief-page';
-    cont.innerHTML='<div class="runhead"><span><b>Folio.wax</b> · Brief an die Aktionäre'+(total>1?' · Teil '+(idx+1):'')+'</span><span>${heute}</span></div>'+
-      '<div class="sec-head"><div class="kicker"><span class="num">03</span> Monatsbericht</div><h2>Brief an die Aktionäre</h2><div class="rule"></div></div>'+
-      (idx===0?'<p class="brief-hint"><span class="edit-tag">✎ editierbarer Monatsbrief</span> Text einfach einfügen. Der Bericht verteilt den Inhalt automatisch auf so viele Seiten wie nötig; leere Folgeseiten verschwinden.</p>':'<p class="brief-hint"><span class="edit-tag">Fortsetzung</span> Der Text gehört weiterhin zum gleichen Brief.</p>')+
-      '<div class="brief-area"><div class="brief-edit" contenteditable="true" spellcheck="true"></div></div>'+
-      '<div class="pagefoot">Vertraulich · Folio.wax</div><div class="pagenum"></div>';
-    cont.querySelector('.brief-edit').textContent=txt;
-    return cont;
-  }
-  function renderBrief(text, keepFocus){
-    var box=document.getElementById('briefPages'); if(!box) return;
-    var store=document.querySelector('.brief-store'); if(store) store.textContent=normalizeBriefText(text||'').trim();
-    var pages=splitBriefText(text);
-    box.innerHTML=''; pages.forEach(function(t,i){ box.appendChild(makeBriefPage(t,i,pages.length)); });
-    bindBriefEditors(); refreshPageNumbers();
-    if(keepFocus){ var last=box.querySelector('.brief-edit'); if(last){ last.focus(); } }
-  }
-  var briefTimer=null;
-  function bindBriefEditors(){
-    document.querySelectorAll('.brief-edit').forEach(function(ed){
-      ed.addEventListener('paste',function(ev){
-        ev.preventDefault();
-        var txt=(ev.clipboardData||window.clipboardData).getData('text/plain');
-        document.execCommand('insertText',false,txt);
-      });
-      ed.addEventListener('input',function(){
-        clearTimeout(briefTimer);
-        briefTimer=setTimeout(function(){ renderBrief(collectBriefText(), true); }, 450);
-      });
-    });
-  }
-  renderBrief('');
 
   // ---- DB-Archiv-Anbindung: editierbare Texte einsammeln / zurückschreiben ----
   var __d = JSON.parse(${dEmbed});
@@ -4616,8 +4582,8 @@ html,body{background:#aeb6c4;color:var(--ink);font-family:'IBM Plex Sans',sans-s
       // Legacy (Altbericht): reines String-Array, per Index zuordnen.
       els.forEach(function(e,i){ if(arr[i]!=null){ e.innerHTML=arr[i]; e.dataset.orig=arr[i]; } });
     }
-    try{ if(typeof renderBrief==='function'){ var st=document.querySelector('.brief-store'); renderBrief(st ? (st.textContent||st.innerText||'') : collectBriefText()); } }catch(e){}
-    try{ recalc(); refreshPageNumbers(); }catch(e){}
+    try{ recalc(); }catch(e){}
+    try{ updateBriefCount(); updatePageNumbers(); }catch(e){}
   };
   window.waxBerichtArchivieren = function(){
     var st=document.getElementById('archStatus');
@@ -4761,6 +4727,11 @@ html,body{background:#aeb6c4;color:var(--ink);font-family:'IBM Plex Sans',sans-s
   if(ta) ta.addEventListener('input',function(){ if(applyBtn) applyBtn.disabled=true; if(stat) stat.textContent=''; });
   if(ov) ov.addEventListener('click',function(e){ if(e.target===ov) __mkClose(); });
   document.addEventListener('keydown',function(e){ if(e.key==='Escape' && ov && ov.classList.contains('open')) __mkClose(); });
+
+
+<\/script>
+</body></html>`;
+}
 
 function waxBerichtErzeugen(){
   const info = document.getElementById('timeMachineInfo');
