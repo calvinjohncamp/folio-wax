@@ -4147,7 +4147,7 @@ function waxBerichtHtml(d){
     ).join('') || '<tr><td colspan="6" style="text-align:center;color:var(--muted)">Keine aktiven Positionen.</td></tr>';
     return `<section class="page">
       <div class="runhead"><span><b>Folio.wax</b> · Einzeldepot</span><span>${heute}</span></div>
-      <div class="sec-head"><div class="kicker"><span class="num">05.${k}</span> Einzeldepot · ${k} von 6</div></div>
+      <div class="sec-head"><div class="kicker"><span class="num">04.${k}</span> Einzeldepot · ${k} von 6</div></div>
       <div class="member-head">
         <div class="left"><div class="ord">YTD #${m.ytdRank} · ALLTIME #${m.atRank}</div><h2>${esc(vollname(m.name))}</h2><div class="ruf">im Bericht: „${esc(rufLong(m.name))}"</div></div>
         <div class="right"><div class="l">Depotwert</div><div class="v">${eur(m.depot)}</div><div class="d ${cls(m.ytdAbs)}">${pct(m.ytdPct)} YTD · ${seur0(m.ytdAbs)}</div></div>
@@ -4173,7 +4173,7 @@ function waxBerichtHtml(d){
         </tbody>
         <tfoot><tr><td>Gesamtdepot</td><td></td><td>${n2(m.ref)}</td><td>${n2(m.depot)}</td><td class="${cls(m.ytdPct)}">${pct(m.ytdPct)}</td><td class="${cls(m.ytdAbs)}">${seurP(m.ytdAbs)}</td></tr></tfoot>
       </table>
-      <div class="pagefoot">Vertraulich · Folio.wax</div><div class="pagenum">${String(4+k).padStart(2,'0')} / 10</div>
+      <div class="pagefoot">Vertraulich · Folio.wax</div><div class="pagenum">${String(4+k).padStart(2,'0')} / 11</div>
     </section>`;
   }).join('');
 
@@ -4242,11 +4242,6 @@ html,body{background:#aeb6c4;color:var(--ink);font-family:'IBM Plex Sans',sans-s
 .editorial p.lead{font-size:16px;line-height:1.6;color:var(--navy)}
 .editorial p.lead .drop{font-family:'IBM Plex Serif',serif;float:left;font-size:54px;line-height:.78;font-weight:600;color:var(--gold);margin:4px 11px 0 0}
 .sign{font-family:'IBM Plex Serif',serif;font-style:italic;font-size:16px;color:var(--navy);margin-top:6px}
- .brief-box{height:1000px;overflow:hidden;border:1px solid var(--line);border-left:4px solid var(--gold);background:linear-gradient(180deg,#fff,#fbfcff);border-radius:6px;padding:28px 31px 30px;box-shadow:0 8px 24px rgba(10,31,68,.04)}
-.brief-box .editable{height:100%;overflow:hidden;white-space:pre-wrap;font-size:14px;line-height:1.68;color:#27384f}
-.brief-box .editable p{margin:0 0 13px 0}
-.brief-box .editable:empty:before{content:"Moin WAX,\A\A[Monatsbericht hier einfügen …]\A\ANe schöne Jrooß, Jörn";white-space:pre-wrap;color:var(--muted)}
-.brief-hint{font-size:10.5px;line-height:1.45;color:var(--muted);margin:-8px 0 16px 0}
 /* --- V8 Marktkommentar-Seite --- */
 .mk-period{font-size:11px;line-height:1.55;color:var(--muted);background:var(--paper-2);border:1px solid var(--line);border-left:3px solid var(--gold);border-radius:4px;padding:10px 13px;margin-bottom:18px}
 .mk-period b{color:var(--navy);font-weight:600}
@@ -4428,7 +4423,7 @@ html,body{background:#aeb6c4;color:var(--ink);font-family:'IBM Plex Sans',sans-s
     <div class="cover-foot"><span>folio-wax.de</span><span>Erstellt von Jörn</span></div></div></section>
 
   <section class="page"><div class="runhead"><span><b>Folio.wax</b> · Neueste Entwicklungen</span><span>${heute}</span></div>
-    <div class="sec-head"><div class="kicker"><span class="num">01</span> Markt &amp; Umfeld</div><h2>Neueste Entwicklungen</h2><div class="rule"></div></div>
+    <div class="sec-head"><div class="kicker"><span class="num">01</span> Zur Lage</div><h2>Neueste Entwicklungen</h2><div class="rule"></div></div>
     <div class="mk-period">Marktgeschehen im Zeitraum <b>${d.zeitraum.von}</b> &ndash; <b>${d.zeitraum.bis}</b> (rollierende ${d.zeitraum.tage} Tage). Die Depot-Kennzahlen im weiteren Bericht sind <b>YTD</b> (seit 31.12.) — diese Seite ordnet das Marktumfeld qualitativ ein.</div>
 
     <div class="mk-kern">
@@ -4475,8 +4470,8 @@ html,body{background:#aeb6c4;color:var(--ink);font-family:'IBM Plex Sans',sans-s
     </div></section>
 
 
-  <section class="page"><div class="runhead"><span><b>Folio.wax</b> · Ranking</span><span>${heute}</span></div>
-    <div class="sec-head"><div class="kicker"><span class="num">02</span> WAX Aktienclub ${gj}</div><h2>Ranking</h2><div class="rule"></div></div>
+  <section class="page"><div class="runhead"><span><b>Folio.wax</b> · Gesamtübersicht</span><span>${heute}</span></div>
+    <div class="sec-head"><div class="kicker"><span class="num">02</span> WAX Aktienclub ${gj}</div><h2>Gesamtübersicht &amp; Ranking</h2><div class="rule"></div></div>
     <div class="kpis7">
       <div class="kpi"><div class="l">Gesamtwert (echt, inkl. Puffer)</div><div class="v">${eur(d.gesamtEcht)}</div><div class="s">Σ Einzeldepots ${eur0(d.gesamtEinzeldepots)} · Korrektur ${seur0(d.puffer)}</div></div>
       <div class="kpi"><div class="l">Ø pro Person</div><div class="v">${eur(d.proPerson)}</div><div class="s">echter Wert / 6 Mitglieder</div></div>
@@ -4499,16 +4494,8 @@ html,body{background:#aeb6c4;color:var(--ink);font-family:'IBM Plex Sans',sans-s
       <p style="font-size:9.5px;color:var(--muted);margin-top:9px;line-height:1.5">Aktuelle Werte &amp; YTD live aus dem App-Datenstand gerechnet (Basis: Summe der sechs Einzeldepots) · Differenz zum App-Gesamtwert durch den Comdirect-Cash-Puffer.</p>
     </div></section>
 
-  <section class="page"><div class="runhead"><span><b>Folio.wax</b> · Brief an die Aktionäre</span><span>${heute}</span></div>
-    <div class="sec-head"><div class="kicker"><span class="num">03</span> Monatsbericht</div><h2>Brief an die Aktionäre</h2><div class="rule"></div></div>
-    <p class="brief-hint"><span class="edit-tag">✎ kompletter Bereich editierbar</span> Text einfach einfügen. Der sichtbare Bereich ist fest begrenzt; zu langer Text bleibt erhalten, wird unten aber ausgeblendet. Durch Kürzen wird der restliche Text sichtbar.</p>
-    <div class="brief-box">
-      <div class="editable" contenteditable="true" data-key="brief-aktionaere"></div>
-    </div>
-    <div class="pagefoot">Vertraulich · Folio.wax</div><div class="pagenum">03 / 10</div></section>
-
-  <section class="page"><div class="runhead"><span><b>Folio.wax</b> · Depot-Analyse</span><span>${heute}</span></div>
-    <div class="sec-head"><div class="kicker"><span class="num">04</span> Struktur &amp; Einordnung</div><h2>Depot-Analyse</h2><div class="rule"></div></div>
+  <section class="page"><div class="runhead"><span><b>Folio.wax</b> · Gesamtdepot</span><span>${heute}</span></div>
+    <div class="sec-head"><div class="kicker"><span class="num">03</span> Struktur &amp; Einordnung</div><h2>Gesamtdepot-Analyse</h2><div class="rule"></div></div>
     <div class="struct">
       <div class="blk kat"><h3>Kategorien · ${eur0(d.investGesamt)} investiert</h3>${katRows}</div>
       <div class="blk bench"><h3>Benchmarks YTD</h3>
@@ -4533,10 +4520,18 @@ html,body{background:#aeb6c4;color:var(--ink);font-family:'IBM Plex Sans',sans-s
         <p><span class="num">#1</span>[Treiber] · <span class="num">#2</span>[Treiber] · <span class="num">#3</span>[Treiber] · <span class="num">#4</span>[Treiber] · <span class="num">#5</span>[Treiber] · <span class="num">#6</span>[Treiber]</p>
       </div>
     </div>
-    <div class="pagefoot">Vertraulich · Folio.wax</div><div class="pagenum">04 / 10</div></section>
+    <div class="pagefoot">Vertraulich · Folio.wax</div><div class="pagenum">04 / 11</div></section>
 
   ${memberPages}
 
+  <section class="page"><div class="runhead"><span><b>Folio.wax</b> · Management-Bericht</span><span>${heute}</span></div>
+    <div class="sec-head"><div class="kicker"><span class="num">05</span> Ausblick</div><h2>Schlusswort</h2><div class="rule"></div></div>
+    <div class="editorial"><span class="edit-tag">✎ Dein persönlicher Abschluss — frei bearbeitbar</span>
+      <div class="editable" contenteditable="true" data-key="schluss">
+        <p style="font-size:14.5px;line-height:1.7">[Dein persönlicher Abschluss — Ausblick, nächstes Treffen, FC/SVW, Sommer …]</p>
+        <p class="sign">Ne schöne Jrooß,<br>Jörn</p></div></div>
+    <div style="position:absolute;left:52px;right:52px;bottom:38px;border-top:1px solid var(--line);padding-top:13px;display:flex;justify-content:space-between;font-size:10px;color:var(--muted);letter-spacing:.08em">
+      <span>FOLIO.WAX · AKTIENCLUB · VERTRAULICH</span><span>STAND: ${heuteLang} · KURSDATEN: YAHOO FINANCE · KEINE ANLAGEBERATUNG</span></div></section>
 
 </div>
 
