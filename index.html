@@ -4771,10 +4771,13 @@ html,body{background:#aeb6c4;color:var(--ink);font-family:'IBM Plex Sans',sans-s
   ];
   function headerKey(line){
     var t=stripBullet(line).replace(/[:：]+$/,'').trim();
-    if(!t || t.length>90) return null;
+    if(!t || t.length>48) return null;     // Überschriften sind kurz – lange Zeilen sind Bulletpoints
+    if(/[.!?]$/.test(t)) return null;       // ein ganzer Satz ist keine Überschrift (z. B. "KI-Infrastruktur stützt …")
     for(var i=0;i<rules.length;i++){ if(rules[i][1].test(t)) return rules[i][0]; }
     return null;
   }
+  // Eine Zeile, die mit einem Aufzählungszeichen beginnt, ist IMMER ein Bulletpoint – niemals eine Überschrift.
+  function leadingBullet(s){ return /^(?:[•‣◦⁃∙*]|[–—-]\\s)/.test(String(s||'').trim()); }
   function splitInlineBullets(line){
     return String(line||'').split(/\\s*[•‣◦⁃∙]\\s+/).map(function(x){return x.trim();}).filter(Boolean);
   }
@@ -4783,15 +4786,24 @@ html,body{background:#aeb6c4;color:var(--ink);font-family:'IBM Plex Sans',sans-s
     var unmatched=[], cur=null;
     String(raw||'').replace(/\\r/g,'').split('\\n').forEach(function(line){
       var s=line.trim(); if(!s) return;
+      var bulleted=leadingBullet(s);          // beginnt die Zeile mit • – * usw.? → reiner Bulletpoint
       var parts=splitInlineBullets(s);
-      if(parts.length>1){
+      // "Überschrift • a • b" (mehrere Inline-Bullets) – nur prüfen, wenn KEIN führendes Bulletzeichen
+      if(parts.length>1 && !bulleted){
         var hk=headerKey(parts[0]);
         if(hk){ cur=hk; parts.slice(1).forEach(function(x){ x=stripBullet(x); if(x) out[cur].push(x); }); return; }
       }
-      var h=headerKey(s);
-      if(h){ cur=h; return; }
-      var cleaned=stripBullet(s); if(!cleaned) return;
-      if(cur && out[cur]) out[cur].push(cleaned); else unmatched.push(cleaned);
+      // Überschriften-Erkennung NUR für Zeilen ohne führendes Bulletzeichen
+      if(!bulleted){
+        var h=headerKey(s);
+        if(h){ cur=h; return; }
+      }
+      // sonst: ein oder mehrere Bulletpoints für die aktuelle Kategorie
+      var items=(parts.length>1)?parts:[s];
+      items.forEach(function(it){
+        var cleaned=stripBullet(it); if(!cleaned) return;
+        if(cur && out[cur]) out[cur].push(cleaned); else unmatched.push(cleaned);
+      });
     });
     return {out:out, unmatched:unmatched};
   }
