@@ -252,7 +252,7 @@ body::-webkit-scrollbar {
 
 <script>
 // Cache-Bereinigung ohne aggressive Storage-Resets
-const WAX_BUILD = '1778547400000-report-archive-save-fix5-faildiag-20260605';
+const WAX_BUILD = '1778547400000-report-archive-save-fix6-regexfix-20260605';
 try {
   sessionStorage.setItem('wax_build_seen', WAX_BUILD);
 } catch(e) {}
@@ -4614,7 +4614,7 @@ html,body{background:#aeb6c4;color:var(--ink);font-family:'IBM Plex Sans',sans-s
     var total=pages.length;
     pages.forEach(function(p,i){ var n=p.querySelector('.pagenum'); if(n){ n.textContent=String(i+1).padStart(2,'0')+' / '+String(total).padStart(2,'0'); } });
   }
-  function briefPlainText(el){ return (el && (el.innerText || el.textContent) || '').replace(/\n{3,}/g,'\n\n').trim(); }
+  function briefPlainText(el){ return (el && (el.innerText || el.textContent) || '').replace(/\\n{3,}/g,'\\n\\n').trim(); }
   function briefNormalizeHtml(html){
     var tmp=document.createElement('div'); tmp.innerHTML=html||'';
     tmp.querySelectorAll('script,style').forEach(function(n){n.remove();});
@@ -4735,9 +4735,9 @@ html,body{background:#aeb6c4;color:var(--ink);font-family:'IBM Plex Sans',sans-s
         alert('\u2713 Bericht wurde im Archiv gespeichert.');
         try{ if(window.opener && typeof window.opener.waxArchivLaden==='function') window.opener.waxArchivLaden(); }catch(e){}
       }
-      else if(res && res.skipped){ setStatus('\u26a0 Nur der Admin kann archivieren.','#ffd27a'); alert('\u26a0 Nicht gespeichert: nur der Admin kann archivieren.\n\nBitte in der App zuerst als Admin anmelden und den Bericht erneut erzeugen.'); }
-      else { var em=((res&&res.error)||'nicht gespeichert'); setStatus('\u26a0 '+em,'#ffd27a'); alert('\u26a0 Speichern fehlgeschlagen:\n\n'+em); }
-    }).catch(function(e){ setStatus('\u26a0 '+e,'#ffd27a'); alert('\u26a0 Fehler beim Speichern:\n\n'+e); });
+      else if(res && res.skipped){ setStatus('\u26a0 Nur der Admin kann archivieren.','#ffd27a'); alert('\u26a0 Nicht gespeichert: nur der Admin kann archivieren.\\n\\nBitte in der App zuerst als Admin anmelden und den Bericht erneut erzeugen.'); }
+      else { var em=((res&&res.error)||'nicht gespeichert'); setStatus('\u26a0 '+em,'#ffd27a'); alert('\u26a0 Speichern fehlgeschlagen:\\n\\n'+em); }
+    }).catch(function(e){ setStatus('\u26a0 '+e,'#ffd27a'); alert('\u26a0 Fehler beim Speichern:\\n\\n'+e); });
   };
 
 })();
