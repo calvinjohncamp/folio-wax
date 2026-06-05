@@ -4348,6 +4348,37 @@ html,body{background:#aeb6c4;color:var(--ink);font-family:'IBM Plex Sans',sans-s
 .pos-tbl tbody tr.realized td{background:#fbfcfe;color:var(--muted)}
 .pos-tbl tfoot td{padding:9px 7px;text-align:right;font-family:'IBM Plex Mono',monospace;font-weight:600;background:var(--navy);color:#fff;font-size:11px}
 .pos-tbl tfoot td:nth-child(1){text-align:left;font-family:'IBM Plex Sans',sans-serif}
+/* --- V8.1 Text-Import-Assistent --- */
+.mk-imp-overlay{display:none;position:fixed;inset:0;z-index:200;background:rgba(8,18,40,.62);backdrop-filter:blur(2px);align-items:flex-start;justify-content:center;padding:40px 18px;overflow:auto}
+.mk-imp-overlay.open{display:flex}
+.mk-imp-card{background:var(--paper);width:100%;max-width:760px;border-radius:8px;box-shadow:0 24px 60px rgba(0,0,0,.4);padding:22px 24px 24px;font-family:'IBM Plex Sans',sans-serif}
+.mk-imp-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px}
+.mk-imp-head h3{font-family:'IBM Plex Serif',serif;font-size:19px;color:var(--navy);font-weight:600}
+.mk-imp-x{border:none;background:none;font-size:26px;line-height:1;color:var(--muted);cursor:pointer;padding:0 4px}
+.mk-imp-x:hover{color:var(--navy)}
+.mk-imp-hint{font-size:11.5px;line-height:1.55;color:var(--muted);margin-bottom:13px}
+.mk-imp-hint b{color:var(--navy);font-weight:600}
+.mk-imp-ta{width:100%;min-height:170px;resize:vertical;font-family:'IBM Plex Mono',monospace;font-size:12px;line-height:1.5;color:var(--ink);border:1px solid var(--line);border-radius:5px;padding:11px 12px;background:var(--paper-2)}
+.mk-imp-ta:focus{outline:1px solid var(--gold);background:#fffdf3}
+.mk-imp-actions{display:flex;align-items:center;gap:10px;margin-top:13px}
+.mk-imp-sp{flex:1}
+.mk-imp-status{font-size:11.5px;color:var(--muted)}
+.btn-sec{font-family:inherit;font-size:12.5px;font-weight:600;cursor:pointer;border:1px solid var(--line);background:#fff;color:var(--navy);padding:8px 15px;border-radius:4px}
+.btn-sec:hover{border-color:var(--blue);color:var(--blue)}
+.btn-pri{font-family:inherit;font-size:12.5px;font-weight:700;cursor:pointer;border:1px solid var(--gold);background:var(--gold);color:var(--navy);padding:8px 17px;border-radius:4px}
+.btn-pri:hover{background:var(--gold-soft)}
+.btn-pri:disabled{opacity:.4;cursor:not-allowed}
+.mk-imp-prev{margin-top:16px;display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.mk-imp-prev:empty{display:none}
+.mk-imp-pcol{background:var(--paper-2);border:1px solid var(--line);border-radius:5px;padding:11px 13px}
+.mk-imp-pcol h4{font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:var(--blue);font-weight:700;margin-bottom:8px}
+.mk-imp-pcol.kern h4{color:#9a7400}
+.mk-imp-pcol ul,.mk-imp-pcol ol{margin:0;padding-left:18px}
+.mk-imp-pcol li{font-size:11.5px;line-height:1.45;color:#33445e;margin-bottom:5px}
+.mk-imp-pcol.empty{opacity:.55}
+.mk-imp-pcol.empty li{color:var(--muted);font-style:italic;list-style:none;margin-left:-18px}
+.mk-imp-warn{grid-column:1/-1;background:#fff7e6;border:1px solid #f0d77a;border-radius:5px;padding:10px 13px;font-size:11.5px;color:#7a5a00;line-height:1.5}
+.mk-imp-warn b{color:#5a4200}
 @media print{
   @page{size:A4 portrait;margin:0}
   html,body{background:#fff}
@@ -4363,7 +4394,7 @@ html,body{background:#aeb6c4;color:var(--ink);font-family:'IBM Plex Sans',sans-s
   *{-webkit-print-color-adjust:exact;print-color-adjust:exact}
 }
 </style></head><body>
-<div class="toolbar"><span class="tt">Folio.wax · Management-Bericht</span><span class="hint">Stand ${heute}</span><span class="sp"></span><span id="archStatus" style="font-size:11.5px;margin-right:8px;color:var(--blue-soft)"></span><button class="btn" style="background:transparent;color:#fff;border:1px solid var(--gold)" onclick="window.waxBerichtArchivieren&&window.waxBerichtArchivieren()">📥 In Archiv speichern</button><button class="btn" onclick="window.print()">⤓ Als PDF speichern</button></div>
+<div class="toolbar"><span class="tt">Folio.wax · Management-Bericht</span><span class="hint">Stand ${heute}</span><span class="sp"></span><span id="archStatus" style="font-size:11.5px;margin-right:8px;color:var(--blue-soft)"></span><button class="btn" id="mkImportBtn" style="background:transparent;color:#fff;border:1px solid var(--blue-soft)">✨ Text importieren</button><button class="btn" style="background:transparent;color:#fff;border:1px solid var(--gold)" onclick="window.waxBerichtArchivieren&&window.waxBerichtArchivieren()">📥 In Archiv speichern</button><button class="btn" onclick="window.print()">⤓ Als PDF speichern</button></div>
 <div class="doc">
 
   <section class="page cover"><div class="cover-inner"><div class="cover-grain"></div>
@@ -4480,6 +4511,22 @@ html,body{background:#aeb6c4;color:var(--ink);font-family:'IBM Plex Sans',sans-s
       <span>FOLIO.WAX · AKTIENCLUB · VERTRAULICH</span><span>STAND: ${heuteLang} · KURSDATEN: YAHOO FINANCE · KEINE ANLAGEBERATUNG</span></div></section>
 
 </div>
+
+<div id="mkImportOverlay" class="mk-imp-overlay">
+  <div class="mk-imp-card">
+    <div class="mk-imp-head"><h3>✨ Marktkommentar aus Text importieren</h3><button class="mk-imp-x" id="mkImpClose" title="Schließen">×</button></div>
+    <p class="mk-imp-hint">Füge den kompletten Text ein (z. B. aus ChatGPT). Erkannte Überschriften — <b>Kernaussagen</b>, <b>Politik &amp; Geopolitik</b>, <b>Wirtschaft &amp; Zinsen</b>, <b>Unternehmen &amp; Technologie</b>, <b>Auswirkungen auf unser Depot</b> — leiten die Bulletpoints automatisch ins richtige Feld. Zeichen wie • – - * werden zu sauberen Bulletpoints. Nur erkannte Blöcke werden überschrieben.</p>
+    <textarea id="mkImpText" class="mk-imp-ta" placeholder="Hier den ganzen Text einfügen …"></textarea>
+    <div class="mk-imp-actions">
+      <button class="btn-sec" id="mkImpPreview">Vorschau erzeugen</button>
+      <span class="mk-imp-status" id="mkImpStatus"></span>
+      <span class="mk-imp-sp"></span>
+      <button class="btn-sec" id="mkImpCancel">Abbrechen</button>
+      <button class="btn-pri" id="mkImpApply" disabled>Übernehmen</button>
+    </div>
+    <div id="mkImpPreviewBox" class="mk-imp-prev"></div>
+  </div>
+</div>
 <script>
 (function(){
   document.querySelectorAll('.editable').forEach(function(e){ e.dataset.orig=e.innerHTML; });
@@ -4545,6 +4592,135 @@ html,body{background:#aeb6c4;color:var(--ink);font-family:'IBM Plex Sans',sans-s
       else { if(st){ st.textContent='\u26a0 '+((res&&res.error)||'nicht gespeichert'); st.style.color='#ffd27a'; } }
     }).catch(function(e){ if(st){ st.textContent='\u26a0 '+e; st.style.color='#ffd27a'; } });
   };
+
+  // ===================== V8.1: Text -> Bulletpoints =====================
+  function __mkEsc(s){ return String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+  // Rohtext in saubere Bullet-Zeilen zerlegen (inline-Bullets, Listenzeichen, Nummern entfernen)
+  function __mkLines(text){
+    return String(text||'')
+      .replace(/\\r/g,'')
+      .replace(/\\s*[\\u2022\\u2023\\u25E6\\u2043\\u204C\\u204D\\u2219]\\s*/g,'\\n') // • usw.
+      .split('\\n')
+      .map(function(s){ return s.replace(/^\\s*(?:[-\\u2013\\u2014*]+|\\d+[.)])\\s*/,'').trim(); })
+      .filter(function(s){ return s.length>0; });
+  }
+  // Erkennen, ob eine Zeile eine Themen-Überschrift ist; liefert data-key oder null
+  var __MK_RULES=[
+    { key:'mk-kern',        re:/kernaussage/i },
+    { key:'mk-politik',     re:/politik|geopolit/i },
+    { key:'mk-wirtschaft',  re:/wirtschaft|zinsen|notenbank/i },
+    { key:'mk-unternehmen', re:/unternehmen|technologie/i },
+    { key:'mk-depot',       re:/auswirkung|unser depot|euer depot|auf(s| das)? depot/i }
+  ];
+  function __mkHeaderKey(line){
+    var t=String(line||'').replace(/^\\s*\\d+[.)]?\\s*/,'').trim(); // führende "3 " / "1." weg
+    if(t.length>46) return null;
+    if(/[.!?]$/.test(t)) return null;
+    if(t.split(/\\s+/).length>6) return null;
+    for(var i=0;i<__MK_RULES.length;i++){ if(__MK_RULES[i].re.test(t)) return __MK_RULES[i].key; }
+    return null;
+  }
+  function __mkClean(s){ return String(s||'').replace(/^\\s*(?:[•‣◦⁃∙–—*-]+|\\d+[.)])\\s*/,'').trim(); }
+  function __mkStartsBullet(s){ return /^\\s*(?:[•‣◦⁃∙–—*-]+|\\d+[.)])\\s+/.test(s); }
+  function __mkParse(raw){
+    var out={'mk-kern':[],'mk-politik':[],'mk-wirtschaft':[],'mk-unternehmen':[],'mk-depot':[]};
+    var unmatched=[]; var cur=null;
+    function add(s){ var c=__mkClean(s); if(!c) return; if(cur && out[cur]) out[cur].push(c); else unmatched.push(c); }
+    String(raw||'').replace(/\\r/g,'').split('\\n').forEach(function(line){
+      if(!line.trim()) return;
+      if(__mkStartsBullet(line)){ add(line); return; }                 // beginnt mit • / - / 1. -> immer Inhalt
+      if(/\\S\\s*[•‣◦⁃∙]\\s+\\S/.test(line)){                           // Überschrift + Bullets in EINER Zeile
+        var parts=line.split(/\\s*[•‣◦⁃∙]\\s*/).map(function(x){return x.trim();}).filter(Boolean);
+        var first=parts.shift(); var hk=__mkHeaderKey(first);
+        if(hk){ cur=hk; } else { add(first); }
+        parts.forEach(add); return;
+      }
+      var hk2=__mkHeaderKey(line.trim());                              // unbulletet -> evtl. Überschrift
+      if(hk2){ cur=hk2; return; }
+      add(line);                                                       // sonst Inhalt bzw. unmatched
+    });
+    return { out:out, unmatched:unmatched };
+  }
+
+  // ---- Schlaues Einfügen direkt in einen Themenblock (<ul class="mk-list">) ----
+  [].slice.call(document.querySelectorAll('.mk-list')).forEach(function(ul){
+    ul.addEventListener('paste', function(e){
+      var cd=e.clipboardData||window.clipboardData; if(!cd) return;
+      var text=cd.getData('text/plain'); if(!text) return;
+      var bullets=__mkLines(text);
+      if(bullets.length<2) return; // Einzelzeile -> normales Einfügen zulassen
+      e.preventDefault();
+      var li=bullets.map(function(s){ return '<li>'+__mkEsc(s)+'</li>'; }).join('');
+      var curTxt=(ul.textContent||'').trim();
+      if(!curTxt || /^\\[.*\\]$/.test(curTxt)){ ul.innerHTML=li; } // Platzhalter ersetzen
+      else { try{ document.execCommand('insertHTML',false,li); }catch(_){ ul.innerHTML+=li; } }
+      ul.dataset.orig=ul.innerHTML;
+    });
+  });
+
+  // ---- Import-Assistent (ganzer Text auf einmal) ----
+  var __mkLast=null;
+  var ov=document.getElementById('mkImportOverlay');
+  var ta=document.getElementById('mkImpText');
+  var box=document.getElementById('mkImpPreviewBox');
+  var stat=document.getElementById('mkImpStatus');
+  var applyBtn=document.getElementById('mkImpApply');
+  var LABEL={ 'mk-kern':'Kernaussagen', 'mk-politik':'\u2460 Politik & Geopolitik',
+    'mk-wirtschaft':'\u2461 Wirtschaft & Zinsen', 'mk-unternehmen':'\u2462 Unternehmen & Technologie',
+    'mk-depot':'\u2463 Auswirkungen auf unser Depot' };
+  var ORDER=['mk-kern','mk-politik','mk-wirtschaft','mk-unternehmen','mk-depot'];
+  function __mkOpen(){ if(ov){ ov.classList.add('open'); if(ta) ta.focus(); } }
+  function __mkClose(){ if(ov) ov.classList.remove('open'); }
+  function __mkRenderPreview(){
+    var p=__mkParse(ta?ta.value:''); __mkLast=p;
+    var total=ORDER.reduce(function(s,k){return s+p.out[k].length;},0);
+    var html='';
+    ORDER.forEach(function(k){
+      var arr=p.out[k]; var empty=arr.length===0;
+      var tag=(k==='mk-kern')?'ol':'ul';
+      html+='<div class="mk-imp-pcol '+(k==='mk-kern'?'kern ':'')+(empty?'empty':'')+'">'
+          +'<h4>'+LABEL[k]+' \u00b7 '+arr.length+'</h4>'
+          +'<'+tag+'>'
+          +(empty?'<li>\u2014 nichts erkannt \u2014</li>':arr.map(function(s){return '<li>'+__mkEsc(s)+'</li>';}).join(''))
+          +'</'+tag+'></div>';
+    });
+    if(p.unmatched.length){
+      html+='<div class="mk-imp-warn"><b>'+p.unmatched.length+' Zeile(n) ohne erkannte \u00dcberschrift</b> \u2014 werden NICHT \u00fcbernommen. '
+          +'Tipp: \u00dcber jeden Block eine Zeile wie \u201eUNTERNEHMEN &amp; TECHNOLOGIE\u201c setzen.</div>';
+    }
+    if(box) box.innerHTML=html;
+    if(applyBtn) applyBtn.disabled = (total===0);
+    if(stat) stat.textContent = total? (total+' Bulletpoint(s) erkannt') : 'Noch nichts erkannt';
+  }
+  function __mkApply(){
+    if(!__mkLast) __mkRenderPreview();
+    var p=__mkLast; if(!p) return;
+    // Kernaussagen: erste drei Zeilen auf die drei Felder
+    var kern=p.out['mk-kern'];
+    for(var i=1;i<=3;i++){
+      if(kern[i-1]!=null){
+        var ke=document.querySelector('.editable[data-key="mk-kern-'+i+'"]');
+        if(ke){ ke.innerHTML=__mkEsc(kern[i-1]); ke.dataset.orig=ke.innerHTML; }
+      }
+    }
+    ['mk-politik','mk-wirtschaft','mk-unternehmen','mk-depot'].forEach(function(k){
+      var arr=p.out[k]; if(!arr.length) return;
+      var el=document.querySelector('.editable[data-key="'+k+'"]'); if(!el) return;
+      el.innerHTML=arr.map(function(s){ return '<li>'+__mkEsc(s)+'</li>'; }).join('');
+      el.dataset.orig=el.innerHTML;
+    });
+    __mkClose();
+    var as=document.getElementById('archStatus');
+    if(as){ as.textContent='\u2713 Marktkommentar aus Text \u00fcbernommen'; as.style.color='#7bd88f'; }
+  }
+  var ib=document.getElementById('mkImportBtn'); if(ib) ib.addEventListener('click',__mkOpen);
+  var pc=document.getElementById('mkImpPreview'); if(pc) pc.addEventListener('click',__mkRenderPreview);
+  var cc=document.getElementById('mkImpCancel'); if(cc) cc.addEventListener('click',__mkClose);
+  var xc=document.getElementById('mkImpClose'); if(xc) xc.addEventListener('click',__mkClose);
+  if(applyBtn) applyBtn.addEventListener('click',__mkApply);
+  if(ta) ta.addEventListener('input',function(){ if(applyBtn) applyBtn.disabled=true; if(stat) stat.textContent=''; });
+  if(ov) ov.addEventListener('click',function(e){ if(e.target===ov) __mkClose(); });
+  document.addEventListener('keydown',function(e){ if(e.key==='Escape' && ov && ov.classList.contains('open')) __mkClose(); });
 })();
 <\/script>
 </body></html>`;
