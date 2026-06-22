@@ -1993,12 +1993,19 @@ async function applyVerkaufToLots({ mid, datum, wkn, kurs, stueck }) {
       const before = {
         stueck: lotSt,
         kaufwert: lotKaufwert,
+        wert_ref: lotRefW,
         verkauft: !!lot.verkauft,
         verkauf_datum: lot.verkauf_datum || null
       };
+      // Jahresanfangs-Referenzwert der Restposition anteilig auf die verbleibenden
+      // Stücke reduzieren (kurs_ref ist pro Stück und bleibt unverändert). Sonst behält
+      // der Rest den vollen wert_ref der ursprünglichen Stückzahl → falsches YTD.
+      const restWertRef = lotRefK != null
+        ? lotRefK * restSt
+        : (lotRefW != null && lotSt > 0 ? lotRefW * (restSt / lotSt) : null);
       const patchData = restSt <= 1e-9
         ? { stueck: 0, kaufwert: 0, verkauft: true, verkauf_datum: null }
-        : { stueck: restSt, kaufwert: restSt * lotKaufkurs };
+        : { stueck: restSt, kaufwert: restSt * lotKaufkurs, ...(restWertRef != null ? { wert_ref: restWertRef } : {}) };
       const patchRes = await sbPatchDetailed('positionen', `id=eq.${lot.id}`, patchData);
       if(!patchRes.ok) {
         throw new Error(`Lot ${lot.id} konnte nicht aktualisiert werden.${patchRes.error ? ' ' + patchRes.error : ''}`);
