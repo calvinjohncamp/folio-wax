@@ -1303,15 +1303,20 @@ const TICKER_MAP = {
   'A1KWPR': { t:'VZLB.DE',        fx:'EUR' },
   'A0YEDG': { t:'SXR8.DE',        fx:'EUR' },
   'EWG2LD': { t:'EWG2.SG',        fx:'EUR' },
+  // US-Mega-Caps mit liquider Xetra-Notierung → deutscher Ticker, EUR direkt
+  // (analog Folio Invest, keine USD→EUR-Umrechnung, gleiche Kurse)
+  '865985': { t:'APC.DE',         fx:'EUR' },  // Apple
+  '906866': { t:'AMZ.DE',         fx:'EUR' },  // Amazon
+  '870747': { t:'MSF.DE',         fx:'EUR' },  // Microsoft
+  '918422': { t:'NVD.DE',         fx:'EUR' },  // NVIDIA
+  'A14Y6F': { t:'ABEA.DE',        fx:'EUR' },  // Alphabet A
+  'A2JG9Z': { t:'1YD.DE',         fx:'EUR' },  // Broadcom
   // CHF → EUR
   'A0Q4DC': { t:'NESN.SW',        fx:'CHF' },
   // USD → EUR
-  '906866': { t:'AMZN',        fx:'USD' },
   '850471': { t:'BA',          fx:'USD' },
   'A0NJ38': { t:'AWK',         fx:'USD' },
   '932798': { t:'D',           fx:'USD' },
-  'A2JG9Z': { t:'AVGO',        fx:'USD' },
-  '870747': { t:'MSFT',        fx:'USD' },
   'A4A59K': { t:'IB1T.DE',     fx:'EUR' },
   'A3CL8W': { t:'ASTS',        fx:'USD' },
   'A3CVQC': { t:'HOOD',        fx:'USD' },
@@ -1323,7 +1328,6 @@ const TICKER_MAP = {
   'A3CND6': { t:'PATH',        fx:'USD' },
   'A2AT0Z': { t:'CRSP',        fx:'USD' },
   '936386': { t:'SGMO',        fx:'USD' },
-  '918422': { t:'NVDA',        fx:'USD' },
   'A2PK2R': { t:'CRWD',        fx:'USD' },
   'A0YAND': { t:'KTOS',        fx:'USD' },
   'A12GD6': { t:'VKTX',        fx:'USD' },
@@ -1331,7 +1335,6 @@ const TICKER_MAP = {
   'A3DESP': { t:'IPX.AX',         fx:'AUD' },
   // CAD → EUR
   'A2PX5N': { t:'GRSL.V',        fx:'CAD' },
-  'A14Y6F': { t:'GOOGL',       fx:'USD' },
   'A3C4QT': { t:'IONQ',        fx:'USD' },
   'A2PMPY': { t:'AUMB.V',      fx:'CAD' },
   'A2T68Z': { t:'AETH.DE',     fx:'EUR' },
@@ -1528,7 +1531,7 @@ const SECURITY_MASTER_DEFAULTS = {
   'A12GD6': { name:'Viking Therapeutics', category:'Healthcare & Biotech', country:'USA', exchange:'NASDAQ' },
   'A3DESP': { name:'IPERIONX', category:'Industrials & Mobility', country:'Australien', exchange:'ASX' },
   'A2PX5N': { name:'Gogold / Gold Silver', category:'Precious Metals', country:'Kanada', exchange:'TSX Venture' },
-  'A14Y6F': { name:'Alphabet A', category:'Technology & Software', country:'USA', exchange:'NASDAQ', asset_type:'Aktie', yahoo_ticker:'GOOGL', ticker:'GOOGL', currency:'USD', fx:'USD' },
+  'A14Y6F': { name:'Alphabet A', category:'Technology & Software', country:'USA', exchange:'Xetra', asset_type:'Aktie', yahoo_ticker:'ABEA.DE', ticker:'ABEA.DE', currency:'EUR', fx:'EUR' },
   'A3C4QT': { name:'IonQ A', category:'Technology & Software', country:'USA', exchange:'NYSE', asset_type:'Aktie', yahoo_ticker:'IONQ', ticker:'IONQ', currency:'USD', fx:'USD' },
   'A2PMPY': { name:'1911 Gold Corp', category:'Precious Metals', country:'Kanada', exchange:'TSX Venture', asset_type:'Aktie', yahoo_ticker:'AUMB.V', ticker:'AUMB.V', currency:'CAD', fx:'CAD' },
   'A2T68Z': { name:'Sonst. Zertifikat auf Ethereum', category:'Digital Assets & Crypto', country:'Europa', exchange:'Xetra', asset_type:'Zertifikat', yahoo_ticker:'AETH.DE', ticker:'AETH.DE', currency:'EUR', fx:'EUR' }
@@ -1536,7 +1539,14 @@ const SECURITY_MASTER_DEFAULTS = {
 const SECURITY_MASTER_CORRECTIONS = {
   'A0YEDG': { name:'iShares Core S&P 500 UCITS ETF', category:'Broad Market ETF', country:'USA', exchange:'Xetra', asset_type:'ETF', yahoo_ticker:'SXR8.DE', ticker:'SXR8.DE', currency:'EUR', fx:'EUR' },
   'EWG2LD': { name:'Euwax Gold', category:'Precious Metals', country:'Deutschland', exchange:'Stuttgart / EUWAX', asset_type:'ETC', yahoo_ticker:'EWG2.SG', ticker:'EWG2.SG', currency:'EUR', fx:'EUR' },
-  'A4A59K': { name:'iShares Bitcoin Trust ETP', category:'Digital Assets & Crypto', country:'Europa', exchange:'Xetra', asset_type:'ETP', yahoo_ticker:'IB1T.DE', ticker:'IB1T.DE', currency:'EUR', fx:'EUR' }
+  'A4A59K': { name:'iShares Bitcoin Trust ETP', category:'Digital Assets & Crypto', country:'Europa', exchange:'Xetra', asset_type:'ETP', yahoo_ticker:'IB1T.DE', ticker:'IB1T.DE', currency:'EUR', fx:'EUR' },
+  // US-Mega-Caps auf liquide Xetra-Notierung umgestellt → EUR direkt, keine FX-Umrechnung (analog Folio Invest)
+  '865985': { name:'Apple', category:'Consumer & Brands', country:'USA', exchange:'Xetra', asset_type:'Aktie', yahoo_ticker:'APC.DE', ticker:'APC.DE', currency:'EUR', fx:'EUR' },
+  '906866': { name:'Amazon', category:'Consumer & Brands', country:'USA', exchange:'Xetra', asset_type:'Aktie', yahoo_ticker:'AMZ.DE', ticker:'AMZ.DE', currency:'EUR', fx:'EUR' },
+  '870747': { name:'Microsoft', category:'Technology & Software', country:'USA', exchange:'Xetra', asset_type:'Aktie', yahoo_ticker:'MSF.DE', ticker:'MSF.DE', currency:'EUR', fx:'EUR' },
+  '918422': { name:'NVIDIA', category:'Semiconductors & AI Infrastructure', country:'USA', exchange:'Xetra', asset_type:'Aktie', yahoo_ticker:'NVD.DE', ticker:'NVD.DE', currency:'EUR', fx:'EUR' },
+  'A14Y6F': { name:'Alphabet A', category:'Technology & Software', country:'USA', exchange:'Xetra', asset_type:'Aktie', yahoo_ticker:'ABEA.DE', ticker:'ABEA.DE', currency:'EUR', fx:'EUR' },
+  'A2JG9Z': { name:'Broadcom', category:'Semiconductors & AI Infrastructure', country:'USA', exchange:'Xetra', asset_type:'Aktie', yahoo_ticker:'1YD.DE', ticker:'1YD.DE', currency:'EUR', fx:'EUR' }
 };
 function normalizeSecurityText(v){ return String(v||'').trim().toLowerCase(); }
 function getLocalSecurityMaster(){
