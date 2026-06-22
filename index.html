@@ -853,7 +853,7 @@ body.theme-classic .neg, body.theme-classic .kpi-v.neg, body.theme-classic .benc
 </div>
 
 <div class="hd">
-  <div class="hd-logo" onclick="applyTheme('modern');showTab('uebersicht')" style="cursor:pointer" title="Zur Übersicht"><img src="Folio Wax Logo 2026.png" alt="Folio.wax"></div>
+  <div class="hd-logo" onclick="goHome()" style="cursor:pointer" title="Zur Startansicht"><img src="Folio Wax Logo 2026.png" alt="Folio.wax"></div>
   <div class="hd-spacer"></div>
   <div class="hd-user" id="hdUser"></div>
   <div class="hd-date" id="hdDate"></div>
@@ -2774,6 +2774,22 @@ function updateThemeButton() {
 }
 function toggleTheme() {
   applyTheme(getCurrentTheme() === 'classic' ? 'modern' : 'classic');
+}
+
+function goHome() {
+  // Startansicht: Übersicht · Dark Mode · YTD · Standardsortierung · oben
+  overviewMode = 'ytd';
+  depotMode = 'ytd';
+  activeMitglied = 0;
+  investmentsSortRules = [];
+  investmentDetailsSortRules = [];
+  investmentsView = 'main';
+
+  applyTheme('modern');
+  showTab('uebersicht');
+  renderUebersicht();
+
+  window.scrollTo({ top: 0, behavior: 'smooth' });
 }
 
 function toggleOverviewMode() {
