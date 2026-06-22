@@ -5543,6 +5543,37 @@ body.theme-classic .form-input,body.theme-classic .ticker-input,body.theme-class
   document.addEventListener('keydown',function(e){ var ov=byId('mkImportOverlay'); if(e.key==='Escape' && ov && ov.classList.contains('open')) closeImport(); });
 })();
 <\/script>
+
+<style id="folioWaxKlarRotFinalOverride">
+/* Klareres Verlust-Rot: bewusst vom Marken-Orange getrennt */
+:root,
+body.theme-modern,
+body:not(.theme-classic){
+  --wax-negative:#E04F5F !important;
+  --negative:#E04F5F !important;
+}
+body.theme-classic{
+  --wax-negative:#D83F4D !important;
+  --negative:#D83F4D !important;
+}
+.neg,
+td.neg,
+span.neg,
+div.neg,
+.kpi-v.neg,
+.bench-v.neg,
+.kpi .v.neg,
+.mkpi .v.neg,
+.brief-count.high,
+.mk-count.high{
+  color:var(--wax-negative) !important;
+}
+/* falls einzelne Verlustwerte direkt mit Markenorange formatiert wurden */
+[style*="var(--wax-accent)"].neg,
+[style*="var(--orange)"].neg{
+  color:var(--wax-negative) !important;
+}
+</style>
 </body></html>`;
 }
 
@@ -6040,5 +6071,36 @@ async function initApp(){
 }
 </script>
 
+
+<style id="folioWaxKlarRotFinalOverride">
+/* Klareres Verlust-Rot: bewusst vom Marken-Orange getrennt */
+:root,
+body.theme-modern,
+body:not(.theme-classic){
+  --wax-negative:#E04F5F !important;
+  --negative:#E04F5F !important;
+}
+body.theme-classic{
+  --wax-negative:#D83F4D !important;
+  --negative:#D83F4D !important;
+}
+.neg,
+td.neg,
+span.neg,
+div.neg,
+.kpi-v.neg,
+.bench-v.neg,
+.kpi .v.neg,
+.mkpi .v.neg,
+.brief-count.high,
+.mk-count.high{
+  color:var(--wax-negative) !important;
+}
+/* falls einzelne Verlustwerte direkt mit Markenorange formatiert wurden */
+[style*="var(--wax-accent)"].neg,
+[style*="var(--orange)"].neg{
+  color:var(--wax-negative) !important;
+}
+</style>
 </body>
 </html>
