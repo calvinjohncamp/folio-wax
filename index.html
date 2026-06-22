@@ -670,7 +670,7 @@ td:first-child{color:var(--text) !important}
 .gr td{background:#20323B !important;color:var(--text-muted) !important;border-top:1px solid var(--line) !important}
 .sum-row td{background:#20323B !important;color:#E4EEF0 !important;border-top:2px solid #FF7A00 !important}
 .pos,.kpi-v.pos,.bench-v.pos{color:var(--success) !important}
-.neg,.kpi-v.neg,.bench-v.neg{color:#FF7A00 !important}
+.neg,.kpi-v.neg,.bench-v.neg{color:#D85C5C !important}
 
 /* Struktur/Chart-Elemente */
 .donut{background:#263A43 !important}
@@ -784,7 +784,7 @@ body.theme-classic .meta-panel,
 body.theme-classic .info-box,
 body.theme-classic .pflege-access-note{background:#F7FAFB !important;border-color:#D9E1E3 !important;color:#43545C !important}
 body.theme-classic .pos,body.theme-classic .kpi-v.pos,body.theme-classic .bench-v.pos{color:#1F8A5B !important}
-body.theme-classic .neg,body.theme-classic .kpi-v.neg,body.theme-classic .bench-v.neg{color:#FF7A00 !important}
+body.theme-classic .neg,body.theme-classic .kpi-v.neg,body.theme-classic .bench-v.neg{color:#D85C5C !important}
 
 @media (max-width:640px){
   .hd{height:70px !important}.hd-logo img{height:52px !important}.nav{top:70px !important}.statusbar{top:107px !important}
@@ -792,15 +792,29 @@ body.theme-classic .neg,body.theme-classic .kpi-v.neg,body.theme-classic .bench-
 }
 </style>
 
+
+<style id="folioWaxPositiveNegativeFinalFix">
+/* Finaler Farb-Fix: Plus bleibt grün, Minus ist in Dark und Original klar rot. Orange bleibt reine Marken-/Akzentfarbe. */
+.pos, .kpi-v.pos, .bench-v.pos,
+body.theme-modern .pos, body.theme-modern .kpi-v.pos, body.theme-modern .bench-v.pos { color: var(--success, #4DD4A3) !important; }
+body.theme-classic .pos, body.theme-classic .kpi-v.pos, body.theme-classic .bench-v.pos { color: #1F8A5B !important; }
+.neg, .kpi-v.neg, .bench-v.neg,
+body.theme-modern .neg, body.theme-modern .kpi-v.neg, body.theme-modern .bench-v.neg,
+body.theme-classic .neg, body.theme-classic .kpi-v.neg, body.theme-classic .bench-v.neg { color: #D85C5C !important; }
+</style>
 </head>
 <body spellcheck="false" class="theme-modern">
 <script>
 (function(){
   try {
-    var savedTheme = localStorage.getItem("wax_color_theme") || "modern";
+    // Standard nach Code-Eingabe/Neuladen: immer Dark Mode.
+    localStorage.setItem("wax_color_theme", "modern");
     document.body.classList.remove("theme-modern","theme-classic");
-    document.body.classList.add(savedTheme === "classic" ? "theme-classic" : "theme-modern");
-  } catch(e) {}
+    document.body.classList.add("theme-modern");
+  } catch(e) {
+    document.body.classList.remove("theme-modern","theme-classic");
+    document.body.classList.add("theme-modern");
+  }
 })();
 </script>
 
@@ -839,7 +853,7 @@ body.theme-classic .neg,body.theme-classic .kpi-v.neg,body.theme-classic .bench-
 </div>
 
 <div class="hd">
-  <div class="hd-logo" onclick="showTab('uebersicht')" style="cursor:pointer" title="Zur Übersicht"><img src="Folio Wax Logo 2026.png" alt="Folio.wax"></div>
+  <div class="hd-logo" onclick="applyTheme('modern');showTab('uebersicht')" style="cursor:pointer" title="Zur Übersicht"><img src="Folio Wax Logo 2026.png" alt="Folio.wax"></div>
   <div class="hd-spacer"></div>
   <div class="hd-user" id="hdUser"></div>
   <div class="hd-date" id="hdDate"></div>
@@ -1447,35 +1461,37 @@ const META_OPTIONS = {
   exchanges:['NASDAQ','NYSE','Xetra','Tradegate','Stuttgart / EUWAX','SIX Swiss Exchange','TSX Venture','ASX','Asia Exchange']
 };
 const STRUCTURE_COLORS = {
-  'Technology & Software':'#2563EB',
-  'Semiconductors & AI Infrastructure':'#DC2626',
-  'Healthcare & Biotech':'#10B981',
-  'Consumer & Brands':'#F59E0B',
-  'Industrials & Mobility':'#6B7280',
-  'Energy & Utilities':'#0EA5A4',
-  'Precious Metals':'#D4AF37',
-  'Digital Assets & Crypto':'#F97316',
-  'Financial Services':'#111827',
-  'Broad Market ETF':'#0F766E',
+  // Ruhige Pastellpalette für Kategorien, Länder und Börsen
+  'Technology & Software':'#9EB8D0',
+  'Semiconductors & AI Infrastructure':'#D6A8B2',
+  'Healthcare & Biotech':'#8EC6B6',
+  'Consumer & Brands':'#E8B77A',
+  'Industrials & Mobility':'#AEBCC1',
+  'Energy & Utilities':'#97C6C6',
+  'Precious Metals':'#D9C79A',
+  'Digital Assets & Crypto':'#D8A98A',
+  'Financial Services':'#8F9EA5',
+  'Broad Market ETF':'#9AB8B1',
 
-  'USA':'#2563EB',
-  'Deutschland':'#111827',
-  'Schweiz':'#10B981',
-  'Kanada':'#7C3AED',
-  'Australien':'#F59E0B',
-  'Europa':'#14B8A6',
-  'Asien':'#22C55E',
-  'Welt':'#8B5CF6',
+  'USA':'#9EB8D0',
+  'Deutschland':'#AEBCC1',
+  'Schweiz':'#8EC6B6',
+  'Kanada':'#D6A8B2',
+  'Australien':'#E8B77A',
+  'Europa':'#97C6C6',
+  'Asien':'#A7C79F',
+  'Welt':'#BBA5CC',
+  'Nicht zugeordnet':'#D6A8B2',
 
-  'NASDAQ':'#2563EB',
-  'NYSE':'#F59E0B',
-  'Xetra':'#111827',
-  'Tradegate':'#6B7280',
-  'Stuttgart / EUWAX':'#9A3412',
-  'SIX Swiss Exchange':'#10B981',
-  'TSX Venture':'#7C3AED',
-  'ASX':'#DC2626',
-  'Asia Exchange':'#22C55E'
+  'NASDAQ':'#9EB8D0',
+  'NYSE':'#E8B77A',
+  'Xetra':'#AEBCC1',
+  'Tradegate':'#8F9EA5',
+  'Stuttgart / EUWAX':'#D8A98A',
+  'SIX Swiss Exchange':'#8EC6B6',
+  'TSX Venture':'#BBA5CC',
+  'ASX':'#D6A8B2',
+  'Asia Exchange':'#A7C79F'
 };
 const SECURITY_MASTER_DEFAULTS = {
   '716460': { name:'SAP', category:'Technology & Software', country:'Deutschland', exchange:'Xetra' },
@@ -1659,7 +1675,7 @@ async function persistSecurityMeta(entry){
   }
 }
 function getStructureColor(label, idx){
-  return STRUCTURE_COLORS[label] || ['#3B82F6','#10B981','#F59E0B','#8B5CF6','#EF4444','#6B7280','#14B8A6','#111827'][idx % 8];
+  return STRUCTURE_COLORS[label] || ['#9EB8D0','#8EC6B6','#E8B77A','#BBA5CC','#D6A8B2','#AEBCC1','#97C6C6','#D9C79A'][idx % 8];
 }
 function aggregateStructure(positions, field){
   const totals = {};
@@ -4702,7 +4718,7 @@ function waxBerichtHtml(d){
   const gj        = new Date().getFullYear();
   const refJahr   = (typeof REF_JAHR!=='undefined') ? REF_JAHR : 2025;
 
-  const PALETTE=['#e23b32','#2f6fd6','#f2b705','#8a98ad','#1f8a4c','#d4b04a','#0a1f44','#39b06b','#e8742a','#16c0c0','#7b5ea7','#c0626b'];
+  const PALETTE=['#D6A8B2','#9EB8D0','#E8B77A','#AEBCC1','#8EC6B6','#D9C79A','#8F9EA5','#9AB8B1','#D8A98A','#97C6C6','#BBA5CC','#CDA0AA'];
 
   // Ranking-Zeilen
   const rankingRows = d.ranking.map(m=>{
@@ -5131,7 +5147,7 @@ body.theme-classic .nav{background:#1A1814!important;border-bottom:none!importan
 .statusbar{background:rgba(18,18,18,.94)!important;border-bottom:1px solid var(--line)!important;color:var(--text-dim)!important;top:115px!important;padding:5px 24px!important}
 body.theme-classic .statusbar{background:#141210!important;border-bottom:1px solid #222!important;color:#666!important}.sdot,.sdot.live{background:var(--success)!important}
 .content{max-width:1400px!important;padding:20px 24px 40px!important}.sec-t{color:var(--text-dim)!important;border-bottom:1px solid var(--line-2)!important}.sec-n{color:var(--orange)!important}body.theme-classic .sec-n{color:#1A1814!important}
-.kpi-grid,.bench-grid{background:var(--line)!important;border:1px solid var(--line)!important;border-radius:18px!important;overflow:hidden!important;box-shadow:0 10px 30px rgba(0,0,0,.16)!important}.kpi,.bench-item{background:var(--card)!important}.kpi-l,.bench-l{color:var(--text-muted)!important}.kpi-v,.bench-v{color:var(--text)!important}.kpi-s{color:var(--text-muted)!important}.kpi-v.pos,.bench-v.pos,.pos{color:var(--success)!important}.kpi-v.neg,.bench-v.neg,.neg{color:var(--orange)!important}
+.kpi-grid,.bench-grid{background:var(--line)!important;border:1px solid var(--line)!important;border-radius:18px!important;overflow:hidden!important;box-shadow:0 10px 30px rgba(0,0,0,.16)!important}.kpi,.bench-item{background:var(--card)!important}.kpi-l,.bench-l{color:var(--text-muted)!important}.kpi-v,.bench-v{color:var(--text)!important}.kpi-s{color:var(--text-muted)!important}.kpi-v.pos,.bench-v.pos,.pos{color:var(--success)!important}.kpi-v.neg,.bench-v.neg,.neg{color:#D85C5C!important}
 body.theme-classic .kpi-grid,body.theme-classic .bench-grid{background:#D8D4CE!important;border-color:#D8D4CE!important;border-radius:0!important;box-shadow:none!important}body.theme-classic .kpi,body.theme-classic .bench-item{background:#fff!important}
 .tw{background:var(--card)!important;border:1px solid var(--line)!important;border-radius:18px!important;box-shadow:0 10px 30px rgba(0,0,0,.16)!important}thead th{background:#1a1a1a!important;color:var(--text-muted)!important;border-bottom:1px solid var(--line)!important}tbody tr{border-bottom:1px solid var(--line)!important}tbody tr:hover{background:rgba(223,87,53,.06)!important}td{color:var(--text-soft)!important}td:first-child{color:var(--text)!important}.total-row td{background:var(--midnight)!important;border-top:2px solid var(--line-2)!important;color:var(--text)!important}.sum-row td{background:#111!important;color:var(--silver)!important;border-top:2px solid var(--orange)!important}
 body.theme-classic .tw{background:#fff!important;border-color:#D8D4CE!important;border-radius:0!important;box-shadow:none!important}body.theme-classic thead th{background:#FAF9F6!important;border-bottom:1px solid #E8E4DE!important;color:#777!important}body.theme-classic tbody tr{border-bottom:1px solid #F2EFE9!important}body.theme-classic tbody tr:hover{background:#FDF9F5!important}body.theme-classic td{color:#333!important}body.theme-classic td:first-child{color:#111!important}body.theme-classic .total-row td{background:#F0EDE8!important;border-top:2px solid #D8D4CE!important;color:#111!important}body.theme-classic .sum-row td{background:#1A1814!important;color:#FAF9F6!important;border-top:2px solid #C8441A!important}
@@ -6102,5 +6118,111 @@ div.neg,
   color:var(--wax-negative) !important;
 }
 </style>
+
+<script id="folioWaxPastellStructureFinalOverride">
+/* Finale Sicherheitsschicht: Pastelltöne für Strukturdiagramme in Übersicht und Einzeldepots. */
+(function(){
+  const pastelStructureColors = {
+    'Technology & Software':'#9EB8D0',
+    'Semiconductors & AI Infrastructure':'#D6A8B2',
+    'Healthcare & Biotech':'#8EC6B6',
+    'Consumer & Brands':'#E8B77A',
+    'Industrials & Mobility':'#AEBCC1',
+    'Energy & Utilities':'#97C6C6',
+    'Precious Metals':'#D9C79A',
+    'Digital Assets & Crypto':'#D8A98A',
+    'Financial Services':'#8F9EA5',
+    'Broad Market ETF':'#9AB8B1',
+    'USA':'#9EB8D0',
+    'Deutschland':'#AEBCC1',
+    'Schweiz':'#8EC6B6',
+    'Kanada':'#D6A8B2',
+    'Australien':'#E8B77A',
+    'Europa':'#97C6C6',
+    'Asien':'#A7C79F',
+    'Welt':'#BBA5CC',
+    'Nicht zugeordnet':'#D6A8B2',
+    'NASDAQ':'#9EB8D0',
+    'NYSE':'#E8B77A',
+    'Xetra':'#AEBCC1',
+    'Tradegate':'#8F9EA5',
+    'Stuttgart / EUWAX':'#D8A98A',
+    'SIX Swiss Exchange':'#8EC6B6',
+    'TSX Venture':'#BBA5CC',
+    'ASX':'#D6A8B2',
+    'Asia Exchange':'#A7C79F'
+  };
+  try {
+    if (typeof STRUCTURE_COLORS !== 'undefined') Object.assign(STRUCTURE_COLORS, pastelStructureColors);
+    if (typeof getStructureColor === 'function') {
+      const fallback = ['#9EB8D0','#8EC6B6','#E8B77A','#BBA5CC','#D6A8B2','#AEBCC1','#97C6C6','#D9C79A'];
+      window.getStructureColor = function(label, idx){
+        return (typeof STRUCTURE_COLORS !== 'undefined' && STRUCTURE_COLORS[label]) || fallback[idx % fallback.length];
+      };
+    }
+  } catch(e) {}
+})();
+</script>
+
+
+<style id="folioWaxLightModeContrastFinalFix">
+/* v7.1 – Standard wieder Dark Mode; Light/Original bekommt klare Plus-/Minus-Kontraste.
+   Markenorange bleibt Akzentfarbe, Verluste sind bewusst rot. */
+:root,
+body.theme-modern,
+body:not(.theme-classic){
+  --wax-positive:#4DD4A3 !important;
+  --wax-negative:#E04F5F !important;
+  --success:#4DD4A3 !important;
+}
+body.theme-classic{
+  --wax-positive:#168A5E !important;
+  --wax-negative:#C93A45 !important;
+  --success:#168A5E !important;
+}
+.pos, td.pos, span.pos, div.pos,
+.kpi-v.pos, .bench-v.pos, .kpi .v.pos, .mkpi .v.pos,
+body.theme-modern .pos, body.theme-modern td.pos, body.theme-modern span.pos, body.theme-modern div.pos,
+body.theme-modern .kpi-v.pos, body.theme-modern .bench-v.pos,
+body:not(.theme-classic) .pos, body:not(.theme-classic) td.pos, body:not(.theme-classic) span.pos, body:not(.theme-classic) div.pos,
+body:not(.theme-classic) .kpi-v.pos, body:not(.theme-classic) .bench-v.pos{
+  color:#4DD4A3 !important;
+}
+.neg, td.neg, span.neg, div.neg,
+.kpi-v.neg, .bench-v.neg, .kpi .v.neg, .mkpi .v.neg,
+body.theme-modern .neg, body.theme-modern td.neg, body.theme-modern span.neg, body.theme-modern div.neg,
+body.theme-modern .kpi-v.neg, body.theme-modern .bench-v.neg,
+body:not(.theme-classic) .neg, body:not(.theme-classic) td.neg, body:not(.theme-classic) span.neg, body:not(.theme-classic) div.neg,
+body:not(.theme-classic) .kpi-v.neg, body:not(.theme-classic) .bench-v.neg{
+  color:#E04F5F !important;
+}
+body.theme-classic .pos, body.theme-classic td.pos, body.theme-classic span.pos, body.theme-classic div.pos,
+body.theme-classic .kpi-v.pos, body.theme-classic .bench-v.pos,
+body.theme-classic .kpi .v.pos, body.theme-classic .mkpi .v.pos{
+  color:#168A5E !important;
+}
+body.theme-classic .neg, body.theme-classic td.neg, body.theme-classic span.neg, body.theme-classic div.neg,
+body.theme-classic .kpi-v.neg, body.theme-classic .bench-v.neg,
+body.theme-classic .kpi .v.neg, body.theme-classic .mkpi .v.neg{
+  color:#C93A45 !important;
+}
+/* Gesamtzeilen ohne explizite Pos/Neg-Klasse bleiben neutral und werden nicht eingefärbt. */
+body.theme-classic .total-row td:not(.pos):not(.neg){ color:#16232A !important; }
+</style>
+
+<script id="folioWaxForceDarkDefaultFinalFix">
+(function(){
+  try { localStorage.setItem('wax_color_theme','modern'); } catch(e) {}
+  function ensureDarkDefault(){
+    if (!document.body) return;
+    document.body.classList.remove('theme-classic');
+    document.body.classList.add('theme-modern');
+    if (typeof updateThemeButton === 'function') updateThemeButton();
+  }
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', ensureDarkDefault);
+  else ensureDarkDefault();
+})();
+</script>
+
 </body>
 </html>
