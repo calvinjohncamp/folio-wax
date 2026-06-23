@@ -7,7 +7,7 @@
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-title" content="Folio.wax">
-<title>Folio.wax · Aktienclub v7</title>
+<title>Folio.wax · Aktienclub</title>
 
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <meta http-equiv="Pragma" content="no-cache">
@@ -1459,7 +1459,7 @@ const TICKER_MAP = {
   'A2PX5N': { t:'GRSL.V',        fx:'CAD' },
   'A3C4QT': { t:'IONQ',        fx:'USD' },
   'A2PMPY': { t:'AUMB.V',      fx:'CAD' },
-  'A2T68Z': { t:'AETH.DE',     fx:'EUR' },
+  'A2T68Z': { t:'AETH.SW',     fx:'CHF' },
 };
 
 
@@ -1668,7 +1668,9 @@ const SECURITY_MASTER_CORRECTIONS = {
   '870747': { name:'Microsoft', category:'Technology & Software', country:'USA', exchange:'Xetra', asset_type:'Aktie', yahoo_ticker:'MSF.DE', ticker:'MSF.DE', currency:'EUR', fx:'EUR' },
   '918422': { name:'NVIDIA', category:'Semiconductors & AI Infrastructure', country:'USA', exchange:'Xetra', asset_type:'Aktie', yahoo_ticker:'NVD.DE', ticker:'NVD.DE', currency:'EUR', fx:'EUR' },
   'A14Y6F': { name:'Alphabet A', category:'Technology & Software', country:'USA', exchange:'Xetra', asset_type:'Aktie', yahoo_ticker:'ABEA.DE', ticker:'ABEA.DE', currency:'EUR', fx:'EUR' },
-  'A2JG9Z': { name:'Broadcom', category:'Semiconductors & AI Infrastructure', country:'USA', exchange:'Xetra', asset_type:'Aktie', yahoo_ticker:'1YD.DE', ticker:'1YD.DE', currency:'EUR', fx:'EUR' }
+  'A2JG9Z': { name:'Broadcom', category:'Semiconductors & AI Infrastructure', country:'USA', exchange:'Xetra', asset_type:'Aktie', yahoo_ticker:'1YD.DE', ticker:'1YD.DE', currency:'EUR', fx:'EUR' },
+  // A2T68Z: AETH.DE ist bei Yahoo tot (Kursdaten eingefroren 2019). SIX-Swiss-Notierung AETH.SW (CHF) liefert aktuelle Kurse — gleiche ISIN CH0454664027 (21Shares Ethereum Staking ETP).
+  'A2T68Z': { name:'Sonst. Zertifikat auf Ethereum', category:'Digital Assets & Crypto', country:'Europa', exchange:'SIX Swiss', asset_type:'Zertifikat', yahoo_ticker:'AETH.SW', ticker:'AETH.SW', currency:'CHF', fx:'CHF' }
 };
 function normalizeSecurityText(v){ return String(v||'').trim().toLowerCase(); }
 function getLocalSecurityMaster(){
