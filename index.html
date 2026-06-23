@@ -12,7 +12,7 @@
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
-<link href="https://fonts.googleapis.com/css2?family=Exo+2:wght@500;600;700&family=DM+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Exo+2:wght@500;600;700&family=DM+Sans:wght@300;400;500;600;700&family=Roboto+Mono:wght@500;600;700&display=swap" rel="stylesheet">
 <style>
 * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
 :root,
@@ -94,7 +94,7 @@ body { background: var(--wax-page); color: var(--wax-text); font-family: 'DM San
 .kpi { background: var(--wax-card); padding: 14px 16px; }
 .kpi-l { font-size: 9px; font-weight: 700; letter-spacing: .13em; text-transform: uppercase; color: var(--wax-muted-2); margin-bottom: 4px; }
 .kpi-v { font-size: 20px; font-weight: 700; color: var(--wax-text); line-height: 1.1; }
-.kpi-v.pos { color: var(--wax-positive); } .kpi-v.neg { color: var(--wax-accent); }
+.kpi-v.pos { color: var(--wax-positive); } .kpi-v.neg { color: var(--brand-orange); }
 .kpi-s { font-size: 10px; color: #777; margin-top: 3px; }
 .kpi-footnote{font-size:10px;color:var(--wax-muted);line-height:1.5;margin:-16px 0 22px 0;padding:0 2px}
 .kpi-footnote strong{color:var(--wax-dark)}
@@ -126,7 +126,7 @@ td:nth-child(2) { text-align: left; }
 .at-rank-num { display:inline-block; width:12px; text-align:left; }
 .at-rank-icon { display:inline-flex; align-items:center; justify-content:center; min-width:22px; }
 .at-rank-icon:empty { display:none; }
-.pos { color: var(--wax-positive); } .neg { color: var(--wax-accent); } .dim { color: var(--wax-muted); }
+.pos { color: var(--wax-positive); } .neg { color: var(--brand-orange); } .dim { color: var(--wax-muted); }
 .bold { font-weight: 700; }
 .badge { display: inline-block; font-size: 8px; font-weight: 700; padding: 2px 5px; border-radius: 2px; margin-left: 4px; vertical-align: middle; }
 .b-new { background: #e8f4e8; color: var(--wax-positive); border: 1px solid #b0d8b0; }
@@ -670,7 +670,7 @@ td:first-child{color:var(--text) !important}
 .gr td{background:#20323B !important;color:var(--text-muted) !important;border-top:1px solid var(--line) !important}
 .sum-row td{background:#20323B !important;color:#E4EEF0 !important;border-top:2px solid #FF7A00 !important}
 .pos,.kpi-v.pos,.bench-v.pos{color:var(--success) !important}
-.neg,.kpi-v.neg,.bench-v.neg{color:#D85C5C !important}
+.neg,.kpi-v.neg,.bench-v.neg{color:var(--brand-orange) !important}
 
 /* Struktur/Chart-Elemente */
 .donut{background:#263A43 !important}
@@ -784,7 +784,7 @@ body.theme-classic .meta-panel,
 body.theme-classic .info-box,
 body.theme-classic .pflege-access-note{background:#F7FAFB !important;border-color:#D9E1E3 !important;color:#43545C !important}
 body.theme-classic .pos,body.theme-classic .kpi-v.pos,body.theme-classic .bench-v.pos{color:#1F8A5B !important}
-body.theme-classic .neg,body.theme-classic .kpi-v.neg,body.theme-classic .bench-v.neg{color:#D85C5C !important}
+body.theme-classic .neg,body.theme-classic .kpi-v.neg,body.theme-classic .bench-v.neg{color:var(--brand-orange) !important}
 
 @media (max-width:640px){
   .hd{height:70px !important}.hd-logo img{height:52px !important}.nav{top:70px !important}.statusbar{top:107px !important}
@@ -800,7 +800,146 @@ body.theme-modern .pos, body.theme-modern .kpi-v.pos, body.theme-modern .bench-v
 body.theme-classic .pos, body.theme-classic .kpi-v.pos, body.theme-classic .bench-v.pos { color: #1F8A5B !important; }
 .neg, .kpi-v.neg, .bench-v.neg,
 body.theme-modern .neg, body.theme-modern .kpi-v.neg, body.theme-modern .bench-v.neg,
-body.theme-classic .neg, body.theme-classic .kpi-v.neg, body.theme-classic .bench-v.neg { color: #D85C5C !important; }
+body.theme-classic .neg, body.theme-classic .kpi-v.neg, body.theme-classic .bench-v.neg { color: var(--brand-orange) !important; }
+/* === Einzeldepot-Karten (Invest-Stil) — Live === */
+.dc-wrap{margin-bottom:0}
+.dc-summary{margin-top:16px}
+.dc-group{font-size:11px;font-weight:700;letter-spacing:.09em;text-transform:uppercase;color:var(--wax-muted);padding:18px 4px 8px}
+.dc-head,.dc-card,.dc-sum{border:1px solid var(--wax-border);border-radius:16px;overflow:hidden;margin-bottom:8px}
+.dc-head{background:var(--wax-card-soft);position:sticky;top:0;z-index:20;box-shadow:0 8px 22px rgba(0,0,0,.16)}
+.dc-card{background:var(--wax-card);box-shadow:0 6px 16px rgba(0,0,0,.10)}
+.dc-card.alt{background:var(--wax-card-soft)}
+.dc-card:hover{border-color:var(--wax-accent)}
+.dc-grid{display:grid;grid-template-columns:2.2fr 0.95fr 1.2fr 1fr 1.25fr;gap:0;align-items:stretch}
+.dc-grid.dc-grid4{grid-template-columns:2.4fr 1.3fr 1.1fr 1.35fr}
+.dc-grid.dc-grid6{grid-template-columns:2fr 0.9fr 1.15fr 1.05fr 1.1fr 1.2fr}
+.dc-grid.dc-grid7{grid-template-columns:1fr 1.5fr 1fr 1.5fr 1.05fr 1.05fr 0.95fr}
+.dc-rank-animal{height:26px;width:auto;vertical-align:middle;margin-left:8px}
+.dc-col.rankcol{align-items:stretch}
+.dc-rankwrap{display:grid;grid-template-columns:1fr 42px;align-items:center;gap:16px;width:100%}
+.dc-rankvals{display:flex;flex-direction:column;align-items:flex-end;min-width:0}
+.dc-rankslot{display:flex;align-items:center;justify-content:center}
+.dc-rankslot .dc-rank-animal{margin-left:0;height:38px}
+.dc-col{padding:16px 18px;border-right:1px solid var(--wax-line);min-width:0;display:flex;flex-direction:column;justify-content:center;align-items:flex-end;text-align:right}
+.dc-col:last-child{border-right:none}
+.dc-col.dc-name{align-items:flex-start;text-align:left}
+.dc-col.dc-share{align-items:stretch;text-align:left}
+.dc-title{font-size:18px;font-weight:700;line-height:1.2;color:var(--wax-text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-bottom:9px;letter-spacing:-.01em}
+.dc-meta{font-size:11.5px;color:var(--wax-muted);display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+.dc-top{font-size:16.5px;font-weight:700;line-height:1.1;color:var(--wax-text);letter-spacing:-.01em}
+.dc-sub{font-size:12.5px;color:var(--wax-muted);line-height:1.25;margin-top:6px}
+.dc-share-top{font-size:13.5px;font-weight:700;color:var(--wax-text);line-height:1.1}
+.dc-bar{height:6px;border-radius:999px;background:var(--wax-line);overflow:hidden;margin-top:7px}
+.dc-bar-fill{height:100%;border-radius:999px;background:var(--wax-accent)}
+.dc-hmain{font-size:12.5px;font-weight:700;color:var(--wax-text);line-height:1.1}
+.dc-hsub{font-size:10.5px;color:var(--wax-muted);margin-top:4px;line-height:1.1}
+.dc-col.pos .dc-top,.dc-col.pos .dc-sub{color:var(--wax-positive) !important}
+.dc-col.neg .dc-top,.dc-col.neg .dc-sub{color:var(--brand-orange) !important}
+.dc-sum{background:linear-gradient(0deg,rgba(223,87,53,.10),rgba(223,87,53,.10)),var(--wax-card-soft)}
+.dc-total{border-color:var(--wax-accent);box-shadow:0 6px 18px rgba(0,0,0,.16)}
+.dc-total .dc-top{font-size:16.5px}
+/* v14: Einzeldepot-Summen als zwei rechtsbündige KPI-Kacheln */
+.dc-summary-kpis{display:grid;grid-template-columns:minmax(235px,280px) minmax(235px,280px);gap:14px;margin:16px 0 8px;width:100%;justify-content:end;align-items:stretch}
+.dc-mini-kpi{background:linear-gradient(180deg,var(--wax-card-soft),var(--wax-card));border:1px solid var(--wax-border-soft);border-radius:16px;padding:12px 16px;min-height:0;box-shadow:0 10px 24px rgba(0,0,0,.16);display:flex;flex-direction:column;justify-content:center;overflow:hidden}
+.dc-mini-kpi.depot{background:linear-gradient(180deg,#20323B 0%,#1B2C34 100%);border-color:rgba(228,238,240,.14)}
+.dc-mini-kpi.deviation{background:linear-gradient(180deg,#1B2C34 0%,#16232A 100%);border-color:rgba(228,238,240,.10)}
+.dc-mini-label{font-size:10px;font-weight:800;letter-spacing:.13em;text-transform:uppercase;color:var(--wax-muted-2);margin-bottom:7px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.dc-mini-kpi.depot .dc-mini-label,.dc-mini-kpi.deviation .dc-mini-label{color:#FFFFFF!important}
+.dc-kpi-lines{display:flex;flex-direction:column}
+.dc-kpi-line{display:grid;grid-template-columns:minmax(64px,1fr) auto;align-items:center;gap:10px;min-width:0;padding:7px 0}
+.dc-kpi-line+.dc-kpi-line{border-top:1px solid rgba(228,238,240,.07)}
+.dc-kpi-line span{font-size:11px;font-weight:600;letter-spacing:.07em;text-transform:uppercase;color:var(--wax-muted-2);white-space:nowrap;display:flex;align-items:baseline;gap:7px;overflow:visible}
+.dc-kpi-line .dc-pct{color:#FFFFFF;font-weight:700;font-size:10.5px;letter-spacing:.02em;opacity:.62}
+.dc-kpi-line strong{font-family:'DM Sans',system-ui,-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif!important;display:inline-flex;flex-direction:column;align-items:flex-end;gap:1px;line-height:1.04;color:var(--wax-text);text-align:right;white-space:nowrap;font-variant-numeric:lining-nums;font-feature-settings:"lnum" 1;min-width:0;font-weight:800}
+.dc-kpi-line strong .dc-num{font-size:18px;font-weight:800;letter-spacing:-.02em}
+.dc-kpi-line strong .dc-delta{font-size:11px;font-weight:700;letter-spacing:0;opacity:.82}
+.dc-mini-kpi.depot .dc-kpi-line strong{color:#FFFFFF!important}
+.dc-kpi-line.total{margin-top:5px;padding-top:12px;border-top:1px solid rgba(228,238,240,.16)}
+.dc-kpi-line.total strong .dc-num{font-size:20px}
+.dc-kpi-line.total span{color:#E4EEF0!important}
+.dc-kpi-line strong.pos{color:var(--wax-positive)!important}.dc-kpi-line strong.neg{color:var(--brand-orange)!important}
+.dc-mini-kpi.deviation .dc-kpi-line strong,.dc-mini-kpi.deviation .dc-kpi-line strong.pos,.dc-mini-kpi.deviation .dc-kpi-line strong.neg{color:#FFFFFF!important}
+.dc-kpi-sub{font-size:11.5px;color:var(--wax-muted);line-height:1.25;margin-top:10px;text-align:right;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.dc-kpi-line strong .dc-basis{font-family:'DM Sans',system-ui,-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif!important;font-size:10px!important;font-weight:600!important;color:rgba(228,238,240,.5)!important;letter-spacing:.01em;margin-top:2px;font-variant-numeric:lining-nums}
+body.theme-classic .dc-mini-kpi.depot .dc-kpi-line strong .dc-basis{color:rgba(228,238,240,.58)!important}
+.dc-title.sold,.dc-card .sold{text-decoration:none!important;color:var(--wax-text)!important}
+body.theme-classic .dc-mini-kpi{box-shadow:0 8px 24px rgba(22,35,42,.08)!important}
+body.theme-classic .dc-mini-kpi.depot{background:linear-gradient(180deg,#20323B 0%,#16232A 100%)!important;border-color:#D9E1E3!important}
+body.theme-classic .dc-mini-kpi.deviation{background:linear-gradient(180deg,#FFFFFF 0%,#F7FAFB 100%)!important;border-color:#D9E1E3!important}
+body.theme-classic .dc-mini-kpi.deviation .dc-mini-label{color:#6C7D84!important}
+body.theme-classic .dc-mini-kpi.deviation .dc-kpi-line span{color:#6C7D84!important}
+body.theme-classic .dc-mini-kpi.deviation .dc-kpi-line strong{color:#16232A!important}
+body.theme-classic .dc-mini-kpi.deviation .dc-kpi-line strong.pos{color:#16232A!important}
+body.theme-classic .dc-mini-kpi.deviation .dc-kpi-line strong.neg{color:#16232A!important}
+body.theme-classic .dc-mini-kpi.deviation .dc-kpi-line.total{border-top-color:#D9E1E3!important}
+body.theme-classic .dc-mini-kpi.deviation .dc-kpi-line.total span{color:#16232A!important}
+body.theme-classic .dc-mini-kpi.deviation .dc-kpi-line.total strong{color:#16232A!important}
+@media(max-width:900px){.dc-summary-kpis{grid-template-columns:1fr;justify-content:stretch}.dc-kpi-line{grid-template-columns:minmax(64px,1fr) auto}.dc-kpi-line strong{min-width:0}.dc-kpi-line strong .dc-num{font-size:17px}.dc-kpi-line.total strong .dc-num{font-size:19px}}
+.dc-structure-mount{display:block;margin-top:30px}
+@media(max-width:720px){
+  .dc-head{display:none}
+  .dc-grid,.dc-grid.dc-grid4,.dc-grid.dc-grid6,.dc-grid.dc-grid7{grid-template-columns:1fr 1fr}
+  .dc-col{padding:11px 12px;border-right:none;border-top:1px solid var(--wax-line)}
+  .dc-col.dc-name{grid-column:1 / -1;border-top:none;border-bottom:1px solid var(--wax-line)}
+  .dc-title{white-space:normal}
+}
+/* === Einzeldepot-Header (Invest-Stil) === */
+.dh{margin-bottom:22px}
+.dh-top{display:flex;align-items:center;justify-content:space-between;gap:10px;margin:2px 2px 14px}
+.dh-eyebrow{font-size:12px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--wax-muted)}
+.dh-yearpill{font-size:13px;font-weight:700;color:var(--wax-text);background:var(--wax-card);border:1px solid var(--wax-border);border-radius:999px;padding:7px 16px;white-space:nowrap}
+.dh-hero{display:grid;grid-template-columns:1fr 1.45fr;gap:12px;margin-bottom:12px}
+.dh-card{background:var(--wax-card);border:1px solid var(--wax-border);border-radius:18px;box-shadow:0 8px 22px rgba(0,0,0,.14)}
+.dh-values{padding:30px 34px;display:flex;flex-direction:column;justify-content:center}
+.dh-val-block{display:flex;flex-direction:column}
+.dh-val-block.top{align-items:flex-start;text-align:left}
+.dh-val-block.bottom{align-items:flex-end;text-align:right;margin-top:14px}
+.dh-bigval{font-size:36px;font-weight:800;line-height:1.02;color:var(--wax-text);letter-spacing:-.025em}
+.dh-bigval-xl{font-size:50px;letter-spacing:-.03em;line-height:1}
+.dh-biglabel{font-size:13.5px;color:var(--wax-muted);margin-top:7px;letter-spacing:.01em}
+.dh-chartcard{padding:18px 22px;display:flex;flex-direction:column;min-height:240px}
+.dh-chart-head{display:flex;justify-content:space-between;font-size:12px;color:var(--wax-muted);letter-spacing:.04em}
+.dh-chart-area{flex:1;display:flex;align-items:center;justify-content:center;color:var(--wax-muted);font-size:13px;border-top:1px dashed var(--wax-line);margin-top:12px;padding-top:12px}
+.dh-kpis{display:grid;grid-template-columns:repeat(4,1fr);gap:12px}
+.dh-kpi{background:var(--wax-card);border:1px solid var(--wax-border);border-radius:16px;padding:16px 20px;min-height:94px;box-shadow:0 6px 16px rgba(0,0,0,.10);display:flex;align-items:center}
+.dh-kpi-rankcard{display:grid;grid-template-columns:auto 1fr auto;align-items:center;gap:12px}
+.dh-kpi-rank{display:flex;flex-direction:column;justify-content:center;gap:6px}
+.dh-kpi-rk-l{font-size:11px;font-weight:700;color:var(--wax-muted);letter-spacing:.1em;text-transform:uppercase}
+.dh-kpi-rk-n{font-size:30px;font-weight:800;color:var(--wax-text);line-height:.95}
+.dh-kpi-mid{display:flex;flex-direction:column;justify-content:center;align-items:center;text-align:center}
+.dh-kpi-pct{font-size:23px;font-weight:800;color:var(--wax-text);letter-spacing:-.015em;line-height:1.05}
+.dh-kpi-abs{font-size:13px;color:var(--wax-muted);margin-top:5px}
+.dh-kpi-rankcard .dh-kpi-abs{font-size:16px}
+.dh-kpi.club{flex-direction:column;align-items:flex-start;justify-content:center;gap:8px}
+.dh-kpi.club .dh-kpi-rk-l{font-size:11px;font-weight:700;color:var(--wax-muted);letter-spacing:.1em;text-transform:uppercase}
+.dh-kpi.club .dh-kpi-mid{align-items:flex-start;text-align:left}
+.dh-kpi.club .dh-kpi-pct{font-size:25px}
+.dh-kpi.club .dh-kpi-abs{font-size:13px;margin-top:4px}
+.dh-kpi-pct.pos,.dh-kpi-abs.pos{color:var(--wax-positive) !important}
+.dh-kpi-pct.neg,.dh-kpi-abs.neg{color:var(--brand-orange) !important}
+.dh-kpi-animal{display:flex;align-items:center;justify-content:center;min-width:62px}
+.dh-hdr-animal{height:52px;width:auto;max-width:70px;object-fit:contain}
+.dh-kpi-shares{flex-direction:column;align-items:stretch;justify-content:center;gap:12px}
+.dh-share-row{display:flex;align-items:center;justify-content:space-between;gap:12px}
+.dh-share-pct{font-size:23px;font-weight:800;color:var(--wax-text);letter-spacing:-.015em;line-height:1}
+.dh-share-tag{font-size:13.5px;font-weight:400;color:var(--wax-muted);text-align:right;line-height:1.25;letter-spacing:.01em}
+.dh-kpi-cash{display:grid;grid-template-columns:1fr auto;align-items:center;gap:12px}
+.dh-kpi-cash .dh-kpi-mid{align-items:flex-start;text-align:left}
+.dh-cash-label{font-size:34px;font-weight:800;color:var(--wax-text);letter-spacing:.01em}
+.dh-kpi-cash .dh-kpi-pct{font-size:30px}
+.dh-kpi-cash .dh-kpi-abs{font-size:16px;margin-top:6px}
+@media(max-width:900px){.dh-hero{grid-template-columns:1fr}.dh-kpis{grid-template-columns:repeat(2,1fr)}}
+@media(max-width:560px){.dh-kpis{grid-template-columns:1fr}.dh-bigval{font-size:30px}.dh-bigval-xl{font-size:38px}}
+/* Wertverlauf-Grafik */
+.dh-chart-area.has-chart{display:block;align-items:stretch;text-align:left;border-top:1px dashed var(--wax-line);margin-top:10px;padding-top:8px}
+.dhc-svg{width:100%;height:auto;display:block;overflow:visible}
+.dhc-grid{stroke:var(--wax-line);stroke-width:1}
+.dhc-zero{stroke:var(--wax-muted);stroke-width:1;stroke-dasharray:4 4;opacity:.55}
+.dhc-line{fill:none;stroke-width:2.4;stroke-linejoin:round;stroke-linecap:round}
+.dhc-pos{stroke:var(--wax-positive)}
+.dhc-neg{stroke:var(--brand-orange)}
+.dhc-ylab,.dhc-xlab{fill:var(--wax-muted);font-size:10px;font-family:inherit}
+.dh-chart-empty{color:var(--wax-muted);font-size:13px;text-align:center}
 </style>
 </head>
 <body spellcheck="false" class="theme-modern">
@@ -877,27 +1016,10 @@ body.theme-classic .neg, body.theme-classic .kpi-v.neg, body.theme-classic .benc
 <div class="content">
 
 <div id="view-uebersicht">
-  <div class="sec-t mode-row" style="margin-top:4px"><span><span class="sec-n">1 ·</span> Gesamtübersicht — WAX Aktienclub 2026</span><div class="mode-tools"><button id="themeToggleBtn" class="mode-toggle" onclick="toggleTheme()" title="Farbwelt wechseln">Original</button><button id="overviewRefreshBtn" class="icon-btn refresh-btn" type="button" title="Kurse aktualisieren" aria-label="Kurse aktualisieren" onclick="refreshMarketData()">↻</button><button id="overviewToggleBtn" class="mode-toggle" onclick="toggleOverviewMode()">Heute</button></div></div>
-  <div class="kpi-grid">
-    <div class="kpi"><div class="kpi-l">Gesamtwert</div><div class="kpi-v" id="kGesamt">—</div><div class="kpi-s">Einzeldepotwerte plus Comdirect-Cash</div></div>
-    <div class="kpi"><div class="kpi-l">Ø pro Person</div><div class="kpi-v" id="kProPerson">—</div><div class="kpi-s">Mittelwert aktuell</div></div>
-    <div class="kpi"><div class="kpi-l" id="kModeLabelPct">YTD Performance</div><div class="kpi-v" id="kYtd">—</div><div class="kpi-s" id="kModeSubPct">seit 31.12. des Vorjahres</div></div>
-    <div class="kpi"><div class="kpi-l" id="kModeLabelAbs">Gewinn ytd</div><div class="kpi-v" id="kYtdAbs">—</div><div class="kpi-s" id="kModeSubAbs">Gewinn/Verlust</div></div>
-    <div class="kpi"><div class="kpi-l">Perf. p.a.</div><div class="kpi-v" id="kPerfPa">—</div><div class="kpi-s">interner Zinsfuß seit Start</div></div>
-    <div class="kpi"><div class="kpi-l">Cashanteil</div><div class="kpi-v" id="kCashAnteil">—</div><div class="kpi-s" id="kCashAnteilSub">echter Comdirect-Cash</div></div>
-    <div class="kpi"><div class="kpi-l">Gewinn Alltime</div><div class="kpi-v" id="kGewinnAlltime">—</div><div class="kpi-s">neutralisiert seit Start</div></div>
-  </div>
-  <div class="sec-t"><span class="sec-n">2 ·</span> Ranking — aktuell & Alltime</div>
-  <div class="tw"><table>
-    <thead><tr>
-      <th>Pos.</th><th>Mitglied</th>
-      <th id="rankPctHead">YTD %</th><th id="rankAbsHead">YTD €</th><th>Akt. Wert</th><th>Anteil %</th><th>Cashanteil</th>
-      <th class="pos-at-head">Pos. AT</th><th>Alltime echt</th><th>Anteil AT %</th>
-      <th>Gewinn Alltime</th><th>Perf. p.a. Alltime</th>
-    </tr></thead>
-    <tbody id="rankingBody"></tbody>
-  </table></div>
-  <div class="sec-t"><span class="sec-n">3 ·</span> Depotstruktur — Kategorien · Länder · Börsen</div>
+  <div id="overviewHeroMount" style="margin-top:4px"></div>
+  <div class="dc-group"><span class="sec-n">2 ·</span> Ranking — aktuell &amp; Alltime</div>
+  <div id="overviewRankMount" class="dc-wrap"></div>
+  <div class="sec-t" style="margin-top:24px"><span class="sec-n">3 ·</span> Depotstruktur — Kategorien · Länder · Börsen</div>
   <div id="overviewStructure"></div>
   <div class="sec-t"><span class="sec-n">4 ·</span> <span id="benchTitle">Benchmarks YTD</span></div>
   <div class="bench-grid">
@@ -2140,6 +2262,174 @@ function toEUR(priceLocal, ccy) {
   return rate ? priceLocal / rate : priceLocal;
 }
 
+// === Wertverlauf-Grafik: Gewinn/Verlust seit 1.1. (pro Einzeldepot) ===
+const CF_HISTORY_WORKER = 'https://jk-invest.calvinjohncamp.workers.dev';
+const histByWkn = {}; // wkn -> [{date:'YYYY-MM-DD', closeEUR:Number}]
+function parseWorkerHistoryPayload(j){
+  if(!j) return [];
+  const prices = Array.isArray(j.prices) ? j.prices : [];
+  return prices.map(p=>({date:p&&p.date, close:Number(p&&p.close)})).filter(p=>p.date && Number.isFinite(p.close));
+}
+async function cfFetchHistory(ticker){
+  const bust = Math.floor(Date.now()/3600000);
+  const urls = [
+    `${CF_HISTORY_WORKER}/?ticker=${encodeURIComponent(ticker)}&_=${bust}`,
+    `${CF_HISTORY_WORKER}/?ticker=${ticker}&_=${bust}`
+  ];
+  for(const url of urls){
+    try{
+      const r = await fetch(url, {signal:AbortSignal.timeout(15000)});
+      if(!r.ok) continue;
+      const j = await r.json();
+      const parsed = parseWorkerHistoryPayload(j);
+      if(parsed.length) return parsed;
+    }catch{}
+  }
+  return [];
+}
+async function ensureHistory(wkn){
+  if(histByWkn[wkn]) return histByWkn[wkn];
+  const info = resolveTickerByWKN(wkn);
+  if(!info){ histByWkn[wkn]=[]; return []; }
+  const raw = await cfFetchHistory(info.t);
+  histByWkn[wkn] = raw.map(p=>({date:p.date, closeEUR:toEUR(p.close, info.fx)}));
+  return histByWkn[wkn];
+}
+function priceEURat(wkn, iso){
+  const ser = histByWkn[wkn]; if(!ser||!ser.length) return null;
+  let val=null;
+  for(let i=0;i<ser.length;i++){ if(ser[i].date<=iso) val=ser[i].closeEUR; else break; }
+  return val;
+}
+// Echte historische Depotwerte 2026 je Mitglied (aus den gepflegten Excel-Dateien, Stand bis 19.05.).
+// Stichtag -> { mitglied_id: Depotwert(Invest+Cash) }. Basis (01.01.) = 31.12.-Referenzwert.
+const WERT_HIST_SEED={"2026-01-01":{1:14811.28,2:21602.89,3:62003.3,4:29311.6,5:33593.55,6:39923.51},"2026-01-05":{1:14590.1,2:22293.35,3:62593.1,4:29938.34,5:36509.14,6:41404.8},"2026-01-12":{1:15030.14,2:22734.94,3:63895.34,4:30443.04,5:42198.89,6:41404.8},"2026-01-26":{1:14479.13,2:22694.04,3:66792.84,4:29553.54,5:41351.49,6:41854.48},"2026-01-30":{1:14479.13,2:22694.04,3:65345.84,4:29553.54,5:41351.49,6:40554.48},"2026-02-02":{1:13801.36,2:22204.77,3:61341.64,4:27897.54,5:39381.88,6:37995.74},"2026-02-03":{1:14207.85,2:22623.75,3:66067.04,4:28477.19,5:40163.24,6:39109.35},"2026-02-04":{1:13942.98,2:22420.63,3:64901.74,4:26681.94,5:37104.39,6:36601.95},"2026-02-18":{1:13604.74,2:23397.57,3:64465.2,4:25318.34,5:38275.67,6:35958.81},"2026-03-18":{1:13421.03,2:20768.02,3:64741.6,4:26605.64,5:38258.45,6:35748.2},"2026-03-23":{1:13044.76,2:19777.39,3:61926.8,4:25723.14,5:37477.98,6:33675.89},"2026-04-06":{1:12945.3,2:20194.2,3:61926.8,4:25316.84,5:38490.28,6:33674.8},"2026-05-05":{1:13956.77,2:19705.05,3:61926.8,4:29068.19,5:40675.04,6:35893.98},"2026-05-06":{1:13956.77,2:19705.05,3:61926.8,4:29068.19,5:40675.04,6:35893.98},"2026-05-08":{1:13956.77,2:19705.05,3:61926.8,4:29068.19,5:40675.04,6:35723.58},"2026-05-11":{1:13735.03,2:20380.14,3:62010.49,4:29647.39,5:42816.89,6:40138.23},"2026-05-14":{1:13735.03,2:20380.14,3:62010.49,4:29647.39,5:42816.89,6:40138.23},"2026-05-15":{1:13735.03,2:20380.14,3:62010.49,4:29647.39,5:43260.09,6:40138.23},"2026-05-19":{1:13970.86,2:19397.5,3:62097.06,4:29427.31,5:42195.94,6:39073.42}};
+// Gemeinsame Tageshistorie (Supabase-Tabelle 'wertverlauf') – geräteübergreifend für alle Mitglieder.
+let wertHistDB = {}; // 'YYYY-MM-DD' -> { mitglied_id: wert }
+async function sbUpsert(table, rows, onConflict){
+  try{
+    const r = await fetch(`${SB_URL}/rest/v1/${table}?on_conflict=${onConflict}`, {
+      method:'POST',
+      headers:{'apikey':SB_KEY,'Authorization':'Bearer '+SB_KEY,'Content-Type':'application/json','Prefer':'resolution=merge-duplicates,return=minimal'},
+      body: JSON.stringify(rows)
+    });
+    return r.ok;
+  }catch{ return false; }
+}
+async function loadWertverlauf(){
+  const rows = await sbGet('wertverlauf','select=datum,mitglied_id,wert&order=datum');
+  wertHistDB = {};
+  (rows||[]).forEach(r=>{ const d=String(r.datum).slice(0,10); (wertHistDB[d]=wertHistDB[d]||{})[r.mitglied_id]=Number(r.wert); });
+  return wertHistDB;
+}
+async function recordDailyWertSb(){
+  if(!db || !db.mitglieder) return;
+  const iso=new Date().toISOString().slice(0,10);
+  const rows=[];
+  db.mitglieder.forEach(m=>{ const v=getDepotwert(m.id); if(v!=null && !isNaN(v)){ const w=Math.round(v*100)/100; rows.push({datum:iso, mitglied_id:m.id, wert:w}); (wertHistDB[iso]=wertHistDB[iso]||{})[m.id]=w; } });
+  if(rows.length) await sbUpsert('wertverlauf', rows, 'datum,mitglied_id');
+}
+function buildMemberGainSeries(id){
+  // Reale Werte: Excel-Seed (Jan–Mai) + gemeinsame Tageshistorie (Supabase) + heutiger Live-Wert.
+  // gain(d) = Depotwert(d) − Wert am 01.01. (= Referenzwert). Endpunkt = exakt der YTD-KPI.
+  const merged={};
+  const seed=(typeof WERT_HIST_SEED!=='undefined')?WERT_HIST_SEED:{};
+  Object.keys(seed).forEach(d=>{ if(seed[d][id]!=null) merged[d]=Number(seed[d][id]); });
+  Object.keys(wertHistDB||{}).forEach(d=>{ if(wertHistDB[d] && wertHistDB[d][id]!=null) merged[d]=Number(wertHistDB[d][id]); });
+  let dates=Object.keys(merged).sort();
+  if(!dates.length) return [];
+  const baseline=merged[dates[0]];
+  const todayIso=new Date().toISOString().slice(0,10);
+  const todayVal=(typeof getDepotwert==='function')?getDepotwert(id):null;
+  if(todayVal!=null && !isNaN(todayVal)){ merged[todayIso]=todayVal; dates=Object.keys(merged).sort(); }
+  return dates.map(d=>({date:d, gain: merged[d]-baseline}));
+}
+function depotChartSvg(series, idPrefix){
+  const pfx = idPrefix || 'd';
+  if(!series || series.length<2) return '<div class="dh-chart-empty">Kein Verlauf verfügbar</div>';
+  const W=720, H=208, padL=8, padR=62, padT=12, padB=22;
+  const vals = series.map(s=>s.gain);
+  let mn=Math.min(0,...vals), mx=Math.max(0,...vals);
+  if(mn===mx){ mx=mn+1; }
+  const span=(mx-mn)||1; mn-=span*0.12; mx+=span*0.12;
+  const x=i=> padL + (W-padL-padR) * (i/(series.length-1));
+  const y=v=> padT + (H-padT-padB) * (1-(v-mn)/(mx-mn));
+  const zeroY=y(0);
+  const pts = series.map((s,i)=>`${x(i).toFixed(1)},${y(s.gain).toFixed(1)}`).join(' ');
+  const stepRaw=(mx-mn)/4, mag=Math.pow(10,Math.floor(Math.log10(stepRaw||1))), step=Math.max(Math.ceil(stepRaw/mag)*mag,1);
+  const fmtTsd=v=> (Math.abs(v)>=1000 ? (v/1000).toLocaleString('de-DE',{maximumFractionDigits:0})+' Tsd' : v.toLocaleString('de-DE',{maximumFractionDigits:0}))+' €';
+  let yTicks='';
+  for(let v=Math.ceil(mn/step)*step; v<=mx; v+=step){
+    yTicks += `<line x1="${padL}" y1="${y(v).toFixed(1)}" x2="${W-padR}" y2="${y(v).toFixed(1)}" class="dhc-grid"/><text x="${W-padR+6}" y="${(y(v)+3).toFixed(1)}" class="dhc-ylab">${fmtTsd(v)}</text>`;
+  }
+  const fmtD=iso=>{const a=iso.split('-');return `${a[2]}.${a[1]}.`;};
+  const xi=[...new Set([0, Math.round((series.length-1)/3), Math.round((series.length-1)*2/3), series.length-1])];
+  const xLabels=xi.map(i=>`<text x="${x(i).toFixed(1)}" y="${H-6}" class="dhc-xlab" text-anchor="${i===0?'start':i===series.length-1?'end':'middle'}">${fmtD(series[i].date)}</text>`).join('');
+  const endV=series[series.length-1].gain;
+  const endColor = endV>=0 ? 'var(--wax-positive)' : 'var(--brand-orange)';
+  return `<svg viewBox="0 0 ${W} ${H}" class="dhc-svg">
+    <defs>
+      <clipPath id="${pfx}dhcPos"><rect x="0" y="0" width="${W}" height="${zeroY.toFixed(1)}"/></clipPath>
+      <clipPath id="${pfx}dhcNeg"><rect x="0" y="${zeroY.toFixed(1)}" width="${W}" height="${(H-zeroY).toFixed(1)}"/></clipPath>
+    </defs>
+    ${yTicks}
+    <line x1="${padL}" y1="${zeroY.toFixed(1)}" x2="${W-padR}" y2="${zeroY.toFixed(1)}" class="dhc-zero"/>
+    <polyline points="${pts}" class="dhc-line dhc-pos" clip-path="url(#${pfx}dhcPos)"/>
+    <polyline points="${pts}" class="dhc-line dhc-neg" clip-path="url(#${pfx}dhcNeg)"/>
+    ${xLabels}
+    <circle cx="${x(series.length-1).toFixed(1)}" cy="${y(endV).toFixed(1)}" r="3.6" fill="${endColor}"/>
+  </svg>`;
+}
+function renderDepotChart(id){
+  const area=document.getElementById('depotChartArea');
+  if(!area) return;
+  const series=buildMemberGainSeries(id);
+  if(!series || series.length<2){ area.innerHTML='<div class="dh-chart-empty">Kein Verlauf verfügbar</div>'; return; }
+  area.classList.add('has-chart');
+  area.innerHTML=depotChartSvg(series,'d');
+}
+function buildClubGainSeries(){
+  // Club-weite Gewinn/Verlust-Kurve YTD = Summe der sechs Einzeldepotwerte je Stichtag − Referenzsumme (01.01.).
+  // Endpunkt (heute) = Summe Live-Depotwerte − ref2025 = exakt der YTD-KPI der Übersicht.
+  if(!db || !db.mitglieder || !db.mitglieder.length) return [];
+  const ids=db.mitglieder.map(m=>m.id);
+  const seed=(typeof WERT_HIST_SEED!=='undefined')?WERT_HIST_SEED:{};
+  const memberVal={};
+  ids.forEach(id=>{
+    const merged={};
+    Object.keys(seed).forEach(d=>{ if(seed[d][id]!=null) merged[d]=Number(seed[d][id]); });
+    Object.keys(wertHistDB||{}).forEach(d=>{ if(wertHistDB[d] && wertHistDB[d][id]!=null) merged[d]=Number(wertHistDB[d][id]); });
+    memberVal[id]=merged;
+  });
+  const lastKnown=(map,d)=>{ let v=null; Object.keys(map).sort().forEach(k=>{ if(k<=d) v=map[k]; }); return v; };
+  const dateSet=new Set();
+  Object.keys(seed).forEach(d=>dateSet.add(d));
+  Object.keys(wertHistDB||{}).forEach(d=>dateSet.add(d));
+  let dates=[...dateSet].sort();
+  if(!dates.length) return [];
+  const todayIso=new Date().toISOString().slice(0,10);
+  dates.push(todayIso); dates=[...new Set(dates)].sort();
+  const baseline=Object.values(REF).reduce((s,r)=>s+r.total,0);
+  return dates.map(d=>{
+    let total=0;
+    ids.forEach(id=>{
+      let v;
+      if(d===todayIso){ const lv=getDepotwert(id); v=(lv!=null&&!isNaN(lv))?lv:lastKnown(memberVal[id],d); }
+      else v=lastKnown(memberVal[id],d);
+      if(v!=null && !isNaN(v)) total+=v;
+    });
+    return {date:d, gain: total-baseline};
+  });
+}
+function renderClubChart(){
+  const area=document.getElementById('clubChartArea');
+  if(!area) return;
+  const series=buildClubGainSeries();
+  if(!series || series.length<2){ area.innerHTML='<div class="dh-chart-empty">Kein Verlauf verfügbar</div>'; return; }
+  area.classList.add('has-chart');
+  area.innerHTML=depotChartSvg(series,'club');
+}
+
 // Kurse laden via Cloudflare Worker
 let missingTickerWkns = []; // WKNs ohne Ticker – für den Pflegebereich
 
@@ -2303,6 +2593,8 @@ async function init() {
   setStatus('loading','Lade Kurse & Wechselkurse…');
   await loadFX();
   await Promise.all([loadKurse(), loadBenchmarks()]);
+  // Gemeinsame Tageshistorie laden und heutigen Wert (für alle Mitglieder) zentral festhalten
+  try { await loadWertverlauf(); recordDailyWertSb(); } catch(e) { console.error('Wertverlauf', e); }
   const loaded = Object.keys(liveKurse).length;
   const total = [...new Set(db.positionen.filter(p=>!p.verkauft&&num(p.stueck)>0).map(p=>repairKnownWkn(p.wkn)))].length;
   const fxLoaded = Object.keys(fxRates).length;
@@ -2895,39 +3187,18 @@ function renderUebersicht() {
   const todayAbs = gesamtEinzeldepots-gesamtEinzeldepotsPrev;
   const modePct = overviewMode === 'today' ? todayPct : ytdPct;
   const modeAbs = overviewMode === 'today' ? todayAbs : ytdAbs;
-  document.getElementById('kGesamt').textContent = f(gesamt)+' €';
-  document.getElementById('kProPerson').textContent = f(gesamt/6)+' €';
-  const ytdEl = document.getElementById('kYtd');
-  ytdEl.textContent = fp(modePct); ytdEl.className = 'kpi-v '+(modePct>=0?'pos':'neg');
-  const ytdAbsEl = document.getElementById('kYtdAbs');
-  ytdAbsEl.textContent = fc(modeAbs); ytdAbsEl.className = 'kpi-v '+(modeAbs>=0?'pos':'neg');
   const waxEl = document.getElementById('bWax');
   if (waxEl) waxEl.dataset.value = String(modePct);
 
   const liveAt = db.mitglieder.map(m=>calcAlltimeLive(m.id)).filter(Boolean);
   const totalAlltime = liveAt.reduce((s,a)=>s+a.wert_echt,0);
   const perfPaLive = calcClubXIRR() || 0;
-  const perfPaEl = document.getElementById('kPerfPa');
-  perfPaEl.textContent = fp(perfPaLive);
-  perfPaEl.className = 'kpi-v '+(perfPaLive>=0?'pos':'neg');
   const kapPerfPaEl = document.getElementById('kapPerfPa');
   if (kapPerfPaEl) {
     kapPerfPaEl.textContent = fp(perfPaLive);
     kapPerfPaEl.className = 'kpi-v '+(perfPaLive>=0?'pos':'neg');
   }
-  const cashAnteilEl = document.getElementById('kCashAnteil');
-  const cashAnteilSubEl = document.getElementById('kCashAnteilSub');
-  if (cashAnteilEl) {
-    cashAnteilEl.textContent = f(cashPctGesamt*100,1)+'%';
-    cashAnteilEl.className = 'kpi-v';
-  }
-  if (cashAnteilSubEl) cashAnteilSubEl.textContent = f(comdirectCashTotal)+' € echter Comdirect-Cash';
   const gewinnAlltime = totalAlltime - (EINSATZ_PP * 6);
-  const gewAllEl = document.getElementById('kGewinnAlltime');
-  if (gewAllEl) {
-    gewAllEl.textContent = fc(gewinnAlltime);
-    gewAllEl.className = 'kpi-v ' + (gewinnAlltime>=0?'pos':'neg');
-  }
   const rows = db.mitglieder.map(m=>{
     const akt = getDepotwert(m.id);
     const prev = getDepotwert(m.id, prevKurse, liveKurse);
@@ -2940,49 +3211,99 @@ function renderUebersicht() {
     const cashPct = akt>0 ? cash/akt : 0;
     return { m, akt, prev, ref, ytd, ytdAbs:akt-ref, today, todayAbs:akt-prev, at, anteilAkt:gesamtEinzeldepots>0?akt/gesamtEinzeldepots:0, anteilAt:at?at.wert_echt/totalAlltime:0, gewinn, cash, cashPct };
   }).sort((a,b)=>(overviewMode==='today' ? b.today-a.today : b.ytd-a.ytd));
-
   const atSorted = [...rows].sort((a,b)=>(b.at?.wert_echt||0)-(a.at?.wert_echt||0));
-  let html='';
-  rows.forEach((r,i)=>{
-    const atRank = atSorted.findIndex(x=>x.m.id===r.m.id)+1;
-    // Bulle hinter Rang 1, Bär hinter letztem Rang
-    const isDarkAnimalMode = !document.body.classList.contains('theme-original');
-    const bullImg = '<img src="' + (isDarkAnimalMode ? 'bull_wax_hd%20dark.png' : 'bull_wax_hd.png') + '" class="animal-img wax-animal-icon bull-icon overview-bull-icon" alt="">';
-    const bearImg = '<img src="' + (isDarkAnimalMode ? 'bear_wax_hd%20dark.png' : 'bear_wax_hd.png') + '" class="animal-img wax-animal-icon bear-icon" alt="">';
-    const emoji = ''; // Tiere jetzt in Pos-Spalten
-    html+=`<tr>
-      <td class="bold" style="position:relative;overflow:visible;min-width:64px">
-        <div style="display:flex;align-items:center;gap:10px">
-          ${i+1}${i===0?bullImg:i===rows.length-1?bearImg:''}
-        </div>
-      </td>
-      <td class="bold">${r.m.name.split(',')[0]}</td>
-      <td class="${cl(overviewMode==='today'?r.today:r.ytd)} bold">${fp(overviewMode==='today'?r.today:r.ytd)}</td>
-      <td class="${cl(overviewMode==='today'?r.todayAbs:r.ytdAbs)}">${fc(overviewMode==='today'?r.todayAbs:r.ytdAbs)}</td>
-      <td class="bold">${f(r.akt)} €</td>
-      <td class="dim">${f(r.anteilAkt*100,1)}%</td>
-      <td class="dim">${f(r.cashPct*100,1)}%</td>
-      <td class="dim at-rank-cell">
-        <span class="at-rank-wrap"><span class="at-rank-num">${atRank}</span><span class="at-rank-icon">${atRank===1?bullImg:atRank===rows.length?bearImg:''}</span></span>
-      </td>
-      <td>${r.at?f(r.at.wert_echt)+' €':'—'}</td>
-      <td class="dim">${f(r.anteilAt*100,1)}%</td>
-      <td class="${r.gewinn!=null?cl(r.gewinn):''}">  ${r.gewinn!=null?fc(r.gewinn):'—'}</td>
-      <td class="${r.at&&r.at.perf_pa>=0?'pos':'neg'}">${r.at?fp(r.at.perf_pa):'—'}</td>
-    </tr>`;
-  });
   const tg = rows.reduce((s,r)=>s+(r.gewinn||0),0);
   const totalCashVirtual = db.mitglieder.reduce((s,m)=>s+getCash(m.id),0);
   const totalCashPctVirtual = gesamtEinzeldepots>0 ? totalCashVirtual/gesamtEinzeldepots : 0;
-  html+=`<tr class="total-row"><td></td><td>Gesamt</td>
-    <td class="${cl(modePct)}">${fp(modePct)}</td><td class="${cl(modeAbs)}">${fc(modeAbs)}</td>
-    <td>${f(gesamtEinzeldepots)} €*</td><td>100%</td><td>${f(totalCashPctVirtual*100,1)}%</td>
-    <td></td><td>${f(totalAlltime)} €</td><td>100%</td>
-    <td class="${cl(tg)}">${fc(tg)}</td>
-    <td class="${perfPaLive>=0?'pos':'neg'}">${fp(perfPaLive)}</td>
-  </tr>`;
-  html+=`<tr class="cash-row"><td></td><td colspan="11" style="text-align:left;white-space:normal;font-size:10px;color:var(--wax-muted);padding-top:10px;padding-bottom:10px"><strong>* Hinweis:</strong> Dieser Betrag weicht ab vom Gesamtwert des WAX-Depots aufgrund des sogenannten Cash-Puffers. Siehe Bereich Pflege unter 5.2.</td></tr>`;
-  document.getElementById('rankingBody').innerHTML = html;
+
+  // === Hero + KPI-Kacheln (Look der Einzeldepots, club-weit) ===
+  // Beide Sichten dauerhaft sichtbar: Kachel 1 = YTD, Kachel 2 = Heute → kein Toggle mehr nötig.
+  const hero = `<div class="dh">
+    <div class="dh-top">
+      <div class="dh-eyebrow">WAX Aktienclub — Gesamtübersicht</div>
+      <div class="mode-tools">
+        <button id="themeToggleBtn" class="mode-toggle" onclick="toggleTheme()" title="Farbwelt wechseln">Original</button>
+        <button id="overviewRefreshBtn" class="icon-btn refresh-btn" type="button" title="Kurse aktualisieren" aria-label="Kurse aktualisieren" onclick="refreshMarketData()">↻</button>
+        <div class="dh-yearpill">Börsenjahr ${Number(REF_JAHR)+1}</div>
+      </div>
+    </div>
+    <div class="dh-hero">
+      <div class="dh-card dh-values">
+        <div class="dh-val-block top"><div class="dh-bigval dh-bigval-xl">${f(gesamt)} €</div><div class="dh-biglabel">Gesamtwert WAX-Club</div></div>
+        <div class="dh-val-block bottom"><div class="dh-bigval">${f(gesamt/6)} €</div><div class="dh-biglabel">Ø pro Person</div></div>
+      </div>
+      <div class="dh-card dh-chartcard">
+        <div class="dh-chart-head"><span>Gewinn bzw. Verlust YTD · WAX-Club</span><span>seit 1.1.</span></div>
+        <div class="dh-chart-area" id="clubChartArea">Gewinn/Verlust wird geladen …</div>
+      </div>
+    </div>
+    <div class="dh-kpis">
+      <div class="dh-kpi club">
+        <div class="dh-kpi-rk-l">YTD Performance</div>
+        <div class="dh-kpi-mid"><div class="dh-kpi-pct ${cl(ytdPct)}">${fp(ytdPct)}</div><div class="dh-kpi-abs ${cl(ytdAbs)}">${fc(ytdAbs)}</div></div>
+      </div>
+      <div class="dh-kpi club">
+        <div class="dh-kpi-rk-l">Heute</div>
+        <div class="dh-kpi-mid"><div class="dh-kpi-pct ${cl(todayPct)}">${fp(todayPct)}</div><div class="dh-kpi-abs ${cl(todayAbs)}">${fc(todayAbs)}</div></div>
+      </div>
+      <div class="dh-kpi club">
+        <div class="dh-kpi-rk-l">Perf. p.a.</div>
+        <div class="dh-kpi-mid"><div class="dh-kpi-pct ${cl(perfPaLive)}">${fp(perfPaLive)}</div><div class="dh-kpi-abs">${f(gewinnAlltime)} € Gewinn Alltime</div></div>
+      </div>
+      <div class="dh-kpi club">
+        <div class="dh-kpi-rk-l">Cashanteil</div>
+        <div class="dh-kpi-mid"><div class="dh-kpi-pct">${f(cashPctGesamt*100,1)}%</div><div class="dh-kpi-abs">${f(comdirectCashTotal)} € echter Cash</div></div>
+      </div>
+    </div>
+  </div>`;
+  const heroMount = document.getElementById('overviewHeroMount');
+  if (heroMount) heroMount.innerHTML = hero;
+
+  // === Ranking-Zeilen (verschlankt, Look der Aktiven Positionen, 7 Spalten) ===
+  // YTD + Heute dauerhaft sichtbar; Perf. p.a. (groß) mit Gewinn Alltime (klein) zusammengeführt.
+  const isDarkAnimalMode = !document.body.classList.contains('theme-original');
+  const bullImg = '<img src="' + (isDarkAnimalMode ? 'bull_wax_hd%20dark.png' : 'bull_wax_hd.png') + '" class="dc-rank-animal" alt="Bulle">';
+  const bearImg = '<img src="' + (isDarkAnimalMode ? 'bear_wax_hd%20dark.png' : 'bear_wax_hd.png') + '" class="dc-rank-animal" alt="Bär">';
+  // Perf.-p.a.-Rangfolge für Bulle/Bär in der Perf.-Spalte (Bulle = bester, Bär = schwächster).
+  const paSorted = [...rows].sort((a,b)=>((b.at?b.at.perf_pa:-Infinity)-(a.at?a.at.perf_pa:-Infinity)));
+  const paBestId = paSorted[0]?.m.id, paWorstId = paSorted[paSorted.length-1]?.m.id;
+  let rhtml = `<div class="dc-head"><div class="dc-grid dc-grid7">
+    <div class="dc-col dc-name"><div class="dc-hmain">Mitglied</div></div>
+    <div class="dc-col rankcol"><div class="dc-rankwrap"><div class="dc-rankvals"><div class="dc-hmain">YTD</div></div><div class="dc-rankslot"></div></div></div>
+    <div class="dc-col"><div class="dc-hmain">Heute</div></div>
+    <div class="dc-col rankcol"><div class="dc-rankwrap"><div class="dc-rankvals"><div class="dc-hmain">Perf. p.a. Alltime</div></div><div class="dc-rankslot"></div></div></div>
+    <div class="dc-col"><div class="dc-hmain">Akt. Wert</div></div>
+    <div class="dc-col"><div class="dc-hmain">Alltime echt</div></div>
+    <div class="dc-col dc-share"><div class="dc-hmain">Anteil Alltime</div></div>
+  </div></div>`;
+  rows.forEach((r,i)=>{
+    const ytdAnimal = i===0?bullImg:(i===rows.length-1?bearImg:'');
+    const paAnimal = r.m.id===paBestId?bullImg:(r.m.id===paWorstId?bearImg:'');
+    rhtml += `<article class="dc-card"><div class="dc-grid dc-grid7">
+      <div class="dc-col dc-name"><div class="dc-title">${i+1}. ${r.m.name.split(',')[0]}</div></div>
+      <div class="dc-col rankcol ${cl(r.ytd)}"><div class="dc-rankwrap"><div class="dc-rankvals"><div class="dc-top">${fp(r.ytd)}</div><div class="dc-sub">${fc(r.ytdAbs)}</div></div><div class="dc-rankslot">${ytdAnimal}</div></div></div>
+      <div class="dc-col ${cl(r.today)}"><div class="dc-top">${fp(r.today)}</div><div class="dc-sub">${fc(r.todayAbs)}</div></div>
+      <div class="dc-col rankcol ${r.at?cl(r.at.perf_pa):''}"><div class="dc-rankwrap"><div class="dc-rankvals"><div class="dc-top">${r.at?fp(r.at.perf_pa):'—'}</div><div class="dc-sub">${r.gewinn!=null?fc(r.gewinn):'—'}</div></div><div class="dc-rankslot">${paAnimal}</div></div></div>
+      <div class="dc-col"><div class="dc-top">${f(r.akt)} €</div><div class="dc-sub">Cash ${f(r.cashPct*100,1)}%</div></div>
+      <div class="dc-col"><div class="dc-top">${r.at?f(r.at.wert_echt)+' €':'—'}</div></div>
+      <div class="dc-col dc-share"><div class="dc-share-top">${f(r.anteilAt*100,1)}%</div><div class="dc-bar"><div class="dc-bar-fill" style="width:${Math.min(r.anteilAt*100,100).toFixed(1)}%"></div></div></div>
+    </div></article>`;
+  });
+  rhtml += `<div class="dc-sum"><div class="dc-grid dc-grid7">
+    <div class="dc-col dc-name"><div class="dc-title">Gesamt</div><div class="dc-meta"><span>WAX Aktienclub · 6 Matadore</span></div></div>
+    <div class="dc-col rankcol ${cl(ytdPct)}"><div class="dc-rankwrap"><div class="dc-rankvals"><div class="dc-top">${fp(ytdPct)}</div><div class="dc-sub">${fc(ytdAbs)}</div></div><div class="dc-rankslot"></div></div></div>
+    <div class="dc-col ${cl(todayPct)}"><div class="dc-top">${fp(todayPct)}</div><div class="dc-sub">${fc(todayAbs)}</div></div>
+    <div class="dc-col rankcol ${cl(perfPaLive)}"><div class="dc-rankwrap"><div class="dc-rankvals"><div class="dc-top">${fp(perfPaLive)}</div><div class="dc-sub">${fc(tg)}</div></div><div class="dc-rankslot"></div></div></div>
+    <div class="dc-col"><div class="dc-top">${f(gesamtEinzeldepots)} €*</div><div class="dc-sub">Cash ${f(totalCashPctVirtual*100,1)}%</div></div>
+    <div class="dc-col"><div class="dc-top">${f(totalAlltime)} €</div></div>
+    <div class="dc-col dc-share"><div class="dc-share-top">100%</div><div class="dc-bar"><div class="dc-bar-fill" style="width:100%"></div></div></div>
+  </div></div>
+  <div style="font-size:10px;color:var(--wax-muted);padding:8px 4px 0;line-height:1.5"><strong>* Hinweis:</strong> „Akt. Wert" und „Alltime echt" summieren sich jeweils auf die Summe der sechs Einzeldepots (gerechnet ohne Steuern und Gebühren). Diese Summe liegt um den <strong>Kapitalpuffer</strong> über dem „Gesamtwert WAX-Club" in der oberen KPI. Der Kapitalpuffer ist die Differenz zwischen dem rechnerischen Cash der Einzeldepots und dem tatsächlichen Comdirect-Kontostand (Steuern/Gebühren bei Wertpapierverkäufen). Details siehe Pflege 5.2.</div>`;
+  const rankMount = document.getElementById('overviewRankMount');
+  if (rankMount) rankMount.innerHTML = rhtml;
+
+  updateThemeButton();
+  renderClubChart();
 
   // Top 10 Holdings — clubweit, nach WKN aggregiert, absteigend
   const holdingsMap={}; // wkn → {bezeichnung, wert}
@@ -3263,7 +3584,11 @@ function getDepotRankings() {
 function rankDisplay(pos) {
   const darkMode = !document.body.classList.contains('theme-original');
   const bullSrc = darkMode ? 'bull_wax_hd%20dark.png' : 'bull_wax_hd.png';
-  const icon = pos===1 ? '<img src="'+bullSrc+'" class="rank-icon wax-animal-icon bull-icon" alt="">' : '';
+  const bearSrc = darkMode ? 'bear_wax_hd%20dark.png' : 'bear_wax_hd.png';
+  const total = (typeof db!=='undefined' && db.mitglieder) ? db.mitglieder.length : 6;
+  let icon = '';
+  if (pos===1) icon = '<img src="'+bullSrc+'" class="rank-icon wax-animal-icon bull-icon" alt="">';
+  else if (pos!=null && pos===total) icon = '<img src="'+bearSrc+'" class="rank-icon wax-animal-icon bear-icon" alt="">';
   return '<span>'+pos+'</span>'+icon;
 }
 
@@ -3349,8 +3674,10 @@ function renderDepot(id) {
   const totalAlltime = liveAt.reduce((s,a)=>s+a.wert_echt,0);
   const perfPaLive = calcClubXIRR() || 0;
   const perfPaEl = document.getElementById('kPerfPa');
-  perfPaEl.textContent = fp(perfPaLive);
-  perfPaEl.className = 'kpi-v '+(perfPaLive>=0?'pos':'neg');
+  if (perfPaEl) {
+    perfPaEl.textContent = fp(perfPaLive);
+    perfPaEl.className = 'kpi-v '+(perfPaLive>=0?'pos':'neg');
+  }
   const gewinnAlltime = totalAlltime - (EINSATZ_PP * 6);
   const gewAllEl = document.getElementById('kGewinnAlltime');
   if (gewAllEl) {
@@ -3359,30 +3686,82 @@ function renderDepot(id) {
   }
   const gewinnStart = atData ? atData.wert_echt-EINSATZ_PP : null;
 
-  let html=`<div class="kpi-grid" style="margin-bottom:16px">
-    <div class="kpi"><div class="kpi-l">${isToday ? 'Position Heute' : 'Position YTD'}</div><div class="kpi-v bold rank-pos">${rankDisplay(isToday ? todayRanks.todayPos[id] : rankings.ytdPos[id])}</div><div class="kpi-s">${isToday ? 'heutiger Tag' : 'aktuelles Jahr'}</div></div>
-    <div class="kpi"><div class="kpi-l">Aktueller Wert</div><div class="kpi-v bold">${f(gesamtAkt)} €</div><div class="kpi-s">Invest + Cash</div></div>
-    <div class="kpi"><div class="kpi-l">${isToday ? 'Heute %' : 'YTD %'}</div><div class="kpi-v ${cl(modePct)}">${fp(modePct)}</div><div class="kpi-s">${isToday ? 'Veränderung ggü. Vortag' : 'seit 31.12. des Vorjahres'}</div></div>
-    <div class="kpi"><div class="kpi-l">${isToday ? 'Gewinn heute' : 'Gewinn ytd'}</div><div class="kpi-v ${cl(modeAbs)}">${fc(modeAbs)}</div><div class="kpi-s">Gewinn/Verlust</div></div>
-    <div class="kpi"><div class="kpi-l">Anteil Depot aktuell</div><div class="kpi-v">${f(gesamtAkt/gesamt*100,1)}%</div><div class="kpi-s">am Gesamtdepot WAX</div></div>
-    <div class="kpi"><div class="kpi-l">Position Alltime</div><div class="kpi-v bold rank-pos">${rankDisplay(rankings.atPos[id])}</div><div class="kpi-s">Alltime-Wertung</div></div>
-    <div class="kpi"><div class="kpi-l">Alltime echt</div><div class="kpi-v">${atData?f(atData.wert_echt)+' €':'—'}</div><div class="kpi-s">neutralisiert</div></div>
-    <div class="kpi"><div class="kpi-l">Perf. p.a. Alltime</div><div class="kpi-v ${atData&&atData.perf_pa>=0?'pos':'neg'}">${atData?fp(atData.perf_pa):'—'}</div><div class="kpi-s">interner Zinsfuß seit Start</div></div>
-    <div class="kpi"><div class="kpi-l">Gewinn Alltime</div><div class="kpi-v ${gewinnStart!=null?cl(gewinnStart):''}">${gewinnStart!=null?fc(gewinnStart):'—'}</div><div class="kpi-s">Alltime minus Einsatz</div></div>
-    <div class="kpi"><div class="kpi-l">Anteil WAX Alltime</div><div class="kpi-v">${atData?f(atData.wert_echt/totalAlltime*100,1):'—'}%</div><div class="kpi-s">neutralisiert</div></div>
-    <div class="kpi"><div class="kpi-l">Cash aktuell</div><div class="kpi-v">${f(cash)} €</div><div class="kpi-s">echter Cash-Bestand</div></div>
-    <div class="kpi"><div class="kpi-l">Cashanteil</div><div class="kpi-v">${f(cash/Math.max(gesamtAkt,1)*100,1)}%</div><div class="kpi-s">${f(cash)} € aktuell</div></div>
+  const memberFirst = (((m && m.name) || '').split(',')[0] || 'Depot').trim();
+  const boersenjahr = Number(REF_JAHR) + 1;
+  const ytdRank = isToday ? todayRanks.todayPos[id] : rankings.ytdPos[id];
+  const atRank = rankings.atPos[id];
+  const anteilAkt = gesamt>0 ? gesamtAkt/gesamt*100 : 0;
+  const anteilAt = (atData && totalAlltime>0) ? atData.wert_echt/totalAlltime*100 : null;
+  const cashAnteil = gesamtAkt>0 ? cash/gesamtAkt*100 : 0;
+  const animalImg = (rank) => {
+    // Neutral: helles Theme -> dunkle PNG, dunkles Theme -> weiße PNG. Keine Plus/Minus-Farben.
+    const light = document.body.classList.contains('theme-classic');
+    const total = db.mitglieder.length;
+    if (rank===1) return `<img src="${light?'bull_wax_hd.png':'bull_wax_hd_white.png'}" class="dh-hdr-animal" alt="Bulle des Jahres">`;
+    if (rank!=null && rank===total) return `<img src="${light?'bear_wax_hd.png':'bear_wax_hd_white.png'}" class="dh-hdr-animal" alt="Bär des Jahres">`;
+    return '';
+  };
+  let html=`<div class="dh">
+    <div class="dh-top"><div class="dh-eyebrow">Mein Depot — ${memberFirst}</div><div class="dh-yearpill">Börsenjahr ${boersenjahr}</div></div>
+    <div class="dh-hero">
+      <div class="dh-card dh-values">
+        <div class="dh-val-block top"><div class="dh-bigval dh-bigval-xl">${atData?f(atData.wert_echt)+' €':'—'}</div><div class="dh-biglabel">Wert Alltime echt</div></div>
+        <div class="dh-val-block bottom"><div class="dh-bigval">${f(gesamtAkt)} €</div><div class="dh-biglabel">Wert aktuell im WAX-Depot</div></div>
+      </div>
+      <div class="dh-card dh-chartcard">
+        <div class="dh-chart-head"><span>Gewinn bzw. Verlust YTD · ${memberFirst}</span><span>seit 1.1.</span></div>
+        <div class="dh-chart-area" id="depotChartArea">Gewinn/Verlust wird geladen …</div>
+      </div>
+    </div>
+    <div class="dh-kpis">
+      <div class="dh-kpi dh-kpi-rankcard">
+        <div class="dh-kpi-rank"><div class="dh-kpi-rk-l">${isToday?'Heute':'YTD'}</div><div class="dh-kpi-rk-n">${ytdRank!=null?ytdRank+'.':'—'}</div></div>
+        <div class="dh-kpi-mid"><div class="dh-kpi-pct ${cl(modePct)}">${fp(modePct)}</div><div class="dh-kpi-abs ${cl(modeAbs)}">${fc(modeAbs)}</div></div>
+        <div class="dh-kpi-animal">${animalImg(ytdRank)}</div>
+      </div>
+      <div class="dh-kpi dh-kpi-rankcard">
+        <div class="dh-kpi-rank"><div class="dh-kpi-rk-l">Alltime</div><div class="dh-kpi-rk-n">${atRank!=null?atRank+'.':'—'}</div></div>
+        <div class="dh-kpi-mid"><div class="dh-kpi-pct ${atData?(atData.perf_pa>=0?'pos':'neg'):''}">${atData?fp(atData.perf_pa):'—'}</div><div class="dh-kpi-abs ${gewinnStart!=null?cl(gewinnStart):''}">${gewinnStart!=null?fc(gewinnStart):'—'}</div></div>
+        <div class="dh-kpi-animal">${animalImg(atRank)}</div>
+      </div>
+      <div class="dh-kpi dh-kpi-shares">
+        <div class="dh-share-row"><span class="dh-share-pct">${f(anteilAkt,1)}%</span><span class="dh-share-tag">Anteil am Depot<br>aktuell</span></div>
+        <div class="dh-share-row"><span class="dh-share-pct">${anteilAt!=null?f(anteilAt,1)+'%':'—'}</span><span class="dh-share-tag">Anteil WAX<br>Alltime</span></div>
+      </div>
+      <div class="dh-kpi dh-kpi-cash">
+        <div class="dh-kpi-mid"><div class="dh-kpi-pct">${f(cashAnteil,1)}%</div><div class="dh-kpi-abs">${f(cash)} €</div></div>
+        <div class="dh-cash-label">Cash</div>
+      </div>
+    </div>
   </div>`;
 
-  html+=`<div class="tw"><table><thead><tr>
-    <th>Stück</th><th>Bezeichnung</th><th>WKN</th><th>Art</th>
-    <th>Kaufkurs</th><th>Kaufwert</th>
-    <th>${isToday ? 'Vortag Kurs' : 'Kurs 31.12.25'}</th><th>${isToday ? 'Wert Vortag' : 'Wert 31.12.25'}</th>
-    <th>Akt. Kurs</th><th>Akt. Wert</th><th>${isToday ? 'Diff. %' : 'YTD %'}</th><th>${isToday ? 'Diff. €' : 'YTD €'}</th>
-  </tr></thead><tbody>`;
+  const diffHead = isToday ? 'Veränderung Heute' : 'Veränderung YTD';
+  html+=`<div class="dc-group">Aktive Positionen</div>`;
+  html+=`<div class="dc-wrap"><div class="dc-head"><div class="dc-grid">
+    <div class="dc-col dc-name"><div class="dc-hmain">Position</div></div>
+    <div class="dc-col dc-share"><div class="dc-hmain">Anteil</div></div>
+    <div class="dc-col"><div class="dc-hmain">Kurs akt./Kauf</div></div>
+    <div class="dc-col"><div class="dc-hmain">Wert akt./Kauf</div></div>
+    <div class="dc-col"><div class="dc-hmain">${diffHead}</div></div>
+  </div></div>`;
+
+  // Verkaufte Wertpapiere vorab berechnen, damit der KPI direkt in der oberen 3er-Reihe erscheinen kann.
+  const soldSummary = { kaufwert:0, ref:0, wert:0, diff:0, count: verkauftPos.length };
+  if (!isToday && verkauftPos.length>0) {
+    verkauftPos.forEach(p=>{
+      const refV = (p.wert_ref != null && !isNaN(p.wert_ref)) ? Number(p.wert_ref) : Number(p.kaufwert||0);
+      const bookingFb = getSoldBookingFallback(p);
+      const fb = bookingFb || getSoldExcelFallback(p);
+      const sellV = (p.verkaufswert != null && !isNaN(p.verkaufswert)) ? Number(p.verkaufswert) : (fb?.verkaufswert != null ? Number(fb.verkaufswert) : refV);
+      const diffAbs = (sellV!=null && refV!=null) ? (sellV-refV) : 0;
+      soldSummary.kaufwert += Number(p.kaufwert||0);
+      soldSummary.ref += Number(refV||0);
+      soldSummary.wert += Number(sellV||0);
+      soldSummary.diff += Number(diffAbs||0);
+    });
+  }
 
   if (aktivPos.length > 0) {
-    html+=`<tr class="gr"><td colspan="12">Aktive Positionen</td></tr>`;
     const wknWert={};
     aktivPos.forEach(p=>{
       const k=liveKurse[p.wkn];
@@ -3395,93 +3774,102 @@ function renderDepot(id) {
       const ka=liveKurse[a.wkn],kb=liveKurse[b.wkn];
       return (kb!=null?kb*b.stueck:(b.wert_ref||b.kaufwert))-(ka!=null?ka*a.stueck:(a.wert_ref||a.kaufwert));
     });
+    const totalAktSec = sortedPos.reduce((s,p)=>{const k=liveKurse[p.wkn];return s+(k!=null?k*p.stueck:(p.wert_ref||p.kaufwert));},0);
     let sumBaseVisible = 0;
     let sumAktVisible = 0;
-    sortedPos.forEach(p=>{
+    sortedPos.forEach((p,idx)=>{
       const k=liveKurse[p.wkn];
       const prevK=(prevKurse[p.wkn] != null && !isNaN(prevKurse[p.wkn])) ? prevKurse[p.wkn] : k;
       const isNewCurrentYear = !isToday && p.kauf_datum && String(p.kauf_datum).slice(0,4) > String(REF_JAHR);
-      const baseK = isToday ? prevK : (p.kurs_ref ?? (isNewCurrentYear ? p.kaufkurs : p.kaufkurs));
       const wAkt=k!=null?k*p.stueck:(p.wert_ref||p.kaufwert);
+      // Basis je Position: im Heute-Modus der Vortageswert, im YTD-Modus der
+      // 31.12.-Wert (wert_ref) bzw. der Kaufwert bei unterjährig gekauften Titeln,
+      // die es am 31.12. noch nicht gab. So ist die Veränderung je Position sinnvoll.
       const wBase=isToday ? ((prevK!=null?prevK:k)*p.stueck) : ((p.wert_ref!=null && !isNaN(p.wert_ref)) ? p.wert_ref : p.kaufwert);
       sumAktVisible += (wAkt || 0);
       sumBaseVisible += (wBase || 0);
+      const share = totalAktSec>0 ? (wAkt/totalAktSec) : 0;
       const dp=(k!=null&&wBase)?(wAkt-wBase)/wBase:null;
       const de=(k!=null&&wBase!=null)?wAkt-wBase:null;
       const dateBadge=(!isToday && isNewCurrentYear && p.kauf_datum)?`<span class="badge b-new">NEU ${fdate(p.kauf_datum)}</span>`:'';
-      const kursDisplay = k!=null ? f(k,4) : `<span class="kurs-loading">lädt…</span>`;
-      html+=`<tr>
-        <td>${f(p.stueck,0)}</td><td>${securityDisplayName(p.wkn, p.bezeichnung)}${dateBadge}</td>
-        <td class="dim">${p.wkn}</td><td class="dim">${p.art}</td>
-        <td class="dim">${f(p.kaufkurs,4)}</td><td class="dim">${f(p.kaufwert)}</td>
-        <td class="dim">${baseK?f(baseK,4):'—'}</td><td class="dim">${wBase!=null?f(wBase):'—'}</td>
-        <td class="bold">${kursDisplay}</td><td class="bold">${f(wAkt)}</td>
-        <td class="${cl(dp)}">${dp!=null?fp(dp):'—'}</td><td class="${cl(de)}">${de!=null?fc(de):'—'}</td>
-      </tr>`;
+      const kursDisplay = k!=null ? f(k,2) : `<span class="kurs-loading">lädt…</span>`;
+      html+=`<article class="dc-card ${idx%2?'alt':''}"><div class="dc-grid">
+        <div class="dc-col dc-name"><div class="dc-title">${securityDisplayName(p.wkn, p.bezeichnung)}</div><div class="dc-meta"><span>${p.wkn}</span><span>${f(p.stueck,0)} Stk.</span>${dateBadge}</div></div>
+        <div class="dc-col dc-share"><div class="dc-share-top">${f(share*100,1)}%</div><div class="dc-bar"><div class="dc-bar-fill" style="width:${Math.min(share*100,100).toFixed(1)}%"></div></div></div>
+        <div class="dc-col"><div class="dc-top">${kursDisplay}</div><div class="dc-sub">${f(p.kaufkurs,2)}</div></div>
+        <div class="dc-col"><div class="dc-top">${f(wAkt)} €</div><div class="dc-sub">${f(p.kaufwert)} €</div></div>
+        <div class="dc-col ${cl(de)}"><div class="dc-top">${dp!=null?fp(dp):'—'}</div><div class="dc-sub">${de!=null?fc(de):'—'}</div></div>
+      </div></article>`;
     });
-    // Summenzeile WERTPAPIERE:
-    // Im YTD-Modus ist die 31.12.-Basis ein eingefrorener Jahresabschluss-Fixwert
-    // aus Supabase (jahresabschluss.invest_ref), NICHT die Summe sichtbarer aktiver Lots.
-    // Das ist wichtig, weil Käufe/Verkäufe nach dem Jahreswechsel die sichtbaren aktiven
-    // Positionen verändern, die Excel-Referenzbasis 31.12. aber unverändert bleiben muss.
-    const sumBase = isToday ? sumBaseVisible : investRef;
-    const sumDiff = sumAktVisible - sumBase;
-    html+=`<tr class="total-row">
-      <td colspan="5" style="text-align:right">Summe Wertpapiere</td>
-      <td style="text-align:right">${f(kaufwertSum)}</td><td></td><td style="text-align:right">${f(sumBase)}</td><td></td>
-      <td class="bold">${f(sumAktVisible)}</td>
-      <td class="${cl(sumDiff)}">${sumBase>0?fp(sumDiff/sumBase):'—'}</td>
-      <td class="${cl(sumDiff)}">${fc(sumDiff)}</td>
-    </tr>`;
+    html+=`</div>`;
+    // Summe Wertpapiere = ehrliche Summe der angezeigten Positions-Veränderungen
+    // (Wert aktuell − Basis je Position). Damit addieren sich die Spaltenwerte exakt
+    // zur Summe – auch bei unterjährig gekauften Titeln (Basis = Kaufwert).
+    const sumDiff = sumAktVisible - sumBaseVisible;
+    // KPI-Zusammenfassung: nur noch zwei kompakte Karten unter den aktiven Positionen.
+    // Karte 1 zeigt ausschließlich Wertpapiere: aktueller Wert vs. Basis der angezeigten Positionen.
+    const wpPct = sumBaseVisible > 0 ? (sumDiff / sumBaseVisible) : 0;
+    var investSummaryHtml = `<div class="dc-mini-kpi">
+      <div class="dc-mini-label">Aktuell investiert</div>
+      <div class="dc-mini-value">${f(sumAktVisible)} €</div>
+      <div class="dc-mini-change ${cl(sumDiff)}">${fc(sumDiff)} · ${sumBaseVisible>0?fp(wpPct):'0,0%'}</div>
+      <div class="dc-mini-sub">Basis ${f(sumBaseVisible)} € · Kaufwert ${f(kaufwertSum)} €</div>
+    </div>`;
   } else {
-    html+=`<tr class="gr"><td colspan="12">Aktive Positionen</td></tr>`;
-    // Auch ohne aktive Positionen bleibt die YTD-31.12.-Wertpapierbasis der
-    // eingefrorene Supabase-Wert jahresabschluss.invest_ref.
-    const sumBase = isToday ? 0 : investRef;
-    const sumDiff = 0 - sumBase;
-    html+=`<tr style="visibility:hidden;height:0"><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td></tr>`;
-    html+=`<tr><td colspan="5" style="text-align:left;color:var(--wax-muted-2);padding:9px 10px">Alle Positionen 2026 verkauft</td>
-      <td style="text-align:right" class="dim">—</td><td style="text-align:right" class="dim">—</td><td style="text-align:right" class="dim">${f(sumBase)}</td><td style="text-align:right" class="dim">—</td><td class="bold">0,00</td>
-      <td class="${cl(sumDiff)}">${sumBase>0?fp(sumDiff/sumBase):'—'}</td><td class="${cl(sumDiff)}">${fc(sumDiff)}</td></tr>`;
-    html+=`<tr class="total-row"><td colspan="5" style="text-align:right">Summe Wertpapiere</td>
-      <td style="text-align:right">—</td><td style="text-align:right">—</td><td style="text-align:right">${f(sumBase)}</td><td style="text-align:right">—</td>
-      <td class="bold">0,00</td><td class="${cl(sumDiff)}">${sumBase>0?fp(sumDiff/sumBase):'—'}</td><td class="${cl(sumDiff)}">${fc(sumDiff)}</td></tr>`;
+    html+=`<article class="dc-card"><div class="dc-grid">
+      <div class="dc-col dc-name"><div class="dc-title" style="color:var(--wax-muted)">Alle Positionen 2026 verkauft</div><div class="dc-meta"><span>Keine aktiven Wertpapiere</span></div></div>
+      <div class="dc-col dc-share"></div>
+      <div class="dc-col"></div>
+      <div class="dc-col"><div class="dc-top">0,00 €</div></div>
+      <div class="dc-col"><div class="dc-top">0,0%</div><div class="dc-sub">0,00 €</div></div>
+    </div></article>`;
+    html+=`</div>`;
+    var investSummaryHtml = `<div class="dc-mini-kpi">
+      <div class="dc-mini-label">Aktuell investiert</div>
+      <div class="dc-mini-value">0,00 €</div>
+      <div class="dc-mini-change">0,00 € · 0,0%</div>
+      <div class="dc-mini-sub">Keine aktiven Wertpapiere</div>
+    </div>`;
   }
 
-
-  const cashBase = isToday ? cash : cashRef;
-  const cashDiff = cash - cashBase;
-  const cashPctChange = cashBase ? cashDiff / cashBase : null;
-  const cashPct = gesamtAkt>0 ? cash/gesamtAkt : 0;
-  html+=`<tr class="cash-row">
-    <td></td><td class="bold">Cash</td>
-    <td colspan="5" class="dim" style="text-align:left">Kontoguthaben</td>
-    <td class="bold">${f(cashBase)}</td><td></td><td class="bold">${f(cash)}</td>
-    <td class="${cl(cashPctChange)}">${cashPctChange!=null?fp(cashPctChange):'—'}</td>
-    <td class="${cl(cashDiff)}">${fc(cashDiff)}</td>
-  </tr>`;
-
   const gesamtBase = isToday ? gesamtPrev : gesamtRef;
-  html+=`<tr class="sum-row">
-    <td colspan="7" style="text-align:right">Gesamtdepot</td>
-    <td style="text-align:right">${f(gesamtBase)} €</td><td></td>
-    <td class="bold">${f(gesamtAkt)} €</td>
-    <td class="${cl(modePct)}">${fp(modePct)}</td>
-    <td class="${cl(modeAbs)}">${fc(modeAbs)}</td>
-  </tr>`;
-
-  html+=`</tbody></table></div>`;
+  // Zwei-Kachel-Zusammenfassung rechtsbündig:
+  // links Kursentwicklung, rechts Übersicht aus Aktuell + Cash = Gesamtdepot.
+  const currentDepotDev = modeAbs - soldSummary.diff;
+  const currentDepotBase = Math.abs(investAkt - currentDepotDev) > 0.01 ? (investAkt - currentDepotDev) : investRef;
+  const currentDepotPct = currentDepotBase ? currentDepotDev / currentDepotBase : 0;
+  const soldPct = soldSummary.ref ? soldSummary.diff / soldSummary.ref : 0;
+  const investSharePct = gesamtAkt ? (investAkt / gesamtAkt) : 0;
+  const cashSharePct = gesamtAkt ? (cash / gesamtAkt) : 0;
+  html += `<div class="dc-summary-kpis">
+    <div class="dc-mini-kpi deviation">
+      <div class="dc-mini-label">Kursentwicklung</div>
+      <div class="dc-kpi-lines">
+        <div class="dc-kpi-line"><span>Aktuell</span><strong class="${cl(currentDepotDev)}"><span class="dc-num">${fc(currentDepotDev)}</span><span class="dc-delta">${fp(currentDepotPct)}</span></strong></div>
+        <div class="dc-kpi-line"><span>Verkäufe</span><strong class="${cl(soldSummary.diff)}"><span class="dc-num">${fc(soldSummary.diff)}</span><span class="dc-delta">${fp(soldPct)}</span></strong></div>
+        <div class="dc-kpi-line total"><span>YTD</span><strong class="${cl(modeAbs)}"><span class="dc-num">${fc(modeAbs)}</span><span class="dc-delta">${fp(modePct)}</span></strong></div>
+      </div>
+    </div>
+    <div class="dc-mini-kpi depot">
+      <div class="dc-mini-label">Übersicht</div>
+      <div class="dc-kpi-lines">
+        <div class="dc-kpi-line"><span>Aktuell <b class="dc-pct">(${f(investSharePct*100,0)}%)</b></span><strong><span class="dc-num">${f(investAkt)} €</span><em class="dc-basis">Basis ${f(currentDepotBase)} €</em></strong></div>
+        <div class="dc-kpi-line"><span>Cash <b class="dc-pct">(${f(cashSharePct*100,0)}%)</b></span><strong><span class="dc-num">${f(cash)} €</span></strong></div>
+        <div class="dc-kpi-line total"><span>Gesamtdepot</span><strong><span class="dc-num">${f(gesamtAkt)} €</span><em class="dc-basis">Basis ${f(gesamtBase)} €</em></strong></div>
+      </div>
+    </div>
+  </div>`;
 
   if (!isToday && verkauftPos.length>0) {
-    html+=`<div class="tw" style="margin-top:18px"><table><thead><tr>
-      <th>Stück</th><th>Bezeichnung</th><th>WKN</th><th>Art</th>
-      <th>Kaufkurs</th><th>Kaufwert</th>
-      <th>Kurs 31.12.25</th><th>Wert 31.12.25</th>
-      <th>Verkaufskurs</th><th>Verkaufswert</th><th>YTD %</th><th>YTD €</th>
-    </tr></thead><tbody>`;
-    html+=`<tr class="gr"><td colspan="12">Verkaufte Wertpapiere</td></tr>`;
+    html+=`<div class="dc-group">Verkaufte Wertpapiere</div>`;
+    html+=`<div class="dc-wrap"><div class="dc-head"><div class="dc-grid dc-grid4">
+      <div class="dc-col dc-name"><div class="dc-hmain">Position</div></div>
+      <div class="dc-col"><div class="dc-hmain">Kurs Verk./Basis</div></div>
+      <div class="dc-col"><div class="dc-hmain">Wert Verk./Basis</div></div>
+      <div class="dc-col"><div class="dc-hmain">Veränderung YTD</div></div>
+    </div></div>`;
     let soldKaufwert = 0, soldRef = 0, soldWert = 0, soldDiff = 0;
-    verkauftPos.forEach(p=>{
+    verkauftPos.forEach((p,idx)=>{
       const refK = (p.kurs_ref != null && !isNaN(p.kurs_ref)) ? Number(p.kurs_ref) : Number(p.kaufkurs||0);
       const refV = (p.wert_ref != null && !isNaN(p.wert_ref)) ? Number(p.wert_ref) : Number(p.kaufwert||0);
       const bookingFb = getSoldBookingFallback(p);
@@ -3499,26 +3887,18 @@ function renderDepot(id) {
       // Dieses Datum ist keine fachlich verlässliche Verkaufsinformation und wird deshalb nicht als RAUS-Badge gezeigt.
       // Neue Verkäufe ab App-Neustart behalten ihr echtes Verkaufsdatum und zeigen den Badge wieder automatisch.
       const dateBadge = (soldDate && soldDate !== '2026-05-19') ? `<span class="badge b-out">RAUS ${fdate(soldDate)}</span>` : '';
-      html+=`<tr style="opacity:.97">
-        <td>${f(p.stueck,0)}</td><td class="sold">${securityDisplayName(p.wkn, p.bezeichnung)}${dateBadge}</td>
-        <td class="dim">${p.wkn}</td><td class="dim">${p.art}</td>
-        <td class="dim">${f(p.kaufkurs,4)}</td><td class="dim">${f(p.kaufwert)}</td>
-        <td class="dim">${refK?f(refK,4):'—'}</td><td class="dim">${refV!=null?f(refV):'—'}</td>
-        <td class="bold">${sellK!=null?f(sellK,4):'—'}</td><td class="bold">${sellV!=null?f(sellV):'—'}</td>
-        <td class="${cl(diffPct)}">${diffPct!=null?fp(diffPct):'—'}</td><td class="${cl(diffAbs)}">${diffAbs!=null?fc(diffAbs):'—'}</td>
-      </tr>`;
+      html+=`<article class="dc-card ${idx%2?'alt':''}"><div class="dc-grid dc-grid4">
+        <div class="dc-col dc-name"><div class="dc-title">${securityDisplayName(p.wkn, p.bezeichnung)}</div><div class="dc-meta"><span>${p.wkn}</span><span>${f(p.stueck,0)} Stk.</span>${dateBadge}</div></div>
+        <div class="dc-col"><div class="dc-top">${sellK!=null?f(sellK,2):'—'}</div><div class="dc-sub">${refK?f(refK,2):'—'}</div></div>
+        <div class="dc-col"><div class="dc-top">${sellV!=null?f(sellV)+' €':'—'}</div><div class="dc-sub">${refV!=null?f(refV)+' €':'—'}</div></div>
+        <div class="dc-col ${cl(diffAbs)}"><div class="dc-top">${diffPct!=null?fp(diffPct):'—'}</div><div class="dc-sub">${diffAbs!=null?fc(diffAbs):'—'}</div></div>
+      </div></article>`;
     });
-    html+=`<tr class="total-row">
-      <td colspan="5" style="text-align:right">Summe verkaufte Wertpapiere</td>
-      <td style="text-align:right">${f(soldKaufwert)}</td><td></td><td style="text-align:right">${f(soldRef)}</td><td></td>
-      <td class="bold">${f(soldWert)}</td>
-      <td class="${cl(soldRef>0?soldDiff/soldRef:null)}">${soldRef>0?fp(soldDiff/soldRef):'—'}</td>
-      <td class="${cl(soldDiff)}">${fc(soldDiff)}</td>
-    </tr></tbody></table></div>`;
+    html+=`</div>`;
   }
 
   if (!isToday) {
-    html += `<div id="singleDepotStructureMount"></div>`;
+    html += `<div id="singleDepotStructureMount" class="dc-structure-mount"></div>`;
   }
 
   document.getElementById('depotContent').innerHTML = html;
@@ -3536,6 +3916,9 @@ function renderDepot(id) {
       if (mount) mount.innerHTML = '';
     }
   }
+
+  // Wertverlauf-Grafik asynchron nachladen (Historien werden gecacht)
+  try { renderDepotChart(id); } catch (err) { console.error('Wertverlauf-Grafik fehlgeschlagen', err); }
 }
 
 // PERFORMANCE
@@ -5180,7 +5563,7 @@ body.theme-classic .nav{background:#1A1814!important;border-bottom:none!importan
 .statusbar{background:rgba(18,18,18,.94)!important;border-bottom:1px solid var(--line)!important;color:var(--text-dim)!important;top:115px!important;padding:5px 24px!important}
 body.theme-classic .statusbar{background:#141210!important;border-bottom:1px solid #222!important;color:#666!important}.sdot,.sdot.live{background:var(--success)!important}
 .content{max-width:1400px!important;padding:20px 24px 40px!important}.sec-t{color:var(--text-dim)!important;border-bottom:1px solid var(--line-2)!important}.sec-n{color:var(--orange)!important}body.theme-classic .sec-n{color:#1A1814!important}
-.kpi-grid,.bench-grid{background:var(--line)!important;border:1px solid var(--line)!important;border-radius:18px!important;overflow:hidden!important;box-shadow:0 10px 30px rgba(0,0,0,.16)!important}.kpi,.bench-item{background:var(--card)!important}.kpi-l,.bench-l{color:var(--text-muted)!important}.kpi-v,.bench-v{color:var(--text)!important}.kpi-s{color:var(--text-muted)!important}.kpi-v.pos,.bench-v.pos,.pos{color:var(--success)!important}.kpi-v.neg,.bench-v.neg,.neg{color:#D85C5C!important}
+.kpi-grid,.bench-grid{background:var(--line)!important;border:1px solid var(--line)!important;border-radius:18px!important;overflow:hidden!important;box-shadow:0 10px 30px rgba(0,0,0,.16)!important}.kpi,.bench-item{background:var(--card)!important}.kpi-l,.bench-l{color:var(--text-muted)!important}.kpi-v,.bench-v{color:var(--text)!important}.kpi-s{color:var(--text-muted)!important}.kpi-v.pos,.bench-v.pos,.pos{color:var(--success)!important}.kpi-v.neg,.bench-v.neg,.neg{color:var(--orange)!important}
 body.theme-classic .kpi-grid,body.theme-classic .bench-grid{background:#D8D4CE!important;border-color:#D8D4CE!important;border-radius:0!important;box-shadow:none!important}body.theme-classic .kpi,body.theme-classic .bench-item{background:#fff!important}
 .tw{background:var(--card)!important;border:1px solid var(--line)!important;border-radius:18px!important;box-shadow:0 10px 30px rgba(0,0,0,.16)!important}thead th{background:#1a1a1a!important;color:var(--text-muted)!important;border-bottom:1px solid var(--line)!important}tbody tr{border-bottom:1px solid var(--line)!important}tbody tr:hover{background:rgba(223,87,53,.06)!important}td{color:var(--text-soft)!important}td:first-child{color:var(--text)!important}.total-row td{background:var(--midnight)!important;border-top:2px solid var(--line-2)!important;color:var(--text)!important}.sum-row td{background:#111!important;color:var(--silver)!important;border-top:2px solid var(--orange)!important}
 body.theme-classic .tw{background:#fff!important;border-color:#D8D4CE!important;border-radius:0!important;box-shadow:none!important}body.theme-classic thead th{background:#FAF9F6!important;border-bottom:1px solid #E8E4DE!important;color:#777!important}body.theme-classic tbody tr{border-bottom:1px solid #F2EFE9!important}body.theme-classic tbody tr:hover{background:#FDF9F5!important}body.theme-classic td{color:#333!important}body.theme-classic td:first-child{color:#111!important}body.theme-classic .total-row td{background:#F0EDE8!important;border-top:2px solid #D8D4CE!important;color:#111!important}body.theme-classic .sum-row td{background:#1A1814!important;color:#FAF9F6!important;border-top:2px solid #C8441A!important}
@@ -5194,6 +5577,43 @@ body.theme-classic #pinOverlay{background:#1A1814!important;color:#FAF9F6!import
 .form-input,.ticker-input,.ticker-select{background:var(--card)!important;color:var(--text)!important;border-color:var(--line-2)!important}.form-label{color:var(--text-muted)!important}.modal-title,.rules-title,.rule-head{color:var(--text)!important}.rule-text,.rule-subhead{color:var(--text-soft)!important}
 body.theme-classic .form-input,body.theme-classic .ticker-input,body.theme-classic .ticker-select{background:#fff!important;color:#333!important;border-color:#D8D4CE!important}body.theme-classic .modal-title,body.theme-classic .rules-title,body.theme-classic .rule-head{color:#111!important}body.theme-classic .rule-text,body.theme-classic .rule-subhead{color:#444!important}
 @media (max-width:640px){.hd,.nav,.statusbar,.content{padding-left:14px!important;padding-right:14px!important}.hd-logo img{height:52px!important}}
+/* === Einzeldepot-Karten (Invest-Stil) === */
+.dc-wrap{margin-bottom:0}
+.dc-summary{margin-top:16px}
+.dc-group{font-size:11px;font-weight:700;letter-spacing:.09em;text-transform:uppercase;color:var(--text-muted);padding:18px 4px 8px}
+.dc-head,.dc-card,.dc-sum{border:1px solid var(--line-2);border-radius:16px;overflow:hidden;margin-bottom:8px}
+.dc-head{background:var(--card-2);position:sticky;top:0;z-index:20;box-shadow:0 8px 22px rgba(0,0,0,.16)}
+.dc-card{background:var(--card);box-shadow:0 6px 16px rgba(0,0,0,.10)}
+.dc-card.alt{background:var(--card-2)}
+.dc-card:hover{border-color:var(--orange)}
+.dc-grid{display:grid;grid-template-columns:2.2fr 0.95fr 1.2fr 1fr 1.25fr;gap:0;align-items:stretch}
+.dc-grid.dc-grid4{grid-template-columns:2.4fr 1.3fr 1.1fr 1.35fr}
+.dc-col{padding:16px 18px;border-right:1px solid var(--line);min-width:0;display:flex;flex-direction:column;justify-content:center;align-items:flex-end;text-align:right}
+.dc-col:last-child{border-right:none}
+.dc-col.dc-name{align-items:flex-start;text-align:left}
+.dc-col.dc-share{align-items:stretch;text-align:left}
+.dc-title{font-size:18px;font-weight:700;line-height:1.2;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-bottom:9px;letter-spacing:-.01em}
+.dc-meta{font-size:11.5px;color:var(--text-muted);display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+.dc-top{font-size:16.5px;font-weight:700;line-height:1.1;color:var(--text);letter-spacing:-.01em}
+.dc-sub{font-size:12.5px;color:var(--text-muted);line-height:1.25;margin-top:6px}
+.dc-share-top{font-size:13.5px;font-weight:700;color:var(--text);line-height:1.1}
+.dc-bar{height:6px;border-radius:999px;background:var(--line);overflow:hidden;margin-top:7px}
+.dc-bar-fill{height:100%;border-radius:999px;background:var(--orange)}
+.dc-hmain{font-size:12.5px;font-weight:700;color:var(--text);line-height:1.1}
+.dc-hsub{font-size:10.5px;color:var(--text-muted);margin-top:4px;line-height:1.1}
+.dc-col.pos .dc-top,.dc-col.pos .dc-sub{color:var(--success) !important}
+.dc-col.neg .dc-top,.dc-col.neg .dc-sub{color:var(--orange) !important}
+.dc-sum{background:linear-gradient(0deg,rgba(223,87,53,.10),rgba(223,87,53,.10)),var(--card-2)}
+.dc-total{border-color:var(--orange);box-shadow:0 6px 18px rgba(0,0,0,.16)}
+.dc-total .dc-top{font-size:16.5px}
+.dc-structure-mount{display:block;margin-top:30px}
+@media(max-width:720px){
+  .dc-head{display:none}
+  .dc-grid,.dc-grid.dc-grid4{grid-template-columns:1fr 1fr}
+  .dc-col{padding:11px 12px;border-right:none;border-top:1px solid var(--line)}
+  .dc-col.dc-name{grid-column:1 / -1;border-top:none;border-bottom:1px solid var(--line)}
+  .dc-title{white-space:normal}
+}
 </style></head><body>
 <div class="toolbar"><span class="tt">Folio.wax · Management-Bericht</span><span class="hint">Stand ${heute}</span><span class="sp"></span><span id="archStatus" style="font-size:11.5px;margin-right:8px;color:var(--blue-soft)"></span><button type="button" class="btn" id="mkImportBtn" onclick="window.waxMkImportOpen?window.waxMkImportOpen():(function(){var o=document.getElementById('mkImportOverlay');if(o){o.classList.add('open');setTimeout(function(){var t=document.getElementById('mkImpText');if(t)t.focus();},0)}})()" style="background:transparent;color:var(--wax-card);border:1px solid var(--blue-soft)">✨ Text importieren</button><button class="btn" style="background:transparent;color:var(--wax-card);border:1px solid var(--gold)" onclick="if(window.waxBerichtArchivieren){window.waxBerichtArchivieren();}else{alert('\u26a0 Die Speicher-Funktion ist im Bericht-Fenster nicht geladen \u2013 es liegt ein Script-Fehler vor. Bitte den roten Hinweis in der Kopfzeile bzw. die Konsole pr\u00fcfen.');}">📥 In Archiv speichern</button><button class="btn" onclick="window.print()">⤓ Als PDF speichern</button></div>
 <div class="doc">
@@ -5598,12 +6018,12 @@ body.theme-classic .form-input,body.theme-classic .ticker-input,body.theme-class
 :root,
 body.theme-modern,
 body:not(.theme-classic){
-  --wax-negative:#E04F5F !important;
-  --negative:#E04F5F !important;
+  --wax-negative:#FF7A00 !important;
+  --negative:#FF7A00 !important;
 }
 body.theme-classic{
-  --wax-negative:#D83F4D !important;
-  --negative:#D83F4D !important;
+  --wax-negative:#FF7A00 !important;
+  --negative:#FF7A00 !important;
 }
 .neg,
 td.neg,
@@ -6126,12 +6546,12 @@ async function initApp(){
 :root,
 body.theme-modern,
 body:not(.theme-classic){
-  --wax-negative:#E04F5F !important;
-  --negative:#E04F5F !important;
+  --wax-negative:#FF7A00 !important;
+  --negative:#FF7A00 !important;
 }
 body.theme-classic{
-  --wax-negative:#D83F4D !important;
-  --negative:#D83F4D !important;
+  --wax-negative:#FF7A00 !important;
+  --negative:#FF7A00 !important;
 }
 .neg,
 td.neg,
@@ -6205,12 +6625,12 @@ div.neg,
 body.theme-modern,
 body:not(.theme-classic){
   --wax-positive:#4DD4A3 !important;
-  --wax-negative:#E04F5F !important;
+  --wax-negative:#FF7A00 !important;
   --success:#4DD4A3 !important;
 }
 body.theme-classic{
   --wax-positive:#168A5E !important;
-  --wax-negative:#C93A45 !important;
+  --wax-negative:#FF7A00 !important;
   --success:#168A5E !important;
 }
 .pos, td.pos, span.pos, div.pos,
@@ -6227,7 +6647,7 @@ body.theme-modern .neg, body.theme-modern td.neg, body.theme-modern span.neg, bo
 body.theme-modern .kpi-v.neg, body.theme-modern .bench-v.neg,
 body:not(.theme-classic) .neg, body:not(.theme-classic) td.neg, body:not(.theme-classic) span.neg, body:not(.theme-classic) div.neg,
 body:not(.theme-classic) .kpi-v.neg, body:not(.theme-classic) .bench-v.neg{
-  color:#E04F5F !important;
+  color:#FF7A00 !important;
 }
 body.theme-classic .pos, body.theme-classic td.pos, body.theme-classic span.pos, body.theme-classic div.pos,
 body.theme-classic .kpi-v.pos, body.theme-classic .bench-v.pos,
@@ -6237,7 +6657,7 @@ body.theme-classic .kpi .v.pos, body.theme-classic .mkpi .v.pos{
 body.theme-classic .neg, body.theme-classic td.neg, body.theme-classic span.neg, body.theme-classic div.neg,
 body.theme-classic .kpi-v.neg, body.theme-classic .bench-v.neg,
 body.theme-classic .kpi .v.neg, body.theme-classic .mkpi .v.neg{
-  color:#C93A45 !important;
+  color:#FF7A00 !important;
 }
 /* Gesamtzeilen ohne explizite Pos/Neg-Klasse bleiben neutral und werden nicht eingefärbt. */
 body.theme-classic .total-row td:not(.pos):not(.neg){ color:#16232A !important; }
