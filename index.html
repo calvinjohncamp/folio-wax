@@ -814,6 +814,7 @@ body.theme-classic .neg, body.theme-classic .kpi-v.neg, body.theme-classic .benc
 .dc-grid.dc-grid4{grid-template-columns:2.4fr 1.3fr 1.1fr 1.35fr}
 .dc-grid.dc-grid6{grid-template-columns:2fr 0.9fr 1.15fr 1.05fr 1.1fr 1.2fr}
 .dc-grid.dc-grid7{grid-template-columns:1fr 1.5fr 1fr 1.5fr 1.05fr 1.05fr 0.95fr}
+.dc-grid.dc-grid-pos6{grid-template-columns:2.2fr 0.9fr 1.1fr 1.1fr 1.15fr 1.2fr}
 .dc-rank-animal{height:26px;width:auto;vertical-align:middle;margin-left:8px}
 .dc-col.rankcol{align-items:stretch}
 .dc-rankwrap{display:grid;grid-template-columns:1fr 42px;align-items:center;gap:16px;width:100%}
@@ -878,7 +879,7 @@ body.theme-classic .dc-mini-kpi.deviation .dc-kpi-line.total strong{color:#16232
 .dc-structure-mount{display:block;margin-top:30px}
 @media(max-width:720px){
   .dc-head{display:none}
-  .dc-grid,.dc-grid.dc-grid4,.dc-grid.dc-grid6,.dc-grid.dc-grid7{grid-template-columns:1fr 1fr}
+  .dc-grid,.dc-grid.dc-grid4,.dc-grid.dc-grid6,.dc-grid.dc-grid7,.dc-grid.dc-grid-pos6{grid-template-columns:1fr 1fr}
   .dc-col{padding:11px 12px;border-right:none;border-top:1px solid var(--wax-line)}
   .dc-col.dc-name{grid-column:1 / -1;border-top:none;border-bottom:1px solid var(--wax-line)}
   .dc-title{white-space:normal}
@@ -897,6 +898,8 @@ body.theme-classic .dc-mini-kpi.deviation .dc-kpi-line.total strong{color:#16232
 .dh-bigval{font-size:36px;font-weight:800;line-height:1.02;color:var(--wax-text);letter-spacing:-.025em}
 .dh-bigval-xl{font-size:50px;letter-spacing:-.03em;line-height:1}
 .dh-biglabel{font-size:13.5px;color:var(--wax-muted);margin-top:7px;letter-spacing:.01em}
+.dh-val-anteil{margin-top:7px;font-size:11px;color:var(--wax-muted);letter-spacing:.01em;line-height:1.2}
+.dh-val-anteil b{font-size:12.5px;font-weight:800;color:var(--wax-text);margin-right:5px;letter-spacing:-.01em}
 .dh-chartcard{padding:18px 22px;display:flex;flex-direction:column;min-height:240px}
 .dh-chart-head{display:flex;justify-content:space-between;font-size:12px;color:var(--wax-muted);letter-spacing:.04em}
 .dh-chart-area{flex:1;display:flex;align-items:center;justify-content:center;color:var(--wax-muted);font-size:13px;border-top:1px dashed var(--wax-line);margin-top:12px;padding-top:12px}
@@ -920,6 +923,8 @@ body.theme-classic .dc-mini-kpi.deviation .dc-kpi-line.total strong{color:#16232
 .dh-kpi-animal{display:flex;align-items:center;justify-content:center;min-width:62px}
 .dh-hdr-animal{height:52px;width:auto;max-width:70px;object-fit:contain}
 .dh-kpi-shares{flex-direction:column;align-items:stretch;justify-content:center;gap:12px}
+.dh-kpi-heute{flex-direction:column;align-items:center;justify-content:center;gap:5px;text-align:center}
+.dh-kpi-heute .dh-kpi-abs{font-size:16px;margin-top:0}
 .dh-share-row{display:flex;align-items:center;justify-content:space-between;gap:12px}
 .dh-share-pct{font-size:23px;font-weight:800;color:var(--wax-text);letter-spacing:-.015em;line-height:1}
 .dh-share-tag{font-size:13.5px;font-weight:400;color:var(--wax-muted);text-align:right;line-height:1.25;letter-spacing:.01em}
@@ -1083,7 +1088,7 @@ body.theme-classic .dc-mini-kpi.deviation .dc-kpi-line.total strong{color:#16232
   </div></div>
 
 <div id="view-depots" style="display:none">
-  <div class="sec-t mode-row" style="margin-top:4px"><span><span class="sec-n">2 ·</span> Einzeldepots — <span id="depotModeTitle">YTD</span> &amp; Alltime</span><div class="mode-tools"><button id="depotRefreshBtn" class="icon-btn refresh-btn" type="button" title="Kurse aktualisieren" aria-label="Kurse aktualisieren" onclick="refreshMarketData()">↻</button><button id="depotToggleBtn" class="mode-toggle" onclick="toggleDepotMode()">Heute</button></div></div>
+  <div class="sec-t mode-row" style="margin-top:4px"><span><span class="sec-n">2 ·</span> Einzeldepots — YTD &amp; Alltime</span><div class="mode-tools"><button id="depotRefreshBtn" class="icon-btn refresh-btn" type="button" title="Kurse aktualisieren" aria-label="Kurse aktualisieren" onclick="refreshMarketData()">↻</button></div></div>
   <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:16px;" id="mitgliedBtns"></div>
   <div id="depotContent"></div>
 </div>
@@ -3645,11 +3650,8 @@ function renderDepot(id) {
   const ref = REF[id] || {};
   const rankings = getDepotRankings();
   const todayRanks = getDepotTodayRankings();
-  const isToday = depotMode === 'today';
-  const btn = document.getElementById('depotToggleBtn');
-  if (btn) btn.textContent = isToday ? 'YTD' : 'Heute';
-  const title = document.getElementById('depotModeTitle');
-  if (title) title.textContent = isToday ? 'Heute' : 'YTD';
+  // Kein Heute/YTD-Umschalter mehr: KPIs/Hero zeigen fix YTD; "Heute" steckt als eigene Spalte in der Positionstabelle.
+  const isToday = false;
 
   let investAkt=0, kaufwertSum=0;
   aktivPos.forEach(p=>{
@@ -3707,8 +3709,8 @@ function renderDepot(id) {
     <div class="dh-top"><div class="dh-eyebrow">Mein Depot — ${memberFirst}</div><div class="dh-yearpill">Börsenjahr ${boersenjahr}</div></div>
     <div class="dh-hero">
       <div class="dh-card dh-values">
-        <div class="dh-val-block top"><div class="dh-bigval dh-bigval-xl">${atData?f(atData.wert_echt)+' €':'—'}</div><div class="dh-biglabel">Wert Alltime echt</div></div>
-        <div class="dh-val-block bottom"><div class="dh-bigval">${f(gesamtAkt)} €</div><div class="dh-biglabel">Wert aktuell im WAX-Depot</div></div>
+        <div class="dh-val-block top"><div class="dh-bigval dh-bigval-xl">${atData?f(atData.wert_echt)+' €':'—'}</div><div class="dh-biglabel">Wert Alltime echt</div><div class="dh-val-anteil"><b>${anteilAt!=null?f(anteilAt,1)+' %':'—'}</b>Anteil WAX Alltime</div></div>
+        <div class="dh-val-block bottom"><div class="dh-bigval">${f(gesamtAkt)} €</div><div class="dh-biglabel">Wert aktuell im WAX-Depot</div><div class="dh-val-anteil"><b>${f(anteilAkt,1)} %</b>Anteil am Depot aktuell</div></div>
       </div>
       <div class="dh-card dh-chartcard">
         <div class="dh-chart-head"><span>Gewinn bzw. Verlust YTD · ${memberFirst}</span><span>seit 1.1.</span></div>
@@ -3726,9 +3728,10 @@ function renderDepot(id) {
         <div class="dh-kpi-mid"><div class="dh-kpi-pct ${atData?(atData.perf_pa>=0?'pos':'neg'):''}">${atData?fp(atData.perf_pa):'—'}</div><div class="dh-kpi-abs ${gewinnStart!=null?cl(gewinnStart):''}">${gewinnStart!=null?fc(gewinnStart):'—'}</div></div>
         <div class="dh-kpi-animal">${animalImg(atRank)}</div>
       </div>
-      <div class="dh-kpi dh-kpi-shares">
-        <div class="dh-share-row"><span class="dh-share-pct">${f(anteilAkt,1)}%</span><span class="dh-share-tag">Anteil am Depot<br>aktuell</span></div>
-        <div class="dh-share-row"><span class="dh-share-pct">${anteilAt!=null?f(anteilAt,1)+'%':'—'}</span><span class="dh-share-tag">Anteil WAX<br>Alltime</span></div>
+      <div class="dh-kpi dh-kpi-heute">
+        <div class="dh-kpi-rk-l">Heute</div>
+        <div class="dh-kpi-pct ${cl(todayPct)}">${fp(todayPct)}</div>
+        <div class="dh-kpi-abs ${cl(todayAbs)}">${fc(todayAbs)}</div>
       </div>
       <div class="dh-kpi dh-kpi-cash">
         <div class="dh-kpi-mid"><div class="dh-kpi-pct">${f(cashAnteil,1)}%</div><div class="dh-kpi-abs">${f(cash)} €</div></div>
@@ -3737,14 +3740,14 @@ function renderDepot(id) {
     </div>
   </div>`;
 
-  const diffHead = isToday ? 'Veränderung Heute' : 'Veränderung YTD';
   html+=`<div class="dc-group">Aktive Positionen</div>`;
-  html+=`<div class="dc-wrap"><div class="dc-head"><div class="dc-grid">
+  html+=`<div class="dc-wrap"><div class="dc-head"><div class="dc-grid dc-grid-pos6">
     <div class="dc-col dc-name"><div class="dc-hmain">Position</div></div>
     <div class="dc-col dc-share"><div class="dc-hmain">Anteil</div></div>
+    <div class="dc-col"><div class="dc-hmain">YTD</div></div>
+    <div class="dc-col"><div class="dc-hmain">Heute</div></div>
     <div class="dc-col"><div class="dc-hmain">Kurs akt./Kauf</div></div>
     <div class="dc-col"><div class="dc-hmain">Wert akt./Kauf</div></div>
-    <div class="dc-col"><div class="dc-hmain">${diffHead}</div></div>
   </div></div>`;
 
   // Verkaufte Wertpapiere vorab berechnen, damit der KPI direkt in der oberen 3er-Reihe erscheinen kann.
@@ -3782,25 +3785,29 @@ function renderDepot(id) {
     sortedPos.forEach((p,idx)=>{
       const k=liveKurse[p.wkn];
       const prevK=(prevKurse[p.wkn] != null && !isNaN(prevKurse[p.wkn])) ? prevKurse[p.wkn] : k;
-      const isNewCurrentYear = !isToday && p.kauf_datum && String(p.kauf_datum).slice(0,4) > String(REF_JAHR);
+      const isNewCurrentYear = p.kauf_datum && String(p.kauf_datum).slice(0,4) > String(REF_JAHR);
       const wAkt=k!=null?k*p.stueck:(p.wert_ref||p.kaufwert);
-      // Basis je Position: im Heute-Modus der Vortageswert, im YTD-Modus der
-      // 31.12.-Wert (wert_ref) bzw. der Kaufwert bei unterjährig gekauften Titeln,
-      // die es am 31.12. noch nicht gab. So ist die Veränderung je Position sinnvoll.
-      const wBase=isToday ? ((prevK!=null?prevK:k)*p.stueck) : ((p.wert_ref!=null && !isNaN(p.wert_ref)) ? p.wert_ref : p.kaufwert);
+      // YTD-Basis = 31.12.-Wert (wert_ref) bzw. Kaufwert bei unterjährig gekauften Titeln,
+      // die es am 31.12. noch nicht gab. Heute-Basis = Vortageswert (prevK × Stück).
+      // Beide Veränderungen werden parallel in eigenen Spalten angezeigt (kein Umschalter mehr).
+      const wBaseYTD=(p.wert_ref!=null && !isNaN(p.wert_ref)) ? p.wert_ref : p.kaufwert;
+      const wBaseToday=(prevK!=null?prevK:k)*p.stueck;
       sumAktVisible += (wAkt || 0);
-      sumBaseVisible += (wBase || 0);
+      sumBaseVisible += (wBaseYTD || 0);
       const share = totalAktSec>0 ? (wAkt/totalAktSec) : 0;
-      const dp=(k!=null&&wBase)?(wAkt-wBase)/wBase:null;
-      const de=(k!=null&&wBase!=null)?wAkt-wBase:null;
-      const dateBadge=(!isToday && isNewCurrentYear && p.kauf_datum)?`<span class="badge b-new">NEU ${fdate(p.kauf_datum)}</span>`:'';
+      const dpYTD=(k!=null&&wBaseYTD)?(wAkt-wBaseYTD)/wBaseYTD:null;
+      const deYTD=(k!=null&&wBaseYTD!=null)?wAkt-wBaseYTD:null;
+      const dpToday=(k!=null&&wBaseToday)?(wAkt-wBaseToday)/wBaseToday:null;
+      const deToday=(k!=null&&wBaseToday!=null)?wAkt-wBaseToday:null;
+      const dateBadge=(isNewCurrentYear && p.kauf_datum)?`<span class="badge b-new">NEU ${fdate(p.kauf_datum)}</span>`:'';
       const kursDisplay = k!=null ? f(k,2) : `<span class="kurs-loading">lädt…</span>`;
-      html+=`<article class="dc-card ${idx%2?'alt':''}"><div class="dc-grid">
+      html+=`<article class="dc-card ${idx%2?'alt':''}"><div class="dc-grid dc-grid-pos6">
         <div class="dc-col dc-name"><div class="dc-title">${securityDisplayName(p.wkn, p.bezeichnung)}</div><div class="dc-meta"><span>${p.wkn}</span><span>${f(p.stueck,0)} Stk.</span>${dateBadge}</div></div>
         <div class="dc-col dc-share"><div class="dc-share-top">${f(share*100,1)}%</div><div class="dc-bar"><div class="dc-bar-fill" style="width:${Math.min(share*100,100).toFixed(1)}%"></div></div></div>
+        <div class="dc-col ${cl(deYTD)}"><div class="dc-top">${dpYTD!=null?fp(dpYTD):'—'}</div><div class="dc-sub">${deYTD!=null?fc(deYTD):'—'}</div></div>
+        <div class="dc-col ${cl(deToday)}"><div class="dc-top">${dpToday!=null?fp(dpToday):'—'}</div><div class="dc-sub">${deToday!=null?fc(deToday):'—'}</div></div>
         <div class="dc-col"><div class="dc-top">${kursDisplay}</div><div class="dc-sub">${f(p.kaufkurs,2)}</div></div>
         <div class="dc-col"><div class="dc-top">${f(wAkt)} €</div><div class="dc-sub">${f(p.kaufwert)} €</div></div>
-        <div class="dc-col ${cl(de)}"><div class="dc-top">${dp!=null?fp(dp):'—'}</div><div class="dc-sub">${de!=null?fc(de):'—'}</div></div>
       </div></article>`;
     });
     html+=`</div>`;
@@ -3818,12 +3825,13 @@ function renderDepot(id) {
       <div class="dc-mini-sub">Basis ${f(sumBaseVisible)} € · Kaufwert ${f(kaufwertSum)} €</div>
     </div>`;
   } else {
-    html+=`<article class="dc-card"><div class="dc-grid">
+    html+=`<article class="dc-card"><div class="dc-grid dc-grid-pos6">
       <div class="dc-col dc-name"><div class="dc-title" style="color:var(--wax-muted)">Alle Positionen 2026 verkauft</div><div class="dc-meta"><span>Keine aktiven Wertpapiere</span></div></div>
       <div class="dc-col dc-share"></div>
+      <div class="dc-col"><div class="dc-top">0,0%</div><div class="dc-sub">0,00 €</div></div>
+      <div class="dc-col"><div class="dc-top">0,0%</div><div class="dc-sub">0,00 €</div></div>
       <div class="dc-col"></div>
       <div class="dc-col"><div class="dc-top">0,00 €</div></div>
-      <div class="dc-col"><div class="dc-top">0,0%</div><div class="dc-sub">0,00 €</div></div>
     </div></article>`;
     html+=`</div>`;
     var investSummaryHtml = `<div class="dc-mini-kpi">
