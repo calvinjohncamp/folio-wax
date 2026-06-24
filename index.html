@@ -810,6 +810,9 @@ body.theme-classic .neg, body.theme-classic .kpi-v.neg, body.theme-classic .benc
 .dc-card{background:var(--wax-card);box-shadow:0 6px 16px rgba(0,0,0,.10)}
 .dc-card.alt{background:var(--wax-card-soft)}
 .dc-card:hover{border-color:var(--wax-accent)}
+.overview-depot-link{cursor:pointer;transition:border-color .15s, transform .15s, background .15s}
+.overview-depot-link:hover{border-color:var(--wax-accent)!important}
+.overview-depot-link:focus-visible{outline:2px solid var(--wax-accent);outline-offset:3px}
 .dc-grid{display:grid;grid-template-columns:2.2fr 0.95fr 1.2fr 1fr 1.25fr;gap:0;align-items:stretch}
 .dc-grid.dc-grid4{grid-template-columns:2.4fr 1.3fr 1.1fr 1.35fr}
 .dc-grid.dc-grid6{grid-template-columns:2fr 0.9fr 1.15fr 1.05fr 1.1fr 1.2fr}
@@ -3169,6 +3172,13 @@ function showTab(tab) {
   if (tab==='pflege') renderPflege();
 }
 
+function openMitgliedDepot(id) {
+  // Direktsprung von der Übersichts-Rankingzeile ins passende Einzeldepot
+  showTab('depots');
+  selectMitglied(id);
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
 function renderAll() {
   renderUebersicht();
   if (activeTab==='depots') { if (activeMitglied===0) renderEhrungenDepot(); else renderDepot(activeMitglied); }
@@ -3418,7 +3428,7 @@ function renderUebersicht() {
   rows.forEach((r,i)=>{
     const ytdAnimal = i===0?bullImg:(i===rows.length-1?bearImg:'');
     const paAnimal = r.m.id===paBestId?bullImg:(r.m.id===paWorstId?bearImg:'');
-    rhtml += `<article class="dc-card"><div class="dc-grid dc-grid7">
+    rhtml += `<article class="dc-card overview-depot-link" role="button" tabindex="0" title="Einzeldepot öffnen" onclick="openMitgliedDepot(${r.m.id})" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();openMitgliedDepot(${r.m.id});}"><div class="dc-grid dc-grid7">
       <div class="dc-col dc-name"><div class="dc-title">${i+1}. ${r.m.name.split(',')[0]}</div></div>
       <div class="dc-col rankcol ${cl(r.ytd)}"><div class="dc-rankwrap"><div class="dc-rankvals"><div class="dc-top">${fp(r.ytd)}</div><div class="dc-sub">${fc(r.ytdAbs)}</div></div><div class="dc-rankslot">${ytdAnimal}</div></div></div>
       <div class="dc-col ${cl(r.today)}"><div class="dc-top">${fp(r.today)}</div><div class="dc-sub">${fc(r.todayAbs)}</div></div>
