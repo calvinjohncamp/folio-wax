@@ -3941,7 +3941,7 @@ function renderDepot(id) {
         <div class="dh-kpi-animal">${animalImg(ytdRank)}</div>
       </div>
       <div class="dh-kpi dh-kpi-rankcard">
-        <div class="dh-kpi-rank"><div class="dh-kpi-rk-l">Alltime</div><div class="dh-kpi-rk-n">${atRank!=null?atRank+'.':'—'}</div></div>
+        <div class="dh-kpi-rank"><div class="dh-kpi-rk-l">Alltime p.a.</div><div class="dh-kpi-rk-n">${atRank!=null?atRank+'.':'—'}</div></div>
         <div class="dh-kpi-mid"><div class="dh-kpi-pct ${atData?(atData.perf_pa>=0?'pos':'neg'):''}">${atData?fp(atData.perf_pa):'—'}</div><div class="dh-kpi-abs ${gewinnStart!=null?cl(gewinnStart):''}">${gewinnStart!=null?fc(gewinnStart):'—'}</div></div>
         <div class="dh-kpi-animal">${animalImg(atRank)}</div>
       </div>
