@@ -2371,7 +2371,7 @@ function buildMemberGainSeries(id){
   const todayIso=new Date().toISOString().slice(0,10);
   const todayVal=(typeof getDepotwert==='function')?getDepotwert(id):null;
   if(todayVal!=null && !isNaN(todayVal)){ merged[todayIso]=todayVal; dates=Object.keys(merged).sort(); }
-  return dates.map(d=>({date:d, gain: merged[d]-baseline}));
+  return dates.map(d=>({date:d, gain: merged[d]-baseline-cumExternalFlowsUpTo(d, id)}));
 }
 function depotChartSvg(series, idPrefix){
   const pfx = idPrefix || 'd';
@@ -2447,7 +2447,7 @@ function buildClubGainSeries(){
       else v=lastKnown(memberVal[id],d);
       if(v!=null && !isNaN(v)) total+=v;
     });
-    return {date:d, gain: total-baseline};
+    return {date:d, gain: total-baseline-cumExternalFlowsUpTo(d)};
   });
 }
 function renderClubChart(){
@@ -2764,6 +2764,46 @@ function setStatus(state, txt) {
 function getMitglied(id) { return db.mitglieder.find(m=>m.id===id); }
 function getAlltime(id) { return db.alltime.find(a=>a.mitglied_id===id); }
 function getCash(id) { return db.cash.find(c=>c.mitglied_id===id)?.betrag || 0; }
+// === YTD cash-flow-neutral (Version A) ===
+// Externe Geldflüsse (Ein-/Auszahlungen, Reisen, Freigaben) verändern den Depotwert, sind aber
+// KEINE Kursperformance. Sie dürfen die YTD nicht verfälschen. KAUF/VERKAUF sind intern
+// (Cash<->Wertpapier, wertneutral) und bleiben außen vor. KONTOSTAND ist eine Saldo-Korrektur,
+// kein Performance-Fluss – ebenfalls neutralisiert.
+// Nur echte mitgliedsbezogene Geldflüsse. KONTOSTAND ist ein Saldo-Snapshot (z. B. „Comdirect-Gesamtstand",
+// „System-Neustart") OHNE mitglied_id und KEIN Fluss → bewusst NICHT enthalten. Zusätzlich werden Info-
+// Buchungen mit „Comdirect/Gesamtstand"-Bezeichnung und club-weite Buchungen (ohne mitglied_id) ignoriert.
+const YTD_FLOW_TYPES = { EINZAHLUNG:1, ENTNAHME:1, REISE:1, FREIGABE:1 };
+function isRealMemberFlow(b){
+  if (!b) return false;
+  if (!Number(b.mitglied_id)) return false; // club-weite/Info-Buchungen raus
+  if (!YTD_FLOW_TYPES[String(b.typ || '').toUpperCase()]) return false;
+  if (/comdirect|gesamtstand/i.test(String(b.bezeichnung || ''))) return false;
+  return true;
+}
+function netExternalFlows(id){
+  const cy = String(Number(REF_JAHR) + 1); // laufendes Börsenjahr
+  return (db.buchungen || []).reduce((s, b) => {
+    if (!isRealMemberFlow(b) || Number(b.mitglied_id) !== Number(id)) return s;
+    if (String(b.datum || '').slice(0,4) !== cy) return s;
+    return s + Number(b.betrag || 0);
+  }, 0);
+}
+function totalNetExternalFlows(){ return db.mitglieder.reduce((s,m)=>s+netExternalFlows(m.id), 0); }
+// Kumulierte externe Geldflüsse bis einschließlich Datum (für die cash-flow-neutrale Verlaufskurve).
+function cumExternalFlowsUpTo(dateIso, id){
+  const cy = String(Number(REF_JAHR) + 1);
+  return (db.buchungen || []).reduce((s, b) => {
+    if (!isRealMemberFlow(b)) return s;
+    if (id != null && Number(b.mitglied_id) !== Number(id)) return s;
+    const dt = String(b.datum || '');
+    if (dt.slice(0,4) !== cy) return s;
+    if (dateIso && dt > dateIso) return s;
+    return s + Number(b.betrag || 0);
+  }, 0);
+}
+// YTD-Absolut/Prozent eines Mitglieds, bereinigt um externe Geldflüsse.
+function ytdAbsAdj(id, akt){ const a = (akt!=null)?akt:getDepotwert(id); const ref = REF[id]?.total || 0; return a - ref - netExternalFlows(id); }
+function ytdPctAdj(id, akt){ const ref = REF[id]?.total || 0; return ref>0 ? ytdAbsAdj(id, akt)/ref : 0; }
 
 // XIRR (Newton-Raphson, robust — mehrere Startpunkte, Clamping)
 function calcXIRR(cashflows) {
@@ -3280,8 +3320,8 @@ function renderUebersicht() {
   const gesamtPrev = gesamtInvestPrev + comdirectCashTotal;
   const cashPctGesamt = gesamt>0 ? comdirectCashTotal/gesamt : 0;
   const ref2025 = Object.values(REF).reduce((s,r)=>s+r.total,0);
-  const ytdPct = ref2025>0 ? (gesamtEinzeldepots-ref2025)/ref2025 : 0;
-  const ytdAbs = gesamtEinzeldepots-ref2025;
+  const ytdAbs = gesamtEinzeldepots-ref2025-totalNetExternalFlows();
+  const ytdPct = ref2025>0 ? ytdAbs/ref2025 : 0;
   const todayPct = gesamtEinzeldepotsPrev>0 ? (gesamtEinzeldepots-gesamtEinzeldepotsPrev)/gesamtEinzeldepotsPrev : 0;
   const todayAbs = gesamtEinzeldepots-gesamtEinzeldepotsPrev;
   const modePct = overviewMode === 'today' ? todayPct : ytdPct;
@@ -3302,13 +3342,13 @@ function renderUebersicht() {
     const akt = getDepotwert(m.id);
     const prev = getDepotwert(m.id, prevKurse, liveKurse);
     const ref = REF[m.id]?.total || 0;
-    const ytd = ref>0 ? (akt-ref)/ref : 0;
+    const ytd = ref>0 ? (akt-ref-netExternalFlows(m.id))/ref : 0;
     const today = prev>0 ? (akt-prev)/prev : 0;
     const at = calcAlltimeLive(m.id);
     const gewinn = at ? at.wert_echt-EINSATZ_PP : null;
     const cash = getCash(m.id);
     const cashPct = akt>0 ? cash/akt : 0;
-    return { m, akt, prev, ref, ytd, ytdAbs:akt-ref, today, todayAbs:akt-prev, at, anteilAkt:gesamtEinzeldepots>0?akt/gesamtEinzeldepots:0, anteilAt:at?at.wert_echt/totalAlltime:0, gewinn, cash, cashPct };
+    return { m, akt, prev, ref, ytd, ytdAbs:(akt-ref-netExternalFlows(m.id)), today, todayAbs:akt-prev, at, anteilAkt:gesamtEinzeldepots>0?akt/gesamtEinzeldepots:0, anteilAt:at?at.wert_echt/totalAlltime:0, gewinn, cash, cashPct };
   }).sort((a,b)=>(overviewMode==='today' ? b.today-a.today : b.ytd-a.ytd));
   const atSorted = [...rows].sort((a,b)=>(b.at?.wert_echt||0)-(a.at?.wert_echt||0));
   const tg = rows.reduce((s,r)=>s+(r.gewinn||0),0);
@@ -3743,7 +3783,7 @@ function getDepotRankings() {
   const rows = db.mitglieder.map(m=>{
     const akt = getDepotwert(m.id);
     const ref = REF[m.id]?.total || 0;
-    const ytd = ref>0 ? (akt-ref)/ref : 0;
+    const ytd = ref>0 ? (akt-ref-netExternalFlows(m.id))/ref : 0;
     const at = calcAlltimeLive(m.id);
     return { id:m.id, ytd, perf_pa: at?.perf_pa || 0 };
   });
@@ -3771,7 +3811,7 @@ function renderEhrungenDepot() {
   const rows = db.mitglieder.map(m=>{
     const akt = getDepotwert(m.id);
     const ref = REF[m.id]?.total || 0;
-    const ytd = ref>0 ? (akt-ref)/ref : 0;
+    const ytd = ref>0 ? (akt-ref-netExternalFlows(m.id))/ref : 0;
     const at = calcAlltimeLive(m.id);
     return { m, akt, ytd, at };
   });
@@ -3833,8 +3873,9 @@ function renderDepot(id) {
   const gesamtRef = ref.total || 0;
   const investRef = ref.invest || 0;
   const cashRef   = ref.cash  || 0;
-  const ytd = gesamtRef>0 ? (gesamtAkt-gesamtRef)/gesamtRef : 0;
-  const ytdAbs = gesamtAkt-gesamtRef;
+  const _depotFlows = netExternalFlows(id);
+  const ytdAbs = gesamtAkt-gesamtRef-_depotFlows;
+  const ytd = gesamtRef>0 ? ytdAbs/gesamtRef : 0;
   const todayPct = todayStats.todayPct;
   const todayAbs = todayStats.todayAbs;
   const modePct = isToday ? todayPct : ytd;
@@ -4011,7 +4052,7 @@ function renderDepot(id) {
     </div>`;
   }
 
-  const gesamtBase = isToday ? gesamtPrev : gesamtRef;
+  const gesamtBase = isToday ? gesamtPrev : (gesamtRef + _depotFlows);
   // Zwei-Kachel-Zusammenfassung rechtsbündig:
   // links Kursentwicklung, rechts Übersicht aus Aktuell + Cash = Gesamtdepot.
   const currentDepotDev = modeAbs - soldSummary.diff;
@@ -5158,8 +5199,8 @@ function waxBerichtDaten(){
   const proPerson = gesamtEcht/6;
   const cashAnteil = gesamtEcht>0 ? comdirect/gesamtEcht : 0;
   const ref2025 = Object.values(REF).reduce((s,r)=>s+(r.total||0),0);
-  const ytdPct = ref2025>0 ? (gesamtEinzeldepots-ref2025)/ref2025 : 0;
-  const ytdAbs = gesamtEinzeldepots-ref2025;
+  const ytdAbs = gesamtEinzeldepots-ref2025-totalNetExternalFlows();
+  const ytdPct = ref2025>0 ? ytdAbs/ref2025 : 0;
   const clubXirr = calcClubXIRR()||0;
 
   const secDef = (wkn)=> (typeof getSecurityMasterDefault==='function'
