@@ -815,6 +815,17 @@ body.theme-classic .neg, body.theme-classic .kpi-v.neg, body.theme-classic .benc
 .dc-grid.dc-grid6{grid-template-columns:2fr 0.9fr 1.15fr 1.05fr 1.1fr 1.2fr}
 .dc-grid.dc-grid7{grid-template-columns:1fr 1.5fr 1fr 1.5fr 1.05fr 1.05fr 0.95fr}
 .dc-grid.dc-grid-pos6{grid-template-columns:2.2fr 0.9fr 1.1fr 1.1fr 1.15fr 1.2fr}
+/* Kaufkurse-/Analyse-Ansicht */
+.dc-grid.dc-grid-ana{grid-template-columns:2.2fr 1.2fr 1.2fr 1fr 1fr}
+.dc-card.sp500-row{background:#141414}
+body.theme-classic .dc-card.sp500-row{background:#ECEAE4}
+.kk-toggle{font-size:12px;font-weight:700;letter-spacing:.02em;color:var(--wax-text);background:var(--wax-card);border:1px solid var(--wax-border);border-radius:999px;padding:7px 14px;cursor:pointer;white-space:nowrap;transition:all .15s}
+.kk-toggle:hover{border-color:var(--wax-accent)}
+.kk-toggle.active{background:var(--wax-accent);border-color:var(--wax-accent);color:#fff}
+.kk-toggle.loading{opacity:.6;pointer-events:none}
+.sp500-links{display:flex;gap:6px;margin-top:9px;flex-wrap:wrap}
+.sp500-link{display:inline-flex;align-items:center;gap:3px;font-size:10.5px;font-weight:700;letter-spacing:.02em;color:var(--wax-text);background:var(--wax-card-soft);border:1px solid var(--wax-border);border-radius:999px;padding:3px 10px;text-decoration:none;white-space:nowrap}
+.sp500-link:hover{border-color:var(--wax-accent);color:var(--wax-accent)}
 .dc-rank-animal{height:26px;width:auto;vertical-align:middle;margin-left:8px}
 .dc-col.rankcol{align-items:stretch}
 .dc-rankwrap{display:grid;grid-template-columns:1fr 42px;align-items:center;gap:16px;width:100%}
@@ -850,7 +861,8 @@ body.theme-classic .neg, body.theme-classic .kpi-v.neg, body.theme-classic .benc
 .dc-kpi-line{display:grid;grid-template-columns:minmax(64px,1fr) auto;align-items:center;gap:10px;min-width:0;padding:7px 0}
 .dc-kpi-line+.dc-kpi-line{border-top:1px solid rgba(228,238,240,.07)}
 .dc-kpi-line span{font-size:11px;font-weight:600;letter-spacing:.07em;text-transform:uppercase;color:var(--wax-muted-2);white-space:nowrap;display:flex;align-items:baseline;gap:7px;overflow:visible}
-.dc-kpi-line .dc-pct{color:#FFFFFF;font-weight:700;font-size:10.5px;letter-spacing:.02em;opacity:.62}
+.dc-kpi-line .dc-pct{color:#FFFFFF;font-weight:400;font-size:10.5px;letter-spacing:.02em;opacity:.62}
+.dc-kpi-line .dc-pct b{font-weight:700}
 .dc-kpi-line strong{font-family:'DM Sans',system-ui,-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif!important;display:inline-flex;flex-direction:column;align-items:flex-end;gap:1px;line-height:1.04;color:var(--wax-text);text-align:right;white-space:nowrap;font-variant-numeric:lining-nums;font-feature-settings:"lnum" 1;min-width:0;font-weight:800}
 .dc-kpi-line strong .dc-num{font-size:18px;font-weight:800;letter-spacing:-.02em}
 .dc-kpi-line strong .dc-delta{font-size:11px;font-weight:700;letter-spacing:0;opacity:.82}
@@ -1088,7 +1100,7 @@ body.theme-classic .dc-mini-kpi.deviation .dc-kpi-line.total strong{color:#16232
   </div></div>
 
 <div id="view-depots" style="display:none">
-  <div class="sec-t mode-row" style="margin-top:4px"><span><span class="sec-n">2 ·</span> Einzeldepots — YTD &amp; Alltime</span><div class="mode-tools"><button id="depotRefreshBtn" class="icon-btn refresh-btn" type="button" title="Kurse aktualisieren" aria-label="Kurse aktualisieren" onclick="refreshMarketData()">↻</button></div></div>
+  <div class="sec-t mode-row" style="margin-top:4px"><span><span class="sec-n">2 ·</span> Einzeldepots — YTD &amp; Alltime</span><div class="mode-tools"><button id="depotKaufkurseBtn" class="kk-toggle" type="button" onclick="toggleKaufkurse()">Kaufkurse?</button><button id="depotRefreshBtn" class="icon-btn refresh-btn" type="button" title="Kurse aktualisieren" aria-label="Kurse aktualisieren" onclick="refreshMarketData()">↻</button></div></div>
   <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:16px;" id="mitgliedBtns"></div>
   <div id="depotContent"></div>
 </div>
@@ -1567,6 +1579,12 @@ function sanitizeDatabase(data) {
 let db = { mitglieder:[], positionen:[], cash:[], alltime:[], buchungen:[], security_master:[] };
 let liveKurse = {};
 let prevKurse = {};
+// === Kaufkurse-/Analyse-Ansicht (52W-Hoch/Tief, KGV, Potential/Risiko, S&P-Benchmark) ===
+let liveKgv = {};            // wkn -> Trailing-PE (aktive + verkaufte Titel)
+let anaKurse = {};           // wkn -> aktueller EUR-Kurs für VERKAUFTE Titel (aktive stehen in liveKurse)
+let sp500Ref = null;         // {level, high12m, low12m, gaapPe, shillerCape}
+let kaufkurseMode = false;   // globaler Toggle: Einzeldepots zeigen Kaufkurse-Analyse statt Standardliste
+let kaufkurseDataLoaded = false;
 let marketRefreshRunning = false;
 let benchQuotes = {};
 let fxRates = {};
@@ -1844,7 +1862,7 @@ function structureLegend(items, total, topN = null){
 function structureBar(items){
   const max = items[0]?.value || 1;
   const total = items.reduce((s,x)=>s+x.value,0) || 1;
-  return `<div class="bar-list">${items.slice(0,6).map(item => `<div class="bar-item"><div class="bar-label">${item.label}</div><div class="bar-track"><div class="bar-fill" style="width:${(item.value/max)*100}%;background:${item.color}"></div></div><div class="bar-value">${f((item.value/total)*100,1)}%</div></div>`).join('')}</div>`;
+  return `<div class="bar-list">${items.map(item => `<div class="bar-item"><div class="bar-label">${item.label}</div><div class="bar-track"><div class="bar-fill" style="width:${(item.value/max)*100}%;background:${item.color}"></div></div><div class="bar-value">${f((item.value/total)*100,1)}%</div></div>`).join('')}</div>`;
 }
 function renderStructureHtml(positions, subtitle){
   if (!positions || !positions.length) return `<div class="meta-panel">Für diese Ansicht sind noch keine aktiven Wertpapierpositionen vorhanden.</div>`;
@@ -2194,7 +2212,11 @@ function parseWorkerQuotePayload(j) {
   if (!prev && price && changePct != null && changePct !== -100) prev = price / (1 + changePct / 100);
   if (!prev) prev = Number(meta.chartPreviousClose || meta.previousClose || 0) || null;
 
-  return price ? { price, prev: prev || null } : null;
+  // KGV / Trailing-PE (liefert der wax-kurse-Worker seit dem Crumb-Fix mit).
+  const peRaw = j.trailingPE ?? j.trailingPe ?? j.trailing_pe ?? null;
+  const trailingPE = peRaw != null && !isNaN(Number(peRaw)) ? Number(peRaw) : null;
+
+  return price ? { price, prev: prev || null, trailingPE } : null;
 }
 
 async function cfFetchQuote(ticker) {
@@ -2453,11 +2475,81 @@ async function loadKurse() {
     if (quote && quote.price) {
       liveKurse[wkn] = toEUR(quote.price, info.fx);
       prevKurse[wkn] = toEUR(quote.prev || quote.price, info.fx);
+      liveKgv[wkn] = (quote.trailingPE != null && isFinite(Number(quote.trailingPE))) ? Number(quote.trailingPE) : null;
     } else {
       // Ticker vorhanden, aber kein Kurs geliefert
       missingTickerWkns.push(wkn);
     }
   }));
+}
+
+// Zusätzliche Daten für die Kaufkurse-Analyse: aktueller Kurs/KGV der VERKAUFTEN Titel,
+// 52W-Historie aller gezeigten Titel und die S&P-500-Benchmark. Lazy beim ersten Öffnen.
+async function ensureKaufkurseData(force){
+  if(kaufkurseDataLoaded && !force) return;
+  const aktiveWkns = [...new Set(db.positionen.filter(p=>!p.verkauft&&num(p.stueck)>0).map(p=>repairKnownWkn(p.wkn)))];
+  const verkauftWkns = [...new Set(db.positionen.filter(p=>p.verkauft).map(p=>repairKnownWkn(p.wkn)))].filter(w=>!aktiveWkns.includes(w));
+  await Promise.all([
+    // Verkaufte Titel: aktuellen Marktkurs + KGV nachladen (aktive haben das bereits aus loadKurse).
+    ...verkauftWkns.map(async wkn => {
+      const info = resolveTickerByWKN(wkn);
+      if(!info) return;
+      const quote = await cfFetchQuote(info.t);
+      if(quote && quote.price){
+        anaKurse[wkn] = toEUR(quote.price, info.fx);
+        liveKgv[wkn] = (quote.trailingPE != null && isFinite(Number(quote.trailingPE))) ? Number(quote.trailingPE) : null;
+      }
+    }),
+    // 52W-Historie für alle gezeigten Titel sicherstellen.
+    ...[...aktiveWkns, ...verkauftWkns].map(wkn => ensureHistory(wkn).catch(()=>{})),
+    // S&P-500-Benchmark (Indexstand + 52W von ^GSPC, GAAP-KGV + Shiller via multpl).
+    loadSp500Reference()
+  ]);
+  kaufkurseDataLoaded = true;
+}
+// Aktueller EUR-Kurs eines Titels für die Analyse (aktiv: liveKurse, verkauft: anaKurse).
+function anaPriceEUR(wkn){
+  const a = liveKurse[wkn]; if(a!=null && !isNaN(a)) return Number(a);
+  const b = anaKurse[wkn]; if(b!=null && !isNaN(b)) return Number(b);
+  return null;
+}
+// 52W-Hoch/Tief (EUR) aus der gespeicherten Historie.
+function ana52w(wkn){
+  const ser = histByWkn[wkn];
+  if(!ser || !ser.length) return { high:null, low:null };
+  const cl = ser.map(p=>Number(p.closeEUR)).filter(Number.isFinite);
+  if(!cl.length) return { high:null, low:null };
+  return { high: Math.max(...cl), low: Math.min(...cl) };
+}
+async function fetchMultplValuation(){
+  try{
+    const r = await fetch(`${CF_WORKER}/?multpl=1&_=${Math.floor(Date.now()/3600000)}`, { signal: AbortSignal.timeout(12000) });
+    if(!r.ok) return null;
+    const j = await r.json();
+    const nz = v => (v!=null && isFinite(Number(v))) ? Number(v) : null;
+    return { pe: nz(j.pe), cape: nz(j.cape) };
+  }catch(e){ return null; }
+}
+async function loadSp500Reference(){
+  try{
+    const [idxQuote, hist, multpl] = await Promise.all([
+      cfFetchQuote('^GSPC'),
+      cfFetchHistory('^GSPC'),
+      fetchMultplValuation()
+    ]);
+    const level = idxQuote && idxQuote.price ? Number(idxQuote.price) : null;
+    if(!level) return;
+    let high12m=null, low12m=null;
+    if(Array.isArray(hist) && hist.length){
+      const cl = hist.map(p=>Number(p.close)).filter(Number.isFinite);
+      if(cl.length){ high12m=Math.max(...cl); low12m=Math.min(...cl); }
+    }
+    sp500Ref = {
+      level, high12m, low12m,
+      gaapPe: multpl && multpl.pe!=null ? multpl.pe : (sp500Ref && sp500Ref.gaapPe!=null ? sp500Ref.gaapPe : null),
+      shillerCape: multpl && multpl.cape!=null ? multpl.cape : (sp500Ref && sp500Ref.shillerCape!=null ? sp500Ref.shillerCape : null)
+    };
+  }catch(e){ /* alten Stand behalten */ }
 }
 
 
@@ -3291,7 +3383,7 @@ function renderUebersicht() {
       <div class="dc-col rankcol ${cl(r.ytd)}"><div class="dc-rankwrap"><div class="dc-rankvals"><div class="dc-top">${fp(r.ytd)}</div><div class="dc-sub">${fc(r.ytdAbs)}</div></div><div class="dc-rankslot">${ytdAnimal}</div></div></div>
       <div class="dc-col ${cl(r.today)}"><div class="dc-top">${fp(r.today)}</div><div class="dc-sub">${fc(r.todayAbs)}</div></div>
       <div class="dc-col rankcol ${r.at?cl(r.at.perf_pa):''}"><div class="dc-rankwrap"><div class="dc-rankvals"><div class="dc-top">${r.at?fp(r.at.perf_pa):'—'}</div><div class="dc-sub">${r.gewinn!=null?fc(r.gewinn):'—'}</div></div><div class="dc-rankslot">${paAnimal}</div></div></div>
-      <div class="dc-col"><div class="dc-top">${f(r.akt)} €</div><div class="dc-sub">Cash ${f(r.cashPct*100,1)}%</div></div>
+      <div class="dc-col"><div class="dc-top">${f(r.akt)} €</div><div class="dc-sub" style="font-weight:700">Cash ${f(r.cashPct*100,1)}%</div></div>
       <div class="dc-col"><div class="dc-top">${r.at?f(r.at.wert_echt)+' €':'—'}</div></div>
       <div class="dc-col dc-share"><div class="dc-share-top">${f(r.anteilAt*100,1)}%</div><div class="dc-bar"><div class="dc-bar-fill" style="width:${Math.min(r.anteilAt*100,100).toFixed(1)}%"></div></div></div>
     </div></article>`;
@@ -3301,7 +3393,7 @@ function renderUebersicht() {
     <div class="dc-col rankcol ${cl(ytdPct)}"><div class="dc-rankwrap"><div class="dc-rankvals"><div class="dc-top">${fp(ytdPct)}</div><div class="dc-sub">${fc(ytdAbs)}</div></div><div class="dc-rankslot"></div></div></div>
     <div class="dc-col ${cl(todayPct)}"><div class="dc-top">${fp(todayPct)}</div><div class="dc-sub">${fc(todayAbs)}</div></div>
     <div class="dc-col rankcol ${cl(perfPaLive)}"><div class="dc-rankwrap"><div class="dc-rankvals"><div class="dc-top">${fp(perfPaLive)}</div><div class="dc-sub">${fc(tg)}</div></div><div class="dc-rankslot"></div></div></div>
-    <div class="dc-col"><div class="dc-top">${f(gesamtEinzeldepots)} €*</div><div class="dc-sub">Cash ${f(totalCashPctVirtual*100,1)}%</div></div>
+    <div class="dc-col"><div class="dc-top">${f(gesamtEinzeldepots)} €*</div><div class="dc-sub" style="font-weight:700">Cash ${f(totalCashPctVirtual*100,1)}%</div></div>
     <div class="dc-col"><div class="dc-top">${f(totalAlltime)} €</div></div>
     <div class="dc-col dc-share"><div class="dc-share-top">100%</div><div class="dc-bar"><div class="dc-bar-fill" style="width:100%"></div></div></div>
   </div></div>
@@ -3572,6 +3664,80 @@ function selectMitglied(id) {
   renderDepot(id);
 }
 
+// === Kaufkurse-Analyse (52W-Hoch/Tief · KGV · Potential/Risiko · S&P-Benchmark) ===
+async function toggleKaufkurse(){
+  kaufkurseMode = !kaufkurseMode;
+  const btn = document.getElementById('depotKaufkurseBtn');
+  if(btn){ btn.textContent = kaufkurseMode ? 'aktuell' : 'Kaufkurse?'; btn.classList.toggle('active', kaufkurseMode); }
+  if(kaufkurseMode){
+    if(btn) btn.classList.add('loading');
+    try{ await ensureKaufkurseData(); }catch(e){}
+    if(btn) btn.classList.remove('loading');
+  }
+  if(activeMitglied && activeMitglied!==0) renderDepot(activeMitglied);
+}
+// Eine Analyse-Zeile (gilt für aktive wie verkaufte Titel).
+function kkRow(p, idx){
+  const wkn=p.wkn;
+  const cur=anaPriceEUR(wkn);
+  const w52=ana52w(wkn);
+  const hi=w52.high, lo=w52.low, kgv=liveKgv[wkn];
+  const hasC=cur!=null&&cur>0, hasH=hi!=null&&hi>0, hasL=lo!=null&&lo>0;
+  const upR=(hasC&&hasH)?(hi/cur-1):null;
+  const dnR=(hasC&&hasL)?(lo/cur-1):null;
+  const kgvTxt=(kgv!=null&&isFinite(Number(kgv)))?f(Number(kgv),1):'—';
+  return `<article class="dc-card ${idx%2?'alt':''}"><div class="dc-grid dc-grid-ana">
+    <div class="dc-col dc-name"><div class="dc-title">${securityDisplayName(wkn, p.bezeichnung)}</div><div class="dc-meta"><span>${wkn}</span><span>${f(p.stueck,0)} Stk.</span></div></div>
+    <div class="dc-col"><div class="dc-top">${hasC?f(cur,2)+' €':'—'}</div><div class="dc-sub">KGV ${kgvTxt}</div></div>
+    <div class="dc-col"><div class="dc-top">${hasH?f(hi,2)+' €':'—'}</div><div class="dc-sub">${hasL?f(lo,2)+' €':'—'}</div></div>
+    <div class="dc-col ${cl(upR)}"><div class="dc-top">${upR!=null?fp(upR):'—'}</div></div>
+    <div class="dc-col ${cl(dnR)}"><div class="dc-top">${dnR!=null?fp(dnR):'—'}</div></div>
+  </div></article>`;
+}
+// S&P-500-Benchmark-Zeile (Markt-„Bibel"): Indexstand + GAAP-KGV + Shiller CAPE von multpl.
+function kkSp500Row(){
+  if(!sp500Ref || !sp500Ref.level) return '';
+  const lvl=Number(sp500Ref.level), hi=Number(sp500Ref.high12m), lo=Number(sp500Ref.low12m);
+  const hasH=isFinite(hi)&&hi>0, hasL=isFinite(lo)&&lo>0;
+  const upR=hasH?(hi/lvl-1):null, dnR=hasL?(lo/lvl-1):null;
+  const peTxt=(sp500Ref.gaapPe!=null)?f(Number(sp500Ref.gaapPe),1):'—';
+  const capeTxt=(sp500Ref.shillerCape!=null)?f(Number(sp500Ref.shillerCape),1):'—';
+  const lnk=(u,t)=>`<a href="${u}" target="_blank" rel="noopener" class="sp500-link">${t} ↗</a>`;
+  return `<article class="dc-card sp500-row"><div class="dc-grid dc-grid-ana">
+    <div class="dc-col dc-name"><div class="dc-title">S&amp;P 500 Index</div><div class="dc-meta"><span>Benchmark · GAAP-KGV &amp; Shiller (echte Gewinne)</span></div><div class="sp500-links">${lnk('https://www.multpl.com/s-p-500-pe-ratio','S&amp;P 500 KGV')}${lnk('https://www.multpl.com/shiller-pe','Shiller CAPE')}</div></div>
+    <div class="dc-col"><div class="dc-top">${f(lvl,0)} Pkt.</div><div class="dc-sub">KGV ${peTxt} · CAPE ${capeTxt}</div></div>
+    <div class="dc-col"><div class="dc-top">${hasH?f(hi,0)+' Pkt.':'—'}</div><div class="dc-sub">${hasL?f(lo,0)+' Pkt.':'—'}</div></div>
+    <div class="dc-col ${cl(upR)}"><div class="dc-top">${upR!=null?fp(upR):'—'}</div></div>
+    <div class="dc-col ${cl(dnR)}"><div class="dc-top">${dnR!=null?fp(dnR):'—'}</div></div>
+  </div></article>`;
+}
+function renderDepotKaufkurse(aktivPos, verkauftPos){
+  const cols=`<div class="dc-col dc-name"><div class="dc-hmain">Position</div></div>`
+    +`<div class="dc-col"><div class="dc-hmain">Kurs akt. / KGV</div></div>`
+    +`<div class="dc-col"><div class="dc-hmain">52 Wo. Hoch / Tief</div></div>`
+    +`<div class="dc-col"><div class="dc-hmain">Potential</div></div>`
+    +`<div class="dc-col"><div class="dc-hmain">Risiko</div></div>`;
+  const headOpen=`<div class="dc-wrap"><div class="dc-head"><div class="dc-grid dc-grid-ana">${cols}</div></div>`;
+  let h=`<div class="dc-group">Aktive Positionen — Bewertung</div>`+headOpen;
+  h+=kkSp500Row();
+  if(aktivPos.length){
+    const sorted=[...aktivPos].sort((a,b)=>{
+      const wa=(liveKurse[a.wkn]||0)*num(a.stueck), wb=(liveKurse[b.wkn]||0)*num(b.stueck);
+      return wb-wa;
+    });
+    sorted.forEach((p,i)=> h+=kkRow(p, i+1));
+  } else {
+    h+=`<article class="dc-card"><div class="dc-grid dc-grid-ana"><div class="dc-col dc-name"><div class="dc-title" style="color:var(--wax-muted)">Keine aktiven Wertpapiere</div></div><div class="dc-col"></div><div class="dc-col"></div><div class="dc-col"></div><div class="dc-col"></div></div></article>`;
+  }
+  h+=`</div>`;
+  if(verkauftPos.length){
+    h+=`<div class="dc-group">Verkaufte Wertpapiere — Bewertung heute</div>`+headOpen;
+    [...verkauftPos].forEach((p,i)=> h+=kkRow(p, i));
+    h+=`</div>`;
+  }
+  return h;
+}
+
 
 function getDepotRankings() {
   const rows = db.mitglieder.map(m=>{
@@ -3740,6 +3906,9 @@ function renderDepot(id) {
     </div>
   </div>`;
 
+  if(kaufkurseMode){
+    html += renderDepotKaufkurse(aktivPos, verkauftPos);
+  } else {
   html+=`<div class="dc-group">Aktive Positionen</div>`;
   html+=`<div class="dc-wrap"><div class="dc-head"><div class="dc-grid dc-grid-pos6">
     <div class="dc-col dc-name"><div class="dc-hmain">Position</div></div>
@@ -3863,8 +4032,8 @@ function renderDepot(id) {
     <div class="dc-mini-kpi depot">
       <div class="dc-mini-label">Übersicht</div>
       <div class="dc-kpi-lines">
-        <div class="dc-kpi-line"><span>Aktuell <b class="dc-pct">(${f(investSharePct*100,0)}%)</b></span><strong><span class="dc-num">${f(investAkt)} €</span><em class="dc-basis">Basis ${f(currentDepotBase)} €</em></strong></div>
-        <div class="dc-kpi-line"><span>Cash <b class="dc-pct">(${f(cashSharePct*100,0)}%)</b></span><strong><span class="dc-num">${f(cash)} €</span></strong></div>
+        <div class="dc-kpi-line"><span>Aktuell <span class="dc-pct">(<b>${f(investSharePct*100,0)}%</b>)</span></span><strong><span class="dc-num">${f(investAkt)} €</span><em class="dc-basis">Basis ${f(currentDepotBase)} €</em></strong></div>
+        <div class="dc-kpi-line"><span>Cash <span class="dc-pct">(<b>${f(cashSharePct*100,0)}%</b>)</span></span><strong><span class="dc-num">${f(cash)} €</span></strong></div>
         <div class="dc-kpi-line total"><span>Gesamtdepot</span><strong><span class="dc-num">${f(gesamtAkt)} €</span><em class="dc-basis">Basis ${f(gesamtBase)} €</em></strong></div>
       </div>
     </div>
@@ -3910,10 +4079,11 @@ function renderDepot(id) {
   if (!isToday) {
     html += `<div id="singleDepotStructureMount" class="dc-structure-mount"></div>`;
   }
+  } // Ende Standardansicht (else zu kaufkurseMode)
 
   document.getElementById('depotContent').innerHTML = html;
 
-  if (!isToday) {
+  if (!isToday && !kaufkurseMode) {
     try {
       const mount = document.getElementById('singleDepotStructureMount');
       if (mount) {
@@ -4390,7 +4560,7 @@ async function saveKauf() {
 
 function calcFreigabe() {
   const b=parseFloat(document.getElementById('frBetrag').value);
-  document.getElementById('frVorschau').textContent = (b&&b>0)?`Je Mitglied: ${f(b/6)} € (1/6 von ${f(b)} €)`:'';
+  document.getElementById('frVorschau').textContent = (b&&!isNaN(b))?`Je Mitglied: ${f(b/6)} € (1/6 von ${f(b)} €)`:'';
 }
 
 async function saveFreigabe() {
