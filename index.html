@@ -827,6 +827,30 @@ body.theme-classic .neg, body.theme-classic .kpi-v.neg, body.theme-classic .benc
 .overview-depot-link{cursor:pointer;transition:border-color .15s, transform .15s, background .15s}
 .overview-depot-link:hover{border-color:var(--wax-accent)!important}
 .overview-depot-link:focus-visible{outline:2px solid var(--wax-accent);outline-offset:3px}
+/* === Aktuelle Entwicklungen (5 Themen-Kacheln, helleres Blau) === */
+:root,body.theme-modern,body:not(.theme-classic){ --entw-blue:#6FC2E0; --entw-blue-soft:#9BD6EE; --entw-tint:rgba(95,179,212,.30); --entw-tint-strong:rgba(95,179,212,.44); --entw-border:rgba(120,200,228,.45); }
+body.theme-classic{ --entw-blue:#2E7FA6; --entw-blue-soft:#4C97BE; --entw-tint:rgba(46,127,166,.16); --entw-tint-strong:rgba(46,127,166,.26); --entw-border:rgba(46,127,166,.40); }
+.entw-wrap{margin-bottom:24px}
+.entw-tiles{display:grid;grid-template-columns:repeat(5,1fr);gap:10px}
+@media(max-width:860px){.entw-tiles{grid-template-columns:repeat(2,1fr)}}
+@media(max-width:480px){.entw-tiles{grid-template-columns:1fr}}
+.entw-tile{position:relative;display:flex;align-items:center;min-height:74px;text-align:left;cursor:pointer;border:1px solid var(--entw-border);background:var(--entw-tint);border-radius:12px;padding:15px 32px 15px 17px;font-family:inherit;color:var(--wax-text);transition:transform .15s,background .15s,box-shadow .15s}
+.entw-tile:hover{transform:translateY(-2px);background:var(--entw-tint-strong);box-shadow:inset 3px 0 0 var(--entw-blue),inset 0 3px 0 var(--entw-blue),0 8px 22px rgba(0,0,0,.18)}
+.entw-tile:focus-visible{outline:2px solid var(--entw-blue);outline-offset:3px}
+.entw-tile.active{background:var(--entw-tint-strong);box-shadow:inset 3px 0 0 var(--entw-blue),inset 0 3px 0 var(--entw-blue),0 8px 22px rgba(0,0,0,.18)}
+.entw-tile .et-ttl{font-size:18px;font-weight:700;line-height:1.2;letter-spacing:-.01em;color:var(--wax-text)}
+.entw-tile .et-chev{position:absolute;right:13px;top:50%;transform:translateY(-50%);color:var(--entw-blue);font-size:12px;transition:transform .2s,opacity .15s;opacity:0}
+.entw-tile:hover .et-chev,.entw-tile.active .et-chev{opacity:.85}
+.entw-tile.active .et-chev{transform:translateY(-50%) rotate(180deg)}
+.entw-panel{margin-top:12px;border:1px solid var(--wax-border);border-left:3px solid var(--entw-blue);background:var(--wax-card);border-radius:12px;padding:16px 18px;box-shadow:0 6px 16px rgba(0,0,0,.10)}
+.entw-panel h4{font-size:18px;font-weight:700;color:var(--wax-text);letter-spacing:-.01em;margin-bottom:10px}
+.entw-panel .ep-sum{font-size:13.5px;line-height:1.6;color:var(--wax-text);font-weight:700;margin-bottom:14px}
+.entw-panel .ep-blabel{font-size:9px;font-weight:600;letter-spacing:.13em;text-transform:uppercase;color:var(--wax-muted-2);margin-bottom:6px}
+.entw-panel ul{list-style:none;margin:0;padding:0}
+.entw-panel li{position:relative;font-size:12.5px;line-height:1.5;color:var(--wax-text-2);padding:4px 0 4px 16px}
+.entw-panel li::before{content:"";position:absolute;left:0;top:11px;width:6px;height:6px;border-radius:50%;background:var(--entw-blue)}
+.entw-foot{margin-top:11px;font-size:10px;color:var(--wax-muted);line-height:1.5}
+.entw-stand{font-size:10px;font-weight:600;letter-spacing:.04em;color:var(--entw-blue);text-transform:none}
 .dc-grid{display:grid;grid-template-columns:2.2fr 0.95fr 1.2fr 1fr 1.25fr;gap:0;align-items:stretch}
 .dc-grid.dc-grid4{grid-template-columns:2.4fr 1.3fr 1.1fr 1.35fr}
 .dc-grid.dc-grid6{grid-template-columns:2fr 0.9fr 1.15fr 1.05fr 1.1fr 1.2fr}
@@ -1051,11 +1075,13 @@ body.theme-classic .dc-mini-kpi.deviation .dc-kpi-line.total strong{color:#16232
 
 <div id="view-uebersicht">
   <div id="overviewHeroMount" style="margin-top:4px"></div>
-  <div class="dc-group"><span class="sec-n">2 ·</span> Ranking — aktuell &amp; Alltime</div>
+  <div class="dc-group"><span class="sec-n">2 ·</span> Aktuelle Entwicklungen <span id="entwStand" class="entw-stand"></span></div>
+  <div id="overviewEntwicklungen" class="entw-wrap"></div>
+  <div class="dc-group"><span class="sec-n">3 ·</span> Ranking — aktuell &amp; Alltime</div>
   <div id="overviewRankMount" class="dc-wrap"></div>
-  <div class="sec-t" style="margin-top:24px"><span class="sec-n">3 ·</span> Depotstruktur — Kategorien · Länder · Börsen</div>
+  <div class="sec-t" style="margin-top:24px"><span class="sec-n">4 ·</span> Depotstruktur — Kategorien · Länder · Börsen</div>
   <div id="overviewStructure"></div>
-  <div class="sec-t"><span class="sec-n">4 ·</span> <span id="benchTitle">Benchmarks YTD</span></div>
+  <div class="sec-t"><span class="sec-n">5 ·</span> <span id="benchTitle">Benchmarks YTD</span></div>
   <div class="bench-grid">
     <div class="bench-item"><div class="bench-l">WAX</div><div class="bench-v" id="bWax">—</div></div>
     <div class="bench-item"><div class="bench-l">Nasdaq</div><div class="bench-v" id="bNasdaq">lädt…</div></div>
@@ -3331,6 +3357,89 @@ function applyOverviewModeLabels() {
   if (benchTitle) benchTitle.textContent = isToday ? 'Benchmarks Heute' : 'Benchmarks YTD';
 }
 
+// === Aktuelle Entwicklungen (Übersicht, Abschnitt 2) =========================
+// Frontend (Phase 1): liest die jeweils neueste Zeile aus Supabase-Tabelle
+// `entwicklungen` { stand: date, themen: jsonb }. themen ist ein Objekt mit den
+// 5 Schlüsseln politik/wirtschaft/gesellschaft/finanzen/boerse, je { summary, bullets[] }.
+// Solange das Backend (Phase 2: Worker + News + Claude, 1×/Tag) noch keine Daten
+// liefert, wird der eingebettete Beispielinhalt (ENTW_SEED) angezeigt.
+const ENTW_THEMEN = [
+  { key:'politik',      no:'①', titel:'Politik' },
+  { key:'wirtschaft',   no:'②', titel:'Wirtschaft' },
+  { key:'gesellschaft', no:'③', titel:'Gesellschaft' },
+  { key:'finanzen',     no:'④', titel:'Finanzen' },
+  { key:'boerse',       no:'⑤', titel:'Börse & Unternehmen' },
+];
+const ENTW_SEED = {
+  politik:      { summary:'Teilweise Entspannung im Konflikt USA–Iran senkt die Angst vor Energie-Engpässen; Ukraine und die Rivalität USA–China bleiben. Die Welt bewegt sich Richtung multipolarer Ordnung mit dauerhaft höheren geopolitischen Risiken.', bullets:['Energiepreise bleiben ein struktureller Unsicherheitsfaktor.','Verteidigungsausgaben bleiben langfristig hoch.','Lieferketten werden weiter regionalisiert.'] },
+  wirtschaft:   { summary:'Erstmals wieder spürbar bessere Stimmung in der deutschen Wirtschaft — ifo und Unternehmenseinschätzungen deuten auf eine Bodenbildung. Von einem kräftigen Aufschwung kann aber noch keine Rede sein.', bullets:['Deutschland könnte den Tiefpunkt hinter sich haben.','Industrie und Export bleiben anfällig.','Infrastrukturprogramme beginnen langsam zu wirken.'] },
+  gesellschaft: { summary:'KI wird vom Technologie- zunehmend zum Gesellschaftsthema: massive Investitionen, zugleich wachsende Sorgen über Arbeitsplätze, Informationsqualität und Alltag. Studien zeigen Verunsicherung durch das Tempo des Wandels.', bullets:['Produktivität dürfte steigen.','Gewinner sind Unternehmen mit echten KI-Anwendungen.','Der Wettbewerb um Fachkräfte verschiebt sich erheblich.'] },
+  finanzen:     { summary:'Nach den Nahost-Turbulenzen richtet sich der Blick wieder auf Inflation und Zentralbanken. Sinkende Ölpreise entlasten, viele rechnen aber weiter mit restriktiver Geldpolitik. Liquidität bleibt kurzfristig der wichtigste Markttreiber.', bullets:['Anleiherenditen bleiben attraktiv.','Aktien reagieren wieder stärker auf Zinserwartungen.','Liquidität gewinnt gegenüber kurzfristigen Konjunkturdaten.'] },
+  boerse:       { summary:'Die wichtigste Börsengeschichte ist nicht ein neuer Rekord, sondern die kritischere Diskussion über die Bewertungen großer KI-Unternehmen. Bei Tech- und Raumfahrtwerten deutliche Rücksetzer, während KI-Investitionen auf Rekordniveau bleiben.', bullets:['Führen die enormen KI-Investitionen wirklich zu steigenden Gewinnen?','Welche Unternehmen entwickeln nachhaltige Wettbewerbsvorteile?','Wo entstehen Überbewertungen?'] },
+};
+let __entwData = null;     // gecachte Themen-Daten { ...themen }
+let __entwStand = null;    // Datums-/Quellen-Label
+let __entwOpen  = null;    // aktuell geöffneter Schlüssel (Akkordeon)
+
+function entwEscape(s){ return String(s==null?'':s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c])); }
+
+async function renderEntwicklungen(){
+  const mount = document.getElementById('overviewEntwicklungen');
+  if(!mount) return;
+  // Erstaufruf: Daten laden (neueste Zeile). Bei Fehler/leer → Beispielinhalt.
+  if(__entwData === null){
+    let usedSeed = true;
+    try{
+      const rows = await sbGet('entwicklungen', 'select=stand,themen&order=stand.desc&limit=1');
+      const row = Array.isArray(rows) ? rows[0] : null;
+      let themen = row && row.themen;
+      if(typeof themen === 'string'){ try{ themen = JSON.parse(themen); }catch(e){ themen = null; } }
+      if(themen && typeof themen === 'object' && Object.keys(themen).length){
+        __entwData = themen; usedSeed = false;
+        try{ __entwStand = 'Stand ' + new Date(row.stand).toLocaleDateString('de-DE',{day:'2-digit',month:'long',year:'numeric'}); }catch(e){ __entwStand = 'Stand ' + (row.stand||''); }
+      }
+    }catch(e){ /* offline / Tabelle fehlt → Seed */ }
+    if(usedSeed){ __entwData = ENTW_SEED; __entwStand = 'Beispielinhalt — wird ab Phase 2 täglich automatisch aktualisiert'; }
+  }
+  const standEl = document.getElementById('entwStand');
+  if(standEl) standEl.textContent = __entwStand ? '· ' + __entwStand : '';
+  // Kacheln
+  const tiles = ENTW_THEMEN.map(t=>{
+    const active = (__entwOpen === t.key) ? ' active' : '';
+    return `<button type="button" class="entw-tile${active}" onclick="waxEntwToggle('${t.key}')" aria-expanded="${__entwOpen===t.key}">`
+      + `<span class="et-ttl">${entwEscape(t.titel)}</span>`
+      + `<span class="et-chev">▾</span></button>`;
+  }).join('');
+  mount.innerHTML = `<div class="entw-tiles">${tiles}</div><div id="entwPanelMount"></div>`;
+  renderEntwPanel();
+}
+
+function renderEntwPanel(){
+  const pm = document.getElementById('entwPanelMount');
+  if(!pm) return;
+  if(!__entwOpen){ pm.innerHTML = ''; return; }
+  const meta = ENTW_THEMEN.find(t=>t.key===__entwOpen);
+  const d = (__entwData && __entwData[__entwOpen]) || {};
+  const bullets = Array.isArray(d.bullets) ? d.bullets : [];
+  pm.innerHTML = `<div class="entw-panel">`
+    + `<h4>${entwEscape(meta?meta.titel:'')}</h4>`
+    + (d.summary ? `<div class="ep-sum">${entwEscape(d.summary)}</div>` : '')
+    + (bullets.length ? `<div class="ep-blabel">Bedeutung für Anleger</div><ul>${bullets.map(b=>`<li>${entwEscape(b)}</li>`).join('')}</ul>` : '')
+    + `</div>`;
+}
+
+window.waxEntwToggle = function(key){
+  __entwOpen = (__entwOpen === key) ? null : key;
+  // Kachel-Status + Panel ohne Neuladen aktualisieren
+  document.querySelectorAll('#overviewEntwicklungen .entw-tile').forEach((el,i)=>{
+    const k = ENTW_THEMEN[i] && ENTW_THEMEN[i].key;
+    const on = (k === __entwOpen);
+    el.classList.toggle('active', on);
+    el.setAttribute('aria-expanded', on?'true':'false');
+  });
+  renderEntwPanel();
+};
+
 function renderUebersicht() {
   applyOverviewModeLabels();
   // Gesamtwert oben: reale WAX-Sicht = aktuelle Wertpapierwerte aller Matadore + echter Comdirect-Cash.
@@ -3421,6 +3530,7 @@ function renderUebersicht() {
   </div>`;
   const heroMount = document.getElementById('overviewHeroMount');
   if (heroMount) heroMount.innerHTML = hero;
+  renderEntwicklungen();
 
   // === Ranking-Zeilen (verschlankt, Look der Aktiven Positionen, 7 Spalten) ===
   // YTD + Heute dauerhaft sichtbar; Perf. p.a. (groß) mit Gewinn Alltime (klein) zusammengeführt.
