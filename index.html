@@ -851,8 +851,12 @@ body.theme-classic{ --entw-blue:#2E7FA6; --entw-blue-soft:#4C97BE; --entw-tint:r
 .hot-wrap{margin-bottom:20px}
 .hot-title{font-size:18px;font-weight:700;line-height:1.2;letter-spacing:-.01em;color:var(--wax-text);margin-bottom:12px}
 .hot-list{list-style:none;margin:0;padding:0}
-.hot-item{position:relative;font-size:13.5px;line-height:1.55;font-weight:700;color:var(--wax-text);padding:5px 0 5px 18px}
-.hot-item::before{content:"";position:absolute;left:0;top:11px;width:7px;height:7px;border-radius:50%;background:var(--entw-blue)}
+.hot-item{position:relative;padding:1px 0}
+.hot-item-btn{display:block;width:100%;text-align:left;background:none;border:none;cursor:pointer;font-family:inherit;position:relative;font-size:13.5px;line-height:1.55;font-weight:700;color:var(--wax-text);padding:5px 4px 5px 18px;border-radius:6px;transition:background .15s}
+.hot-item-btn::before{content:"";position:absolute;left:0;top:11px;width:7px;height:7px;border-radius:50%;background:var(--entw-blue)}
+.hot-item-btn:hover{background:var(--entw-tint)}
+.hot-item-btn.active{background:var(--entw-tint-strong)}
+.hot-item-btn:focus-visible{outline:2px solid var(--entw-blue);outline-offset:2px}
 .dc-grid{display:grid;grid-template-columns:2.2fr 0.95fr 1.2fr 1fr 1.25fr;gap:0;align-items:stretch}
 .dc-grid.dc-grid4{grid-template-columns:2.4fr 1.3fr 1.1fr 1.35fr}
 .dc-grid.dc-grid6{grid-template-columns:2fr 0.9fr 1.15fr 1.05fr 1.1fr 1.2fr}
@@ -3383,14 +3387,15 @@ const ENTW_SEED = {
 let __entwData = null;     // gecachte Themen-Daten { ...themen }
 let __entwStand = null;    // Datums-/Quellen-Label
 let __entwOpen  = null;    // aktuell geöffneter Schlüssel (Akkordeon)
-let __entwHighlights = null; // "Heißer Scheiß": Array aus 5 Boulevard-Schlagzeilen
+let __entwHighlights = null; // "Heißer Scheiß": Array aus 5 { title, detail }-Objekten
+let __hotOpen = null;       // aktuell geöffneter Highlight-Index (Akkordeon)
 // "Heißer Scheiß"-Beispielinhalt (Fallback, bis der tägliche Worker `highlights` befüllt)
 const HOT_SEED = [
-  'Sport: DFB-Team dreht Spiel in der Nachspielzeit — Stadion bebt.',
-  'Streaming-Hit bricht alle Rekorde und lässt eine Aktie durch die Decke gehen.',
-  'Promi-Hochzeit des Jahres: Stars geben sich überraschend das Ja-Wort.',
-  'Neues KI-Gadget ausverkauft, noch bevor es im Laden steht.',
-  'Wetter-Kapriolen legen halb Deutschland lahm.',
+  { title:'Sport: DFB-Team dreht Spiel in der Nachspielzeit — Stadion bebt.', detail:'Beispielinhalt: Hier würde der recherchierte Kurzbeitrag stehen — was im Spiel passierte, wann die Tore fielen und wie die ersten Reaktionen ausfielen, basierend auf mehreren seriösen Quellen.' },
+  { title:'Streaming-Hit bricht alle Rekorde und lässt eine Aktie durch die Decke gehen.', detail:'Beispielinhalt: Einordnung, welche Produktion betroffen ist, welche Kennzahlen den Rekord belegen und wie der Markt reagiert hat.' },
+  { title:'Promi-Hochzeit des Jahres: Stars geben sich überraschend das Ja-Wort.', detail:'Beispielinhalt: Wer geheiratet hat, wann und wo, und was Beobachter dazu sagen.' },
+  { title:'Neues KI-Gadget ausverkauft, noch bevor es im Laden steht.', detail:'Beispielinhalt: Um welches Produkt es geht, wie hoch die Nachfrage war und was Hersteller/Händler dazu mitteilen.' },
+  { title:'Wetter-Kapriolen legen halb Deutschland lahm.', detail:'Beispielinhalt: Welche Regionen betroffen sind, welche Folgen es gab (Verkehr, Schulen, Strom) und wie die Wetterdienste die Lage einordnen.' },
 ];
 
 function entwEscape(s){ return String(s==null?'':s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c])); }
@@ -3417,21 +3422,18 @@ async function renderEntwicklungen(){
       const hrows = await sbGet('entwicklungen', 'select=highlights&order=stand.desc&limit=1');
       let hl = (Array.isArray(hrows) && hrows[0]) ? hrows[0].highlights : null;
       if(typeof hl === 'string'){ try{ hl = JSON.parse(hl); }catch(e){ hl = null; } }
-      if(Array.isArray(hl) && hl.length){ __entwHighlights = hl.map(s=>String(s)); }
+      if(Array.isArray(hl) && hl.length){
+        __entwHighlights = hl.map(h => (typeof h === 'object' && h)
+          ? { title: String(h.title||''), detail: String(h.detail||'') }
+          : { title: String(h), detail: '' });
+      }
     }catch(e){ /* Spalte fehlt / offline → Seed */ }
     if(usedSeed){ __entwData = ENTW_SEED; __entwStand = 'Beispielinhalt — wird ab Phase 2 täglich automatisch aktualisiert'; }
     if(!__entwHighlights){ __entwHighlights = HOT_SEED; }
   }
   const standEl = document.getElementById('entwStand');
   if(standEl) standEl.textContent = __entwStand ? '· ' + __entwStand : '';
-  // "Heißer Scheiß" oberhalb der 5 Kacheln
-  const hot = document.getElementById('overviewHighlights');
-  if(hot){
-    const items = (Array.isArray(__entwHighlights) ? __entwHighlights : []).slice(0,5);
-    hot.innerHTML = items.length
-      ? `<div class="hot-title">HEISSER SCHEISS</div><ul class="hot-list">${items.map(h=>`<li class="hot-item">${entwEscape(h)}</li>`).join('')}</ul>`
-      : '';
-  }
+  renderHot();
   // Kacheln
   const tiles = ENTW_THEMEN.map(t=>{
     const active = (__entwOpen === t.key) ? ' active' : '';
@@ -3443,6 +3445,32 @@ async function renderEntwicklungen(){
   renderEntwPanel();
 }
 
+function renderHot(){
+  const hot = document.getElementById('overviewHighlights');
+  if(!hot) return;
+  const items = (Array.isArray(__entwHighlights) ? __entwHighlights : []).slice(0,5);
+  if(!items.length){ hot.innerHTML = ''; return; }
+  const list = items.map((h,i)=>{
+    const active = (__hotOpen === i) ? ' active' : '';
+    return `<li class="hot-item"><button type="button" class="hot-item-btn${active}" onclick="waxHotToggle(${i})" aria-expanded="${__hotOpen===i}">${entwEscape(h.title)}</button></li>`;
+  }).join('');
+  hot.innerHTML = `<div class="hot-title">HEISSER SCHEISS</div><ul class="hot-list">${list}</ul><div id="hotPanelMount"></div>`;
+  renderHotPanel();
+}
+function renderHotPanel(){
+  const pm = document.getElementById('hotPanelMount');
+  if(!pm) return;
+  if(__hotOpen === null){ pm.innerHTML = ''; return; }
+  const items = Array.isArray(__entwHighlights) ? __entwHighlights : [];
+  const h = items[__hotOpen] || {};
+  pm.innerHTML = `<div class="entw-panel"><h4>${entwEscape(h.title||'')}</h4>`
+    + (h.detail ? `<div class="ep-sum">${entwEscape(h.detail)}</div>` : `<div class="ep-sum">Noch kein Detailtext hinterlegt.</div>`)
+    + `</div>`;
+}
+window.waxHotToggle = function(i){
+  __hotOpen = (__hotOpen === i) ? null : i;
+  renderHot();
+};
 function renderEntwPanel(){
   const pm = document.getElementById('entwPanelMount');
   if(!pm) return;
