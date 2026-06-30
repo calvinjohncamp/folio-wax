@@ -3454,7 +3454,7 @@ function renderHot(){
     const active = (__hotOpen === i) ? ' active' : '';
     return `<li class="hot-item"><button type="button" class="hot-item-btn${active}" onclick="waxHotToggle(${i})" aria-expanded="${__hotOpen===i}">${entwEscape(h.title)}</button></li>`;
   }).join('');
-  hot.innerHTML = `<div class="hot-title">HEISSER SCHEISS</div><ul class="hot-list">${list}</ul><div id="hotPanelMount"></div>`;
+  hot.innerHTML = `<div class="hot-title">HEADLINES</div><ul class="hot-list">${list}</ul><div id="hotPanelMount"></div>`;
   renderHotPanel();
 }
 function renderHotPanel(){
