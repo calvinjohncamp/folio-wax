@@ -827,7 +827,7 @@ body.theme-classic .neg, body.theme-classic .kpi-v.neg, body.theme-classic .benc
 :root,body.theme-modern,body:not(.theme-classic){ --entw-blue:#6FC2E0; --entw-blue-soft:#9BD6EE; --entw-tint:rgba(95,179,212,.30); --entw-tint-strong:rgba(95,179,212,.44); --entw-border:rgba(120,200,228,.45); }
 body.theme-classic{ --entw-blue:#2E7FA6; --entw-blue-soft:#4C97BE; --entw-tint:rgba(46,127,166,.16); --entw-tint-strong:rgba(46,127,166,.26); --entw-border:rgba(46,127,166,.40); }
 .entw-wrap{margin-bottom:24px}
-.entw-tiles{display:grid;grid-template-columns:repeat(5,1fr);gap:10px}
+.entw-tiles{display:grid;grid-template-columns:repeat(6,1fr);gap:10px}
 @media(max-width:860px){.entw-tiles{grid-template-columns:repeat(2,1fr)}}
 @media(max-width:480px){.entw-tiles{grid-template-columns:1fr}}
 .entw-tile{position:relative;display:flex;align-items:center;min-height:74px;text-align:left;cursor:pointer;border:1px solid var(--entw-border);background:var(--entw-tint);border-radius:12px;padding:15px 32px 15px 17px;font-family:inherit;color:var(--wax-text);transition:transform .15s,background .15s,box-shadow .15s}
@@ -847,7 +847,7 @@ body.theme-classic{ --entw-blue:#2E7FA6; --entw-blue-soft:#4C97BE; --entw-tint:r
 .entw-panel li::before{content:"";position:absolute;left:0;top:11px;width:6px;height:6px;border-radius:50%;background:var(--entw-blue)}
 .entw-foot{margin-top:11px;font-size:10px;color:var(--wax-muted);line-height:1.5}
 .entw-stand{font-size:10px;font-weight:600;letter-spacing:.04em;color:var(--entw-blue);text-transform:none}
-/* "Heißer Scheiß" — Boulevard-Highlights oberhalb der 5 Newsflash-Kacheln */
+/* Headlines — Boulevard-Highlights oberhalb der Newsflash-Kacheln (6 Positionen, Pos. 6 = Sport) */
 .hot-wrap{margin-bottom:20px}
 .hot-title{font-size:18px;font-weight:700;line-height:1.2;letter-spacing:-.01em;color:var(--wax-text);margin-bottom:12px}
 .hot-list{list-style:none;margin:0;padding:0}
@@ -3367,7 +3367,7 @@ function applyOverviewModeLabels() {
 // === Aktuelle Entwicklungen (Übersicht, Abschnitt 2) =========================
 // Frontend (Phase 1): liest die jeweils neueste Zeile aus Supabase-Tabelle
 // `entwicklungen` { stand: date, themen: jsonb }. themen ist ein Objekt mit den
-// 5 Schlüsseln politik/wirtschaft/gesellschaft/finanzen/boerse, je { summary, bullets[] }.
+// 6 Schlüsseln politik/wirtschaft/gesellschaft/finanzen/boerse/sport, je { summary, bullets[] }.
 // Solange das Backend (Phase 2: Worker + News + Claude, 1×/Tag) noch keine Daten
 // liefert, wird der eingebettete Beispielinhalt (ENTW_SEED) angezeigt.
 const ENTW_THEMEN = [
@@ -3376,6 +3376,7 @@ const ENTW_THEMEN = [
   { key:'gesellschaft', no:'③', titel:'Gesellschaft' },
   { key:'finanzen',     no:'④', titel:'Finanzen' },
   { key:'boerse',       no:'⑤', titel:'Börse & Unternehmen' },
+  { key:'sport',        no:'⑥', titel:'Sport' },
 ];
 const ENTW_SEED = {
   politik:      { summary:'Teilweise Entspannung im Konflikt USA–Iran senkt die Angst vor Energie-Engpässen; Ukraine und die Rivalität USA–China bleiben. Die Welt bewegt sich Richtung multipolarer Ordnung mit dauerhaft höheren geopolitischen Risiken.', bullets:['Energiepreise bleiben ein struktureller Unsicherheitsfaktor.','Verteidigungsausgaben bleiben langfristig hoch.','Lieferketten werden weiter regionalisiert.'] },
@@ -3383,19 +3384,22 @@ const ENTW_SEED = {
   gesellschaft: { summary:'KI wird vom Technologie- zunehmend zum Gesellschaftsthema: massive Investitionen, zugleich wachsende Sorgen über Arbeitsplätze, Informationsqualität und Alltag. Studien zeigen Verunsicherung durch das Tempo des Wandels.', bullets:['Produktivität dürfte steigen.','Gewinner sind Unternehmen mit echten KI-Anwendungen.','Der Wettbewerb um Fachkräfte verschiebt sich erheblich.'] },
   finanzen:     { summary:'Nach den Nahost-Turbulenzen richtet sich der Blick wieder auf Inflation und Zentralbanken. Sinkende Ölpreise entlasten, viele rechnen aber weiter mit restriktiver Geldpolitik. Liquidität bleibt kurzfristig der wichtigste Markttreiber.', bullets:['Anleiherenditen bleiben attraktiv.','Aktien reagieren wieder stärker auf Zinserwartungen.','Liquidität gewinnt gegenüber kurzfristigen Konjunkturdaten.'] },
   boerse:       { summary:'Die wichtigste Börsengeschichte ist nicht ein neuer Rekord, sondern die kritischere Diskussion über die Bewertungen großer KI-Unternehmen. Bei Tech- und Raumfahrtwerten deutliche Rücksetzer, während KI-Investitionen auf Rekordniveau bleiben.', bullets:['Führen die enormen KI-Investitionen wirklich zu steigenden Gewinnen?','Welche Unternehmen entwickeln nachhaltige Wettbewerbsvorteile?','Wo entstehen Überbewertungen?'] },
+  sport:        { summary:'Weltsport und deutscher Sport im Überblick: Fußball (Bundesliga, Nationalmannschaft, internationale Wettbewerbe), Tennis und weitere Disziplinen. Im Fokus stehen die wichtigsten Ergebnisse, Turniere und Personalien der vergangenen Tage.', bullets:['Wie schlägt sich der deutsche Sport international?','Welche Spiele und Turniere prägen die Schlagzeilen?','Welche Transfers und Personalentscheidungen stehen an?'] },
 };
 let __entwData = null;     // gecachte Themen-Daten { ...themen }
 let __entwStand = null;    // Datums-/Quellen-Label
 let __entwOpen  = null;    // aktuell geöffneter Schlüssel (Akkordeon)
-let __entwHighlights = null; // "Heißer Scheiß": Array aus 5 { title, detail }-Objekten
+let __entwHighlights = null; // Headlines: Array aus 6 { title, detail }-Objekten (Pos. 6 = Sport)
 let __hotOpen = null;       // aktuell geöffneter Highlight-Index (Akkordeon)
 // "Heißer Scheiß"-Beispielinhalt (Fallback, bis der tägliche Worker `highlights` befüllt)
+// Positionen 1–5 = allgemeine Boulevard-Highlights, Position 6 = immer eine Sportmeldung.
 const HOT_SEED = [
-  { title:'Sport: DFB-Team dreht Spiel in der Nachspielzeit — Stadion bebt.', detail:'Beispielinhalt: Hier würde der recherchierte Kurzbeitrag stehen — was im Spiel passierte, wann die Tore fielen und wie die ersten Reaktionen ausfielen, basierend auf mehreren seriösen Quellen.' },
   { title:'Streaming-Hit bricht alle Rekorde und lässt eine Aktie durch die Decke gehen.', detail:'Beispielinhalt: Einordnung, welche Produktion betroffen ist, welche Kennzahlen den Rekord belegen und wie der Markt reagiert hat.' },
   { title:'Promi-Hochzeit des Jahres: Stars geben sich überraschend das Ja-Wort.', detail:'Beispielinhalt: Wer geheiratet hat, wann und wo, und was Beobachter dazu sagen.' },
   { title:'Neues KI-Gadget ausverkauft, noch bevor es im Laden steht.', detail:'Beispielinhalt: Um welches Produkt es geht, wie hoch die Nachfrage war und was Hersteller/Händler dazu mitteilen.' },
   { title:'Wetter-Kapriolen legen halb Deutschland lahm.', detail:'Beispielinhalt: Welche Regionen betroffen sind, welche Folgen es gab (Verkehr, Schulen, Strom) und wie die Wetterdienste die Lage einordnen.' },
+  { title:'Überraschungs-Comeback: Star-Künstler kündigt Welttournee an.', detail:'Beispielinhalt: Wer auftritt, welche Städte und Termine geplant sind und wie groß der Andrang auf Tickets ist.' },
+  { title:'Sport: DFB-Team dreht Spiel in der Nachspielzeit — Stadion bebt.', detail:'Beispielinhalt: Hier würde der recherchierte Kurzbeitrag stehen — was im Spiel passierte, wann die Tore fielen und wie die ersten Reaktionen ausfielen, basierend auf mehreren seriösen Quellen.' },
 ];
 
 function entwEscape(s){ return String(s==null?'':s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c])); }
@@ -3448,7 +3452,7 @@ async function renderEntwicklungen(){
 function renderHot(){
   const hot = document.getElementById('overviewHighlights');
   if(!hot) return;
-  const items = (Array.isArray(__entwHighlights) ? __entwHighlights : []).slice(0,5);
+  const items = (Array.isArray(__entwHighlights) ? __entwHighlights : []).slice(0,6);
   if(!items.length){ hot.innerHTML = ''; return; }
   const list = items.map((h,i)=>{
     const active = (__hotOpen === i) ? ' active' : '';
