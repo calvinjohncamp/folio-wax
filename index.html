@@ -156,6 +156,28 @@ td:nth-child(2) { text-align: left; }
 .form-input:focus { outline: none; border-color: var(--wax-accent); }
 .form-row-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
 .modal-footer { display: flex; gap: 10px; justify-content: flex-end; margin-top: 20px; }
+/* 12-Monats-Kursverlauf-Popup (Klick auf eine Depot-/Verkaufszeile) */
+[data-chart-wkn]{cursor:pointer}
+.chart-modal-backdrop{position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:600;display:none;align-items:center;justify-content:center;padding:20px}
+.chart-modal-backdrop.open{display:flex}
+.chart-modal{background:var(--wax-card);border:1px solid var(--wax-border);border-radius:18px;box-shadow:0 18px 60px rgba(0,0,0,.28);padding:20px;max-width:640px;width:100%;max-height:calc(100vh - 40px);overflow:auto;color:var(--wax-text)}
+.chart-modal-head{display:flex;align-items:flex-start;justify-content:space-between;gap:10px}
+.chart-modal-title{font-size:18px;font-weight:700;color:var(--wax-text)}
+.chart-modal-sub{font-size:12px;color:var(--wax-muted);margin-top:2px}
+.chart-modal-close{border:none;background:none;font-size:24px;line-height:1;cursor:pointer;color:var(--wax-muted)}
+.chart-modal-price-row{display:flex;align-items:baseline;gap:10px;margin:14px 0 12px}
+.chart-modal-price{font-size:26px;font-weight:700;color:var(--wax-text)}
+.chart-modal-change{font-size:13px;font-weight:700;padding:3px 10px;border-radius:999px;background:var(--wax-panel)}
+.chart-modal-svg-wrap{width:100%}
+.chart-modal-markers{display:flex;justify-content:space-between;gap:8px;margin-top:8px}
+.chart-modal-marker{display:flex;flex-direction:column;gap:2px;min-width:0}
+.chart-modal-marker:first-child{align-items:flex-start;text-align:left}
+.chart-modal-marker:nth-child(2){align-items:center;text-align:center}
+.chart-modal-marker:last-child{align-items:flex-end;text-align:right}
+.chart-modal-marker-price{font-size:14px;font-weight:700;color:var(--wax-text)}
+.chart-modal-marker-date{font-size:11px;color:var(--wax-muted)}
+.chart-modal-empty{color:var(--wax-muted);font-size:13px;text-align:center;padding:40px 0}
+@media (max-width: 480px){.chart-modal{padding:16px}.chart-modal-price{font-size:22px}}
 .info-box { background: var(--wax-panel); border: 1px solid var(--wax-border); padding: 12px; border-radius: 3px; margin-bottom: 14px; font-size: 11px; color: #555; line-height: 1.6; }
 .statusbar { background: var(--wax-status); border-bottom: 1px solid #222; padding: 5px 24px; display: flex; align-items: center; gap: 8px; font-size: 10px; color: var(--wax-muted); position: sticky; top: 102px; z-index: 98; }
 .sdot { width: 6px; height: 6px; border-radius: 50%; background: var(--wax-text-2); flex-shrink: 0; }
@@ -1359,6 +1381,20 @@ body.theme-classic .dc-mini-kpi.deviation .dc-kpi-line.total strong{color:#16232
 </footer>
 </div>
 
+<!-- 12-Monats-Kursverlauf-Popup: EIN Fenster für Depot/Verkauft (identisch zu Folio.invest) -->
+<div class="chart-modal-backdrop" id="chartModalBackdrop" style="display:none" onclick="if(event.target===this) closePriceChart()">
+  <div class="chart-modal">
+    <div class="chart-modal-head">
+      <div>
+        <div class="chart-modal-title" id="chartModalTitle">–</div>
+        <div class="chart-modal-sub" id="chartModalSub"></div>
+      </div>
+      <button class="chart-modal-close" type="button" onclick="closePriceChart()">&times;</button>
+    </div>
+    <div id="chartModalMount"></div>
+  </div>
+</div>
+
 <!-- MODALS -->
 <div id="modalOverlay" style="display:none" class="modal-overlay" onclick="closeModal(event)">
   <div class="modal" id="modalKauf" style="display:none">
@@ -2380,6 +2416,98 @@ function priceEURat(wkn, iso){
   for(let i=0;i<ser.length;i++){ if(ser[i].date<=iso) val=ser[i].closeEUR; else break; }
   return val;
 }
+
+// ===== 12-Monats-Kursverlauf-Popup — ein Fenster für Depot/Verkauft (identisch zu Folio.invest) =====
+let __chartModalWkn = null;
+function buildChartSvg(points, markerIdx){
+  const w = 600, h = 220, padX = 6, padY = 12;
+  const closes = points.map(p => p.close);
+  const min = Math.min(...closes), max = Math.max(...closes);
+  const span = (max - min) || 1;
+  const stepX = points.length > 1 ? (w - padX*2) / (points.length - 1) : 0;
+  const xy = (i) => {
+    const x = padX + i*stepX;
+    const y = padY + (h - padY*2) * (1 - (points[i].close - min)/span);
+    return [x, y];
+  };
+  const coords = points.map((p,i) => xy(i).map(n=>n.toFixed(1)).join(',')).join(' ');
+  const up = points[points.length-1].close >= points[0].close;
+  const stroke = up ? 'var(--success)' : 'var(--brand-orange)';
+  const dots = (markerIdx||[]).map(i => {
+    const [x,y] = xy(i);
+    return '<circle cx="'+x.toFixed(1)+'" cy="'+y.toFixed(1)+'" r="4.5" fill="var(--wax-card)" stroke="'+stroke+'" stroke-width="2.5"/>';
+  }).join('');
+  return '<svg viewBox="0 0 '+w+' '+h+'" preserveAspectRatio="none" style="width:100%;height:220px;display:block">'
+    + '<polyline points="'+coords+'" fill="none" stroke="'+stroke+'" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round"/>'
+    + dots
+    + '</svg>';
+}
+// Findet den Punkt, dessen Datum am nächsten an "monthsAgoFrom" liegt (Kalendermonate, nicht Index) —
+// robust gegen Wochenenden/Feiertage/fehlende Handelstage in der Historie.
+function pointNearestMonthsAgo(points, monthsAgo){
+  const lastDate = new Date(points[points.length-1].date);
+  const target = new Date(lastDate); target.setMonth(target.getMonth() - monthsAgo);
+  let bestIdx = 0, bestDiff = Infinity;
+  points.forEach((p,i) => {
+    const diff = Math.abs(new Date(p.date) - target);
+    if(diff < bestDiff){ bestDiff = diff; bestIdx = i; }
+  });
+  return bestIdx;
+}
+function renderChartModal(wkn, name, points){
+  const mount = document.getElementById('chartModalMount');
+  const titleEl = document.getElementById('chartModalTitle');
+  const subEl = document.getElementById('chartModalSub');
+  if(titleEl) titleEl.textContent = name || wkn || '–';
+  if(subEl) subEl.textContent = 'WKN ' + (wkn||'') + ' · Kursverlauf 12 Monate';
+  if(!mount) return;
+  if(points.length < 2){
+    mount.innerHTML = '<div class="chart-modal-empty">Kein 12-Monats-Kursverlauf verfügbar.</div>';
+    return;
+  }
+  const first = points[0], last = points[points.length-1];
+  const midIdx = pointNearestMonthsAgo(points, 6);
+  const mid = points[midIdx];
+  const chgPct = first.close ? (last.close-first.close)/first.close : 0;
+  const marker = (p) => '<div class="chart-modal-marker"><div class="chart-modal-marker-price">'+f(p.close,2)+' €</div><div class="chart-modal-marker-date">'+fdate(p.date)+'</div></div>';
+  mount.innerHTML = '<div class="chart-modal-price-row">'
+    + '<span class="chart-modal-price">' + f(last.close,2) + ' €</span>'
+    + '<span class="chart-modal-change ' + cl(chgPct) + '">' + fp(chgPct) + '</span>'
+    + '</div>'
+    + '<div class="chart-modal-svg-wrap">' + buildChartSvg(points, [0, midIdx, points.length-1]) + '</div>'
+    + '<div class="chart-modal-markers">' + marker(first) + marker(mid) + marker(last) + '</div>';
+}
+async function openPriceChart(wkn, name){
+  const backdrop = document.getElementById('chartModalBackdrop');
+  const mount = document.getElementById('chartModalMount');
+  if(!backdrop || !mount || !wkn) return;
+  __chartModalWkn = wkn;
+  backdrop.classList.add('open'); backdrop.style.display = 'flex';
+  mount.innerHTML = '<div class="chart-modal-empty">Lade Kursverlauf…</div>';
+  const titleEl = document.getElementById('chartModalTitle');
+  const subEl = document.getElementById('chartModalSub');
+  if(titleEl) titleEl.textContent = name || wkn;
+  if(subEl) subEl.textContent = 'WKN ' + wkn + ' · Kursverlauf 12 Monate';
+  let raw = [];
+  try{ raw = await ensureHistory(wkn); }catch(e){ raw = []; }
+  if(__chartModalWkn !== wkn) return; // Popup wurde inzwischen geschlossen / anderer Titel geöffnet
+  const points = (raw||[])
+    .filter(p => p && p.date && Number.isFinite(p.closeEUR))
+    .sort((a,b) => String(a.date).localeCompare(String(b.date)))
+    .map(p => ({ date: p.date, close: p.closeEUR }));
+  renderChartModal(wkn, name, points);
+}
+function closePriceChart(){
+  __chartModalWkn = null;
+  const backdrop = document.getElementById('chartModalBackdrop');
+  if(backdrop){ backdrop.classList.remove('open'); backdrop.style.display = 'none'; }
+}
+document.addEventListener('click', function(e){
+  const el = e.target.closest('[data-chart-wkn]');
+  if(!el) return;
+  openPriceChart(el.getAttribute('data-chart-wkn'), el.getAttribute('data-chart-name') || '');
+});
+document.addEventListener('keydown', function(e){ if(e.key === 'Escape') closePriceChart(); });
 // Echte historische Depotwerte 2026 je Mitglied (aus den gepflegten Excel-Dateien, Stand bis 19.05.).
 // Stichtag -> { mitglied_id: Depotwert(Invest+Cash) }. Basis (01.01.) = 31.12.-Referenzwert.
 const WERT_HIST_SEED={"2026-01-01":{1:14811.28,2:21602.89,3:62003.3,4:29311.6,5:33593.55,6:39923.51},"2026-01-05":{1:14590.1,2:22293.35,3:62593.1,4:29938.34,5:36509.14,6:41404.8},"2026-01-12":{1:15030.14,2:22734.94,3:63895.34,4:30443.04,5:42198.89,6:41404.8},"2026-01-26":{1:14479.13,2:22694.04,3:66792.84,4:29553.54,5:41351.49,6:41854.48},"2026-01-30":{1:14479.13,2:22694.04,3:65345.84,4:29553.54,5:41351.49,6:40554.48},"2026-02-02":{1:13801.36,2:22204.77,3:61341.64,4:27897.54,5:39381.88,6:37995.74},"2026-02-03":{1:14207.85,2:22623.75,3:66067.04,4:28477.19,5:40163.24,6:39109.35},"2026-02-04":{1:13942.98,2:22420.63,3:64901.74,4:26681.94,5:37104.39,6:36601.95},"2026-02-18":{1:13604.74,2:23397.57,3:64465.2,4:25318.34,5:38275.67,6:35958.81},"2026-03-18":{1:13421.03,2:20768.02,3:64741.6,4:26605.64,5:38258.45,6:35748.2},"2026-03-23":{1:13044.76,2:19777.39,3:61926.8,4:25723.14,5:37477.98,6:33675.89},"2026-04-06":{1:12945.3,2:20194.2,3:61926.8,4:25316.84,5:38490.28,6:33674.8},"2026-05-05":{1:13956.77,2:19705.05,3:61926.8,4:29068.19,5:40675.04,6:35893.98},"2026-05-06":{1:13956.77,2:19705.05,3:61926.8,4:29068.19,5:40675.04,6:35893.98},"2026-05-08":{1:13956.77,2:19705.05,3:61926.8,4:29068.19,5:40675.04,6:35723.58},"2026-05-11":{1:13735.03,2:20380.14,3:62010.49,4:29647.39,5:42816.89,6:40138.23},"2026-05-14":{1:13735.03,2:20380.14,3:62010.49,4:29647.39,5:42816.89,6:40138.23},"2026-05-15":{1:13735.03,2:20380.14,3:62010.49,4:29647.39,5:43260.09,6:40138.23},"2026-05-19":{1:13970.86,2:19397.5,3:62097.06,4:29427.31,5:42195.94,6:39073.42}};
@@ -3925,7 +4053,7 @@ function kkRow(p, idx){
   const upR=(hasC&&hasH)?(hi/cur-1):null;
   const dnR=(hasC&&hasL)?(lo/cur-1):null;
   const kgvTxt=(kgv!=null&&isFinite(Number(kgv)))?f(Number(kgv),1):'—';
-  return `<article class="dc-card ${idx%2?'alt':''}"><div class="dc-grid dc-grid-ana">
+  return `<article class="dc-card ${idx%2?'alt':''}" data-chart-wkn="${escapeHtml(wkn||'')}" data-chart-name="${escapeHtml(securityDisplayName(wkn, p.bezeichnung)||'')}"><div class="dc-grid dc-grid-ana">
     <div class="dc-col dc-name"><div class="dc-title">${securityDisplayName(wkn, p.bezeichnung)}</div><div class="dc-meta"><span>${wkn}</span><span>${f(p.stueck,0)} Stk.</span></div></div>
     <div class="dc-col"><div class="dc-top">${hasC?f(cur,2)+' €':'—'}</div><div class="dc-sub">KGV ${kgvTxt}</div></div>
     <div class="dc-col"><div class="dc-top">${hasH?f(hi,2)+' €':'—'}</div><div class="dc-sub">${hasL?f(lo,2)+' €':'—'}</div></div>
@@ -4210,7 +4338,7 @@ function renderDepot(id) {
       const deToday=(k!=null&&wBaseToday!=null)?wAkt-wBaseToday:null;
       const dateBadge=(isNewCurrentYear && p.kauf_datum)?`<span class="badge b-new">NEU ${fdate(p.kauf_datum)}</span>`:'';
       const kursDisplay = k!=null ? f(k,2) : `<span class="kurs-loading">lädt…</span>`;
-      html+=`<article class="dc-card ${idx%2?'alt':''}"><div class="dc-grid dc-grid-pos6">
+      html+=`<article class="dc-card ${idx%2?'alt':''}" data-chart-wkn="${escapeHtml(p.wkn||'')}" data-chart-name="${escapeHtml(securityDisplayName(p.wkn, p.bezeichnung)||'')}"><div class="dc-grid dc-grid-pos6">
         <div class="dc-col dc-name"><div class="dc-title">${securityDisplayName(p.wkn, p.bezeichnung)}</div><div class="dc-meta"><span>${p.wkn}</span><span>${f(p.stueck,0)} Stk.</span>${dateBadge}</div></div>
         <div class="dc-col dc-share"><div class="dc-share-top">${f(share*100,1)}%</div><div class="dc-bar"><div class="dc-bar-fill" style="width:${Math.min(share*100,100).toFixed(1)}%"></div></div></div>
         <div class="dc-col ${cl(deYTD)}"><div class="dc-top">${dpYTD!=null?fp(dpYTD):'—'}</div><div class="dc-sub">${deYTD!=null?fc(deYTD):'—'}</div></div>
@@ -4306,7 +4434,7 @@ function renderDepot(id) {
       // Dieses Datum ist keine fachlich verlässliche Verkaufsinformation und wird deshalb nicht als RAUS-Badge gezeigt.
       // Neue Verkäufe ab App-Neustart behalten ihr echtes Verkaufsdatum und zeigen den Badge wieder automatisch.
       const dateBadge = (soldDate && soldDate !== '2026-05-19') ? `<span class="badge b-out">RAUS ${fdate(soldDate)}</span>` : '';
-      html+=`<article class="dc-card ${idx%2?'alt':''}"><div class="dc-grid dc-grid4">
+      html+=`<article class="dc-card ${idx%2?'alt':''}" data-chart-wkn="${escapeHtml(p.wkn||'')}" data-chart-name="${escapeHtml(securityDisplayName(p.wkn, p.bezeichnung)||'')}"><div class="dc-grid dc-grid4">
         <div class="dc-col dc-name"><div class="dc-title">${securityDisplayName(p.wkn, p.bezeichnung)}</div><div class="dc-meta"><span>${p.wkn}</span><span>${f(p.stueck,0)} Stk.</span>${dateBadge}</div></div>
         <div class="dc-col"><div class="dc-top">${sellK!=null?f(sellK,2):'—'}</div><div class="dc-sub">${refK?f(refK,2):'—'}</div></div>
         <div class="dc-col"><div class="dc-top">${sellV!=null?f(sellV)+' €':'—'}</div><div class="dc-sub">${refV!=null?f(refV)+' €':'—'}</div></div>
