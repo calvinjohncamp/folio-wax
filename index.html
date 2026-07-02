@@ -255,6 +255,9 @@ footer { margin-top: 28px; padding-top: 14px; border-top: 1px solid var(--wax-bo
 html, body {
   scrollbar-width: none;
   -ms-overflow-style: none;
+  /* Verhindert das elastische Rubber-Band-Überscrollen ganz oben/unten auf iOS
+     (iPad/iPhone), bei dem kurz Inhalt hinter dem Sticky-Header aufblitzt. */
+  overscroll-behavior-y: none;
 }
 html::-webkit-scrollbar,
 body::-webkit-scrollbar {
