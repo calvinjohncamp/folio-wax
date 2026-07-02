@@ -867,6 +867,11 @@ body.theme-classic{ --entw-blue:#2E7FA6; --entw-blue-soft:#4C97BE; --entw-tint:r
 .entw-panel ul{list-style:none;margin:0;padding:0}
 .entw-panel li{position:relative;font-size:12.5px;line-height:1.5;color:var(--wax-text-2);padding:4px 0 4px 16px}
 .entw-panel li::before{content:"";position:absolute;left:0;top:11px;width:6px;height:6px;border-radius:50%;background:var(--entw-blue)}
+.entw-panel .ep-bullet-link{color:inherit;text-decoration:none}
+.entw-panel .ep-bullet-link:hover{color:var(--entw-blue);text-decoration:underline}
+.entw-panel .ep-src-tag{color:var(--wax-muted-2);font-weight:400}
+.entw-panel .ep-src{display:inline-block;margin-top:2px;font-size:11px;font-weight:600;color:var(--entw-blue);text-decoration:none}
+.entw-panel .ep-src:hover{text-decoration:underline}
 .entw-foot{margin-top:11px;font-size:10px;color:var(--wax-muted);line-height:1.5}
 .entw-stand{font-size:10px;font-weight:600;letter-spacing:.04em;color:var(--entw-blue);text-transform:none}
 /* Headlines — Boulevard-Highlights oberhalb der Newsflash-Kacheln (6 Positionen, Pos. 6 = Sport) */
@@ -3531,6 +3536,9 @@ const HOT_SEED = [
 ];
 
 function entwEscape(s){ return String(s==null?'':s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c])); }
+// Quell-Link für eine Headline/einen Bullet-Punkt: echte Artikel-URL, sonst Google-Suche
+// nach dem Text (Link ist dadurch nie tot, auch bei altem Seed-/Cache-Inhalt ohne url).
+function entwLink(url, fallbackText){ return url || ('https://www.google.com/search?q='+encodeURIComponent(fallbackText||'')); }
 
 async function renderEntwicklungen(){
   const mount = document.getElementById('overviewEntwicklungen');
@@ -3560,8 +3568,8 @@ async function renderEntwicklungen(){
       if(typeof hl === 'string'){ try{ hl = JSON.parse(hl); }catch(e){ hl = null; } }
       if(Array.isArray(hl) && hl.length){
         __entwHighlights = hl.map(h => (typeof h === 'object' && h)
-          ? { title: String(h.title||''), detail: String(h.detail||'') }
-          : { title: String(h), detail: '' });
+          ? { title: String(h.title||''), detail: String(h.detail||''), url: String(h.url||''), src: String(h.src||'') }
+          : { title: String(h), detail: '', url: '', src: '' });
       }
     }catch(e){ /* Spalte fehlt / offline → Seed */ }
     if(usedSeed){ __entwData = ENTW_SEED; __entwStand = 'Beispielinhalt — wird ab Phase 2 täglich automatisch aktualisiert'; }
@@ -3599,8 +3607,10 @@ function renderHotPanel(){
   if(__hotOpen === null){ pm.innerHTML = ''; return; }
   const items = Array.isArray(__entwHighlights) ? __entwHighlights : [];
   const h = items[__hotOpen] || {};
+  const href = entwLink(h.url, h.title);
   pm.innerHTML = `<div class="entw-panel"><h4>${entwEscape(h.title||'')}</h4>`
     + (h.detail ? `<div class="ep-sum">${entwEscape(h.detail)}</div>` : `<div class="ep-sum">Noch kein Detailtext hinterlegt.</div>`)
+    + `<a class="ep-src" href="${entwEscape(href)}" target="_blank" rel="noopener noreferrer">Quelle${h.src?': '+entwEscape(h.src):''} →</a>`
     + `</div>`;
 }
 window.waxHotToggle = function(i){
@@ -3614,10 +3624,18 @@ function renderEntwPanel(){
   const meta = ENTW_THEMEN.find(t=>t.key===__entwOpen);
   const d = (__entwData && __entwData[__entwOpen]) || {};
   const bullets = Array.isArray(d.bullets) ? d.bullets : [];
+  const bulletHtml = bullets.map(b=>{
+    // Rückwärtskompatibel: alte gecachte Daten liefern ggf. reine Strings statt {text,url,src}.
+    const text = (typeof b === 'object' && b) ? String(b.text||'') : String(b||'');
+    const url  = (typeof b === 'object' && b) ? String(b.url ||'') : '';
+    const src  = (typeof b === 'object' && b) ? String(b.src ||'') : '';
+    const href = entwLink(url, text);
+    return `<li><a class="ep-bullet-link" href="${entwEscape(href)}" target="_blank" rel="noopener noreferrer">${entwEscape(text)}${src?` <span class="ep-src-tag">(${entwEscape(src)})</span>`:''}</a></li>`;
+  }).join('');
   pm.innerHTML = `<div class="entw-panel">`
     + `<h4>${entwEscape(meta?meta.titel:'')}</h4>`
     + (d.summary ? `<div class="ep-sum">${entwEscape(d.summary)}</div>` : '')
-    + (bullets.length ? `<div class="ep-blabel">Bedeutung für Anleger</div><ul>${bullets.map(b=>`<li>${entwEscape(b)}</li>`).join('')}</ul>` : '')
+    + (bullets.length ? `<div class="ep-blabel">Bedeutung für Anleger</div><ul>${bulletHtml}</ul>` : '')
     + `</div>`;
 }
 
