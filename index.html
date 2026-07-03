@@ -884,6 +884,15 @@ body.theme-classic{ --entw-blue:#2E7FA6; --entw-blue-soft:#4C97BE; --entw-tint:r
 .hot-item-btn:hover{background:var(--entw-tint)}
 .hot-item-btn.active{background:var(--entw-tint-strong)}
 .hot-item-btn:focus-visible{outline:2px solid var(--entw-blue);outline-offset:2px}
+/* CNBC News — Top-10-Headlines des Tages, direkter Link auf CNBC (US-Marktfokus) */
+.cnbc-wrap{margin-bottom:24px}
+.cnbc-list{list-style:none;margin:0;padding:0}
+.cnbc-item{position:relative;display:flex;align-items:baseline;gap:10px;padding:5px 4px;border-radius:6px;transition:background .15s}
+.cnbc-item:hover{background:var(--entw-tint)}
+.cnbc-rank{flex:none;width:18px;font-size:12px;font-weight:800;color:var(--entw-blue);text-align:right}
+.cnbc-link{flex:1;font-size:13.5px;line-height:1.55;font-weight:700;color:var(--wax-text);text-decoration:none}
+.cnbc-item:hover .cnbc-link{color:var(--entw-blue);text-decoration:underline}
+.cnbc-ext{flex:none;font-size:11px;color:var(--wax-muted-2)}
 .dc-grid{display:grid;grid-template-columns:2.2fr 0.95fr 1.2fr 1fr 1.25fr;gap:0;align-items:stretch}
 .dc-grid.dc-grid4{grid-template-columns:2.4fr 1.3fr 1.1fr 1.35fr}
 .dc-grid.dc-grid6{grid-template-columns:2fr 0.9fr 1.15fr 1.05fr 1.1fr 1.2fr}
@@ -1113,7 +1122,9 @@ body.theme-classic .dc-mini-kpi.deviation .dc-kpi-line.total strong{color:#16232
   <div class="dc-group"><span class="sec-n">3 ·</span> Newsflash <span id="entwStand" class="entw-stand"></span></div>
   <div id="overviewHighlights" class="hot-wrap"></div>
   <div id="overviewEntwicklungen" class="entw-wrap"></div>
-  <div class="sec-t" style="margin-top:24px"><span class="sec-n">4 ·</span> <span id="benchTitle">Benchmarks YTD</span></div>
+  <div class="dc-group"><span class="sec-n">4 ·</span> CNBC News <span id="cnbcStand" class="entw-stand"></span></div>
+  <div id="overviewCnbc" class="cnbc-wrap"></div>
+  <div class="sec-t" style="margin-top:24px"><span class="sec-n">5 ·</span> <span id="benchTitle">Benchmarks YTD</span></div>
   <div class="bench-grid">
     <div class="bench-item"><div class="bench-l">WAX</div><div class="bench-v" id="bWax">—</div></div>
     <div class="bench-item"><div class="bench-l">Nasdaq</div><div class="bench-v" id="bNasdaq">lädt…</div></div>
@@ -1122,15 +1133,15 @@ body.theme-classic .dc-mini-kpi.deviation .dc-kpi-line.total strong{color:#16232
     <div class="bench-item"><div class="bench-l">Hang Seng</div><div class="bench-v" id="bHsi">lädt…</div></div>
     <div class="bench-item"><div class="bench-l">Durchschnitt Benchmarks</div><div class="bench-v" id="bTop4">lädt…</div></div>
   </div>
-  <div class="sec-t"><span class="sec-n">5 ·</span> Depotstruktur — Kategorien · Länder · Börsen</div>
+  <div class="sec-t"><span class="sec-n">6 ·</span> Depotstruktur — Kategorien · Länder · Börsen</div>
   <div id="overviewStructure"></div>
-  <div class="sec-t"><span class="sec-n">6 ·</span> Top Holdings (aktuell)</div>
+  <div class="sec-t"><span class="sec-n">7 ·</span> Top Holdings (aktuell)</div>
   <div class="tw"><table>
     <thead><tr><th>Rang</th><th>Titel</th><th>WKN</th><th>Wert (€)</th><th>Anteil</th><th>Kumuliert</th></tr></thead>
     <tbody id="topHoldingsBody"></tbody>
   </table></div>
 
-  <div class="sec-t" style="margin-top:24px"><span class="sec-n">7 ·</span> Spielregeln WAX 2026</div>
+  <div class="sec-t" style="margin-top:24px"><span class="sec-n">8 ·</span> Spielregeln WAX 2026</div>
   <div class="tw rules-box">
     <div class="rules-title">WAX-Spielregeln 2026</div>
     <div class="rules-columns">
@@ -3619,6 +3630,59 @@ window.waxHotToggle = function(i){
   __hotOpen = (__hotOpen === i) ? null : i;
   renderHot();
 };
+
+// === CNBC News (Übersicht, eigene Kategorie unter den Newsflash-Kacheln) =====
+// Top-10-US-Marktheadlines des Tages. Wird 2×/Tag automatisch durch den Worker
+// "wax-cnbc" (CNBC-RSS + Claude-Auswahl, kein Pro-/Investing-Club-Inhalt) in die
+// Supabase-Tabelle "cnbc_news" geschrieben. Solange der Worker noch nicht läuft
+// bzw. keine Zeile vorhanden ist, zeigt das Frontend den eingebetteten
+// Beispielinhalt CNBC_SEED (redaktionell von Hand kuratiert am 03.07.2026).
+const CNBC_SEED = {
+  stand: '03. Juli 2026',
+  items: [
+    { title:'U.S. job creation cools in June with payrolls growth of just 57,000; unemployment rate at 4.2%', url:'https://www.cnbc.com/2026/07/02/jobs-report-june-2026-.html' },
+    { title:'Tesla stock sinks 7% despite strong deliveries report, posting worst day in nearly a year', url:'https://www.cnbc.com/2026/07/02/tesla-tsla-q2-2026-vehicle-delivery-production.html' },
+    { title:'Trump bought Apple, Nvidia and other tech giants before tariff reversal fueled rebound', url:'https://www.cnbc.com/2026/07/02/trump-aapl-nvda-tariffs-disclosures.html' },
+    { title:'Nvidia offers start-up customers chance to swap compute power for revenue share', url:'https://www.cnbc.com/2026/07/02/nvidia-plans-to-offer-start-up-customers-access-to-revenue-sharing-deals.html' },
+    { title:'Microsoft commits $2.5 billion and 6,000 employees to new AI implementation unit', url:'https://www.cnbc.com/2026/07/02/microsoft-commits-2point5-billion-6000-employees-ai-implementation-unit.html' },
+    { title:'Rivian raises 2026 delivery outlook while Lucid misses Wall Street expectations for second quarter', url:'https://www.cnbc.com/2026/07/02/rivian-lucid-q2-deliveries-demand.html' },
+    { title:'Ford Q2 sales drop 10.3% due to F-Series supplier issue, falling EV demand', url:'https://www.cnbc.com/2026/07/02/ford-q2-sales.html' },
+    { title:'Meta’s push into cloud computing means Wall Street has to prepare for lower margins', url:'https://www.cnbc.com/2026/07/02/metas-push-into-cloud-excites-wall-street-despite-lower-margins.html' },
+    { title:'Stock market gains minted nearly 1 million new millionaires in 2025, new UBS report says', url:'https://www.cnbc.com/2026/07/02/stock-market-gains-new-millionaires-ubs.html' },
+    { title:'Trump Accounts get a boost from employer contributions — Goldman Sachs and Morgan Stanley are the latest to offer matching programs', url:'https://www.cnbc.com/2026/07/02/trump-accounts-boosted-by-growing-list-of-employer-matches.html' },
+  ]
+};
+let __cnbcData = null;  // gecachte { stand, items:[{title,url}] } aus Supabase, oder CNBC_SEED
+async function renderCnbcNews(){
+  const mount = document.getElementById('overviewCnbc');
+  if(!mount) return;
+  if(__cnbcData === null){
+    let usedSeed = true;
+    try{
+      const rows = await sbGet('cnbc_news', 'select=stand,items,updated_at&order=stand.desc&limit=1');
+      const row = Array.isArray(rows) ? rows[0] : null;
+      let items = row && row.items;
+      if(typeof items === 'string'){ try{ items = JSON.parse(items); }catch(e){ items = null; } }
+      if(Array.isArray(items) && items.length){
+        let standLabel;
+        try{
+          const datum = new Date(row.stand).toLocaleDateString('en-US',{day:'2-digit',month:'long',year:'numeric'});
+          const uhrzeit = row.updated_at ? ', ' + new Date(row.updated_at).toLocaleTimeString('de-DE',{hour:'2-digit',minute:'2-digit'}) + ' Uhr' : '';
+          standLabel = datum + uhrzeit;
+        }catch(e){ standLabel = String(row.stand||''); }
+        __cnbcData = { stand: standLabel, items };
+        usedSeed = false;
+      }
+    }catch(e){ /* offline / Tabelle fehlt → Seed */ }
+    if(usedSeed){ __cnbcData = { stand: 'Beispielinhalt vom ' + CNBC_SEED.stand + ' — wird automatisch aktualisiert, sobald der Worker läuft', items: CNBC_SEED.items }; }
+  }
+  const standEl = document.getElementById('cnbcStand');
+  if(standEl) standEl.textContent = '· Stand ' + __cnbcData.stand;
+  const list = __cnbcData.items.map((h,i)=>{
+    return `<li class="cnbc-item"><span class="cnbc-rank">${i+1}.</span><a class="cnbc-link" href="${entwEscape(h.url)}" target="_blank" rel="noopener noreferrer">${entwEscape(h.title)}</a><span class="cnbc-ext">↗</span></li>`;
+  }).join('');
+  mount.innerHTML = `<ul class="cnbc-list">${list}</ul>`;
+}
 function renderEntwPanel(){
   const pm = document.getElementById('entwPanelMount');
   if(!pm) return;
@@ -3744,6 +3808,7 @@ function renderUebersicht() {
   const heroMount = document.getElementById('overviewHeroMount');
   if (heroMount) heroMount.innerHTML = hero;
   renderEntwicklungen();
+  renderCnbcNews();
 
   // === Ranking-Zeilen (verschlankt, Look der Aktiven Positionen, 7 Spalten) ===
   // YTD + Heute dauerhaft sichtbar; Perf. p.a. (groß) mit Gewinn Alltime (klein) zusammengeführt.
