@@ -1283,6 +1283,9 @@ body.theme-classic .dc-mini-kpi.deviation .dc-kpi-line.total strong{color:#16232
     <div class="kpi" style="cursor:pointer;border:1px solid var(--wax-border)" onclick="openModal('comdirect')">
       <div class="kpi-l">Cash-Bestand</div><div class="kpi-v" style="font-size:13px">Comdirect aktuell</div><div class="kpi-s">manuell eintragen</div>
     </div>
+    <div class="kpi" style="cursor:pointer;border:1px solid var(--wax-border)" onclick="openModal('split')">
+      <div class="kpi-l">Kapitalmaßnahme</div><div class="kpi-v" style="font-size:14px">🔀 Aktiensplit</div><div class="kpi-s">Stück/Kurs korrigieren</div>
+    </div>
   </div>
   <div style="display:grid;grid-template-columns:repeat(4,minmax(180px,1fr));gap:12px;margin:-4px 0 20px;align-items:start">
     <div style="display:flex;flex-direction:column;gap:8px">
@@ -1503,6 +1506,38 @@ body.theme-classic .dc-mini-kpi.deviation .dc-kpi-line.total strong{color:#16232
     </div>
   </div>
 
+  <div class="modal" id="modalSplit" style="display:none">
+    <div class="modal-title">🔀 Aktiensplit einbuchen</div>
+    <div id="splitStep1">
+      <div class="info-box">Passt Stückzahl und Kaufkurs aller <strong>offenen</strong> Lots dieser WKN — über alle Mitglieder hinweg — an das Split-Verhältnis an. Der Kaufwert je Lot bleibt dabei exakt erhalten. Verkaufte Positionen werden nicht angefasst.</div>
+      <div class="form-row-2">
+        <div class="form-row"><label class="form-label">WKN</label><input type="text" class="form-input" id="spWkn"></div>
+        <div class="form-row"><label class="form-label">Datum (Split-Stichtag)</label><input type="date" class="form-input" id="spDatum"></div>
+      </div>
+      <div class="form-row-2">
+        <div class="form-row"><label class="form-label">Verhältnis — neue Aktien</label><input type="number" class="form-input" id="spRatioNew" placeholder="z. B. 10" step="any" oninput="calcSplit()"></div>
+        <div class="form-row"><label class="form-label">Verhältnis — je alte Aktien</label><input type="number" class="form-input" id="spRatioOld" value="1" placeholder="z. B. 1" step="any" oninput="calcSplit()"></div>
+      </div>
+      <div class="form-row"><label class="form-label">Notiz (optional)</label><input type="text" class="form-input" id="spNotiz" placeholder="z. B. offizieller Split lt. Unternehmensmeldung"></div>
+      <div id="splitVorschau" style="margin-bottom:14px"></div>
+      <div class="modal-footer">
+        <button class="btn btn-outline" onclick="closeModal()">Abbrechen</button>
+        <button class="btn btn-red" id="spBtnVorschau" onclick="showSplitBestätigung()" style="display:none">Vorschau & Bestätigung →</button>
+      </div>
+    </div>
+    <div id="splitStep2" style="display:none">
+      <div class="modal-title" style="font-size:14px;margin-bottom:12px">📋 Bitte prüfen — wird so gebucht:</div>
+      <div id="splitBestätigungDetail"></div>
+      <div class="info-box" style="background:#fff3cd;border-color:#ffc107;color:#856404;margin-top:12px">
+        ⚠️ Vor dem Einbuchen wird automatisch eine Time-Machine-Sicherheitskopie der gesamten Datenbank heruntergeladen. Damit lässt sich der Stand über „Time Machine → Snapshot wiederherstellen" (5.3) jederzeit komplett zurückrollen.
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-outline" onclick="document.getElementById('splitStep1').style.display='block';document.getElementById('splitStep2').style.display='none'">← Zurück</button>
+        <button class="btn btn-red" id="spBtnBuchen" onclick="saveSplit()">✓ Snapshot erzeugen & Split buchen</button>
+      </div>
+    </div>
+  </div>
+
 </div>
 
 <script>
@@ -1701,6 +1736,7 @@ const investmentsDefaultSortRules = [{ key:'aktWert', dir:'desc' }];
 const investmentDetailsDefaultSortRules = [{ key:'bezeichnung', dir:'asc' }];
 const PROD_SICHERHEIT_AKTIV = false; // Undo ist in dieser Sicherheitsversion wieder freigegeben
 let reiseVorschauData = null;
+let splitVorschauData = null;
 
 const META_OPTIONS = {
   categories:[
@@ -2184,7 +2220,7 @@ function sortLotsForSale(lots){
     return num(a.kaufkurs)-num(b.kaufkurs);
   });
 }
-async function rollbackVerkaufOps(ops) {
+async function rollbackOps(ops) {
   for (let i = ops.length - 1; i >= 0; i--) {
     const op = ops[i];
     try {
@@ -2266,7 +2302,7 @@ async function applyVerkaufToLots({ mid, datum, wkn, kurs, stueck }) {
     if(remaining>1e-6) throw new Error(`Verkauf für ${wkn} konnte nicht vollständig zugeordnet werden.`);
     return true;
   } catch(err) {
-    await rollbackVerkaufOps(ops);
+    await rollbackOps(ops);
     throw err;
   }
 }
@@ -4582,7 +4618,7 @@ function renderPerf() {
 
 // LOG
 function renderLog() {
-  const typen={KAUF:'🟢',VERKAUF:'🔴',EINZAHLUNG:'🔵',ENTNAHME:'🟡',REISE:'✈️',FREIGABE:'⬆️',KONTOSTAND:'💳'};
+  const typen={KAUF:'🟢',VERKAUF:'🔴',EINZAHLUNG:'🔵',ENTNAHME:'🟡',REISE:'✈️',FREIGABE:'⬆️',KONTOSTAND:'💳',SPLIT:'🔀'};
   let html='';
   if (!db.buchungen.length) html='<tr><td colspan="8" style="text-align:center;color:var(--wax-muted-2);padding:20px">Noch keine Buchungen</td></tr>';
   else db.buchungen.forEach(b=>{
@@ -4932,8 +4968,8 @@ function renderEhrungen() {
 function openModal(type) {
   if(!isAdmin()){ alert('Transparenzmodus: Nur der Administrator kann im Pflegebereich Änderungen erfassen.'); return; }
   document.getElementById('modalOverlay').style.display='flex';
-  ['modalKauf','modalFreigabe','modalReise','modalComdirect'].forEach(id=>document.getElementById(id).style.display='none');
-  const map={kauf:'modalKauf',freigabe:'modalFreigabe',reise:'modalReise',comdirect:'modalComdirect'};
+  ['modalKauf','modalFreigabe','modalReise','modalComdirect','modalSplit'].forEach(id=>document.getElementById(id).style.display='none');
+  const map={kauf:'modalKauf',freigabe:'modalFreigabe',reise:'modalReise',comdirect:'modalComdirect',split:'modalSplit'};
   document.getElementById(map[type]).style.display='';
   const today=new Date().toISOString().split('T')[0];
   if(type==='kauf'){ document.getElementById('fDatum').value=today; document.getElementById('fBetragVorschau').textContent=''; refreshKaufMetaUI(); }
@@ -4943,6 +4979,18 @@ function openModal(type) {
     document.getElementById('cdDatum').value=today;
     const sumCash = db.mitglieder.reduce((s,m)=>s+(db.cash.find(c=>c.mitglied_id===m.id)?.betrag||0),0);
     document.getElementById('cdInfo').textContent = `Summe Einzel-Cash aktuell: ${f(sumCash)} €`;
+  }
+  if(type==='split'){
+    document.getElementById('spDatum').value=today;
+    document.getElementById('spWkn').value='';
+    document.getElementById('spRatioNew').value='';
+    document.getElementById('spRatioOld').value='1';
+    document.getElementById('spNotiz').value='';
+    document.getElementById('splitVorschau').innerHTML='';
+    document.getElementById('spBtnVorschau').style.display='none';
+    document.getElementById('splitStep1').style.display='block';
+    document.getElementById('splitStep2').style.display='none';
+    splitVorschauData=null;
   }
 }
 function closeModal(e) { if(!e||e.target.id==='modalOverlay') document.getElementById('modalOverlay').style.display='none'; }
@@ -5128,6 +5176,165 @@ async function saveReise() {
 Die Cash-Bestände der 6 virtuellen Depots wurden anteilig nach aktuellem Depotwert reduziert. Negative Cash-Stände sind zulässig und können später durch Verkäufe ausgeglichen werden.
 
 Alltime-Werte und Performance seit Start p.a. werden dafür künftig automatisch aus den Buchungen fortgeführt – inklusive Verrechnung mit dem monatlichen Standardbeitrag von 100 € im jeweiligen Monat.`);
+  } finally {
+    if(_btn){ _btn._waxSubmitting=false; _btn.disabled=false; _btn.textContent=_btn.dataset._origText||_btn.textContent; }
+  }
+}
+
+// AKTIENSPLIT
+// Passt Stück/Kaufkurs aller offenen Lots einer WKN (über alle Mitglieder) an ein Split-Verhältnis an.
+// Kaufwert (und wert_ref) je Lot bleiben dabei unverändert — kaufkurs_neu/kurs_ref_neu werden daraus
+// abgeleitet (stueck_neu = stueck * R; kaufkurs_neu = kaufwert / stueck_neu), damit die historische
+// Kapitalbindung exakt erhalten bleibt statt sich durch Rundung von kaufkurs/R zu verschieben.
+function buildSplitPlan(wkn, ratioNew, ratioOld) {
+  if(!wkn) throw new Error('Bitte WKN angeben.');
+  if(!(ratioNew>0) || !(ratioOld>0)) throw new Error('Bitte gültiges Verhältnis (beide Werte > 0) angeben.');
+  const R = ratioNew/ratioOld;
+  if(Math.abs(R-1)<1e-9) throw new Error('Verhältnis darf nicht 1:1 sein.');
+  const lots = db.positionen.filter(p => repairKnownWkn(p.wkn)===wkn && !p.verkauft && num(p.stueck)>0);
+  if(!lots.length) throw new Error(`Keine offenen Positionen für WKN ${wkn} gefunden.`);
+
+  const rows = lots.map(lot => {
+    const stueckAlt = num(lot.stueck);
+    const kaufkursAlt = num(lot.kaufkurs);
+    const kaufwert = num(lot.kaufwert) || (stueckAlt * kaufkursAlt);
+    const kursRefAlt = (lot.kurs_ref!=null && !isNaN(lot.kurs_ref)) ? Number(lot.kurs_ref) : null;
+    const wertRefAlt = (lot.wert_ref!=null && !isNaN(lot.wert_ref)) ? Number(lot.wert_ref) : null;
+    const stueckNeu = stueckAlt * R;
+    const kaufkursNeu = kaufwert / stueckNeu;
+    const wertRef = kursRefAlt!=null ? (wertRefAlt!=null ? wertRefAlt : kursRefAlt*stueckAlt) : null;
+    const kursRefNeu = kursRefAlt!=null ? wertRef/stueckNeu : null;
+    return {
+      lot, mitglied: getMitglied(lot.mitglied_id),
+      stueckAlt, kaufkursAlt, kaufwert, kursRefAlt, wertRefAlt,
+      stueckNeu, kaufkursNeu, wertRef, kursRefNeu
+    };
+  });
+  const name = findSecurityMeta({wkn})?.name || lots[0].bezeichnung || wkn;
+  const sumKaufwertAlt = rows.reduce((s,r)=>s+r.kaufwert,0);
+  const sumKaufwertNeu = rows.reduce((s,r)=>s+r.stueckNeu*r.kaufkursNeu,0);
+  return { wkn, name, R, rows, sumKaufwertAlt, sumKaufwertNeu };
+}
+
+function calcSplit() {
+  const btn = document.getElementById('spBtnVorschau');
+  const out = document.getElementById('splitVorschau');
+  const wkn = repairKnownWkn(document.getElementById('spWkn').value.trim().toUpperCase());
+  const ratioNew = parseFloat(document.getElementById('spRatioNew').value);
+  const ratioOld = parseFloat(document.getElementById('spRatioOld').value);
+  splitVorschauData = null;
+  btn.style.display='none';
+  if(!wkn || !ratioNew || !ratioOld){ out.innerHTML=''; return; }
+  let plan;
+  try { plan = buildSplitPlan(wkn, ratioNew, ratioOld); }
+  catch(err){ out.innerHTML = `<div style="color:var(--wax-accent);font-size:12px;font-weight:700">${err.message}</div>`; return; }
+  splitVorschauData = plan;
+  const mitgliederCount = new Set(plan.rows.map(r=>r.lot.mitglied_id)).size;
+  out.innerHTML = `<div style="font-size:12px;color:var(--wax-muted)">
+    <strong>${escapeHtml(plan.name)}</strong> (${plan.wkn}) — Split ${f(ratioNew,ratioNew%1?4:0)} : ${f(ratioOld,ratioOld%1?4:0)} (Faktor ${f(plan.R,4)})<br>
+    ${plan.rows.length} offene Lot(s) über ${mitgliederCount} Mitglied(er) betroffen. Kaufwert gesamt bleibt bei ${f(plan.sumKaufwertAlt)} €.
+  </div>`;
+  btn.style.display='block';
+}
+
+function renderSplitPlanTable(plan) {
+  let html = `<div style="background:#f8f6f2;border-radius:4px;padding:12px;margin-bottom:12px;font-size:12px">
+    <div style="font-weight:700;margin-bottom:6px">🔀 ${escapeHtml(plan.name)} (${plan.wkn}) — Faktor ${f(plan.R,4)}</div>
+  </div>`;
+  html += `<div style="overflow-x:auto"><table style="font-size:11px;border-collapse:collapse"><tr style="border-bottom:1px solid var(--wax-border-soft)">
+    <td style="text-align:left;padding:3px 6px">Mitglied</td>
+    <td style="text-align:right;padding:3px 6px">Stück alt</td>
+    <td style="text-align:right;padding:3px 6px">Stück neu</td>
+    <td style="text-align:right;padding:3px 6px">Kaufkurs alt</td>
+    <td style="text-align:right;padding:3px 6px">Kaufkurs neu</td>
+    <td style="text-align:right;padding:3px 6px">Kaufwert</td></tr>`;
+  plan.rows.forEach(r=>{
+    html += `<tr style="border-bottom:1px solid #f0f0f0">
+      <td style="padding:3px 6px;font-weight:700">${r.mitglied?.name.split(',')[0]||'—'}</td>
+      <td style="text-align:right;padding:3px 6px">${formatStueckSafe(r.stueckAlt)}</td>
+      <td style="text-align:right;padding:3px 6px;font-weight:700">${formatStueckSafe(r.stueckNeu)}</td>
+      <td style="text-align:right;padding:3px 6px">${f(r.kaufkursAlt,4)} €</td>
+      <td style="text-align:right;padding:3px 6px;font-weight:700">${f(r.kaufkursNeu,4)} €</td>
+      <td style="text-align:right;padding:3px 6px;color:var(--wax-muted)">${f(r.kaufwert)} €</td>
+    </tr>`;
+  });
+  html += `<tr style="font-weight:700;border-top:2px solid #ddd">
+    <td style="padding:3px 6px">Gesamt</td><td></td><td></td><td></td><td></td>
+    <td style="text-align:right;padding:3px 6px">${f(plan.sumKaufwertAlt)} €</td></tr>`;
+  html += `</table></div>`;
+  const diff = plan.sumKaufwertNeu - plan.sumKaufwertAlt;
+  const ok = Math.abs(diff) < 0.01;
+  html += `<div style="font-size:11px;margin-top:8px;font-weight:700;color:${ok?'var(--wax-positive)':'var(--wax-accent)'}">
+    ${ok?'✓':'✗'} Prüfsumme Kaufwert vorher/nachher: ${f(plan.sumKaufwertAlt)} € → ${f(plan.sumKaufwertNeu)} € (Differenz ${fc(diff)})
+  </div>`;
+  return { html, ok };
+}
+
+function showSplitBestätigung() {
+  const wkn = repairKnownWkn(document.getElementById('spWkn').value.trim().toUpperCase());
+  const ratioNew = parseFloat(document.getElementById('spRatioNew').value);
+  const ratioOld = parseFloat(document.getElementById('spRatioOld').value);
+  let plan;
+  try { plan = buildSplitPlan(wkn, ratioNew, ratioOld); }
+  catch(err){ alert(err.message); return; }
+  splitVorschauData = plan;
+  const { html, ok } = renderSplitPlanTable(plan);
+  document.getElementById('splitBestätigungDetail').innerHTML = html;
+  document.getElementById('spBtnBuchen').disabled = !ok;
+  document.getElementById('splitStep1').style.display='none';
+  document.getElementById('splitStep2').style.display='block';
+}
+
+async function saveSplit() {
+  if(!isAdmin()){ alert('Nur für den Administrator.'); return; }
+  const _btn = document.getElementById('spBtnBuchen');
+  if(_btn && _btn._waxSubmitting){ return; }
+  if(_btn){ _btn._waxSubmitting=true; _btn.disabled=true; _btn.dataset._origText=_btn.textContent; _btn.textContent='…'; }
+  try {
+    const datum = document.getElementById('spDatum').value;
+    const notiz = document.getElementById('spNotiz').value.trim();
+    const ratioNew = parseFloat(document.getElementById('spRatioNew').value);
+    const ratioOld = parseFloat(document.getElementById('spRatioOld').value);
+    if(!datum){ alert('Bitte Datum angeben.'); return; }
+    // Frisch neu berechnen statt der u.U. veralteten Vorschau zu vertrauen.
+    let plan;
+    try { plan = buildSplitPlan(repairKnownWkn(document.getElementById('spWkn').value.trim().toUpperCase()), ratioNew, ratioOld); }
+    catch(err){ alert(err.message); return; }
+    if(Math.abs(plan.sumKaufwertNeu - plan.sumKaufwertAlt) >= 0.01){
+      alert('Prüfsumme stimmt nicht überein — Split wurde nicht gebucht.'); return;
+    }
+
+    const snapshot = await tmBuildSnapshot();
+    const backupName = `SPLIT_${plan.wkn}_${f(ratioNew,ratioNew%1?4:0)}-${f(ratioOld,ratioOld%1?4:0)}_${tmNowStamp()}.json`;
+    tmDownload(backupName, JSON.stringify(snapshot, null, 2), 'application/json;charset=utf-8');
+
+    const ops = [];
+    try {
+      for(const r of plan.rows){
+        const before = { stueck:r.stueckAlt, kaufkurs:r.kaufkursAlt, kaufwert:r.kaufwert, kurs_ref:r.kursRefAlt, wert_ref:r.wertRefAlt };
+        const patchData = { stueck:r.stueckNeu, kaufkurs:r.kaufkursNeu, kaufwert:r.stueckNeu*r.kaufkursNeu };
+        if(r.kursRefNeu!=null) patchData.kurs_ref = r.kursRefNeu;
+        if(r.wertRef!=null) patchData.wert_ref = r.wertRef;
+        const patchRes = await sbPatchDetailed('positionen', `id=eq.${r.lot.id}`, patchData);
+        if(!patchRes.ok) throw new Error(`Lot ${r.lot.id} (${plan.wkn}) konnte nicht aktualisiert werden.${patchRes.error?' '+patchRes.error:''}`);
+        ops.push({ kind:'patch', table:'positionen', filter:`id=eq.${r.lot.id}`, before });
+      }
+    } catch(err){
+      await rollbackOps(ops);
+      throw err;
+    }
+
+    const mitgliederCount = new Set(plan.rows.map(r=>r.lot.mitglied_id)).size;
+    await sbPost('buchungen', {
+      datum, typ:'SPLIT', mitglied_id:null, bezeichnung:plan.name, wkn:plan.wkn,
+      stueck:plan.rows.reduce((s,r)=>s+(r.stueckNeu-r.stueckAlt),0), kurs:plan.R, betrag:0,
+      notiz:`Split ${f(ratioNew,ratioNew%1?4:0)}:${f(ratioOld,ratioOld%1?4:0)} · ${plan.rows.length} Lot(s) / ${mitgliederCount} Mitglied(er) angepasst · Snapshot: ${backupName}${notiz?' · '+notiz:''}`
+    });
+
+    closeModal(); await initApp();
+    alert(`✓ Split für ${plan.name} (${plan.wkn}) gebucht.\n\n${plan.rows.length} Lot(s) über ${mitgliederCount} Mitglied(er) wurden im Verhältnis ${f(ratioNew,ratioNew%1?4:0)}:${f(ratioOld,ratioOld%1?4:0)} anpasst — Kaufwert je Lot bleibt unverändert.\n\nSicherheitskopie vor der Buchung wurde heruntergeladen als:\n${backupName}\n\nBei Problemen: unter 5.3 „Time Machine → Snapshot wiederherstellen" diese Datei einspielen, um den Stand vor dem Split komplett zurückzurollen.`);
+  } catch(err){
+    alert('✗ Split fehlgeschlagen: ' + (err.message||err));
   } finally {
     if(_btn){ _btn._waxSubmitting=false; _btn.disabled=false; _btn.textContent=_btn.dataset._origText||_btn.textContent; }
   }
