@@ -4404,8 +4404,8 @@ function renderDepot(id) {
     <div class="dc-col dc-share"><div class="dc-hmain">Anteil</div></div>
     <div class="dc-col"><div class="dc-hmain">YTD</div></div>
     <div class="dc-col"><div class="dc-hmain">Heute</div></div>
-    <div class="dc-col"><div class="dc-hmain">Kurs akt./Kauf</div></div>
-    <div class="dc-col"><div class="dc-hmain">Wert akt./Kauf</div></div>
+    <div class="dc-col"><div class="dc-hmain">Kurs</div></div>
+    <div class="dc-col"><div class="dc-hmain">Wert</div></div>
   </div></div>`;
 
   // Verkaufte Wertpapiere vorab berechnen, damit der KPI direkt in der oberen 3er-Reihe erscheinen kann.
@@ -4459,13 +4459,17 @@ function renderDepot(id) {
       const deToday=(k!=null&&wBaseToday!=null)?wAkt-wBaseToday:null;
       const dateBadge=(isNewCurrentYear && p.kauf_datum)?`<span class="badge b-new">NEU ${fdate(p.kauf_datum)}</span>`:'';
       const kursDisplay = k!=null ? f(k,2) : `<span class="kurs-loading">lädt…</span>`;
+      const refKurs = (p.kurs_ref!=null && !isNaN(p.kurs_ref)) ? Number(p.kurs_ref) : null;
+      const refWert = (p.wert_ref!=null && !isNaN(p.wert_ref)) ? Number(p.wert_ref) : null;
+      const refKursLine = refKurs!=null ? `<div class="dc-sub">31.12.: ${f(refKurs,2)}</div>` : '';
+      const refWertLine = refWert!=null ? `<div class="dc-sub">31.12.: ${f(refWert)} €</div>` : '';
       html+=`<article class="dc-card ${idx%2?'alt':''}" data-chart-wkn="${escapeHtml(p.wkn||'')}" data-chart-name="${escapeHtml(securityDisplayName(p.wkn, p.bezeichnung)||'')}"><div class="dc-grid dc-grid-pos6">
         <div class="dc-col dc-name"><div class="dc-title">${securityDisplayName(p.wkn, p.bezeichnung)}</div><div class="dc-meta"><span>${p.wkn}</span><span>${f(p.stueck,0)} Stk.</span>${dateBadge}</div></div>
         <div class="dc-col dc-share"><div class="dc-share-top">${f(share*100,1)}%</div><div class="dc-bar"><div class="dc-bar-fill" style="width:${Math.min(share*100,100).toFixed(1)}%"></div></div></div>
         <div class="dc-col ${cl(deYTD)}"><div class="dc-top">${dpYTD!=null?fp(dpYTD):'—'}</div><div class="dc-sub">${deYTD!=null?fc(deYTD):'—'}</div></div>
         <div class="dc-col ${cl(deToday)}"><div class="dc-top">${dpToday!=null?fp(dpToday):'—'}</div><div class="dc-sub">${deToday!=null?fc(deToday):'—'}</div></div>
-        <div class="dc-col"><div class="dc-top">${kursDisplay}</div><div class="dc-sub">${f(p.kaufkurs,2)}</div></div>
-        <div class="dc-col"><div class="dc-top">${f(wAkt)} €</div><div class="dc-sub">${f(p.kaufwert)} €</div></div>
+        <div class="dc-col"><div class="dc-top">${kursDisplay}</div>${refKursLine}<div class="dc-sub">Kauf: ${f(p.kaufkurs,2)}</div></div>
+        <div class="dc-col"><div class="dc-top">${f(wAkt)} €</div>${refWertLine}<div class="dc-sub">Kauf: ${f(p.kaufwert)} €</div></div>
       </div></article>`;
     });
     html+=`</div>`;
@@ -4532,13 +4536,14 @@ function renderDepot(id) {
     html+=`<div class="dc-group">Verkaufte Wertpapiere</div>`;
     html+=`<div class="dc-wrap"><div class="dc-head"><div class="dc-grid dc-grid4">
       <div class="dc-col dc-name"><div class="dc-hmain">Position</div></div>
-      <div class="dc-col"><div class="dc-hmain">Kurs Verk./Basis</div></div>
-      <div class="dc-col"><div class="dc-hmain">Wert Verk./Basis</div></div>
+      <div class="dc-col"><div class="dc-hmain">Kurs</div></div>
+      <div class="dc-col"><div class="dc-hmain">Wert</div></div>
       <div class="dc-col"><div class="dc-hmain">Veränderung YTD</div></div>
     </div></div>`;
     let soldKaufwert = 0, soldRef = 0, soldWert = 0, soldDiff = 0;
     verkauftPos.forEach((p,idx)=>{
-      const refK = (p.kurs_ref != null && !isNaN(p.kurs_ref)) ? Number(p.kurs_ref) : Number(p.kaufkurs||0);
+      const hatJahresendRef = (p.kurs_ref != null && !isNaN(p.kurs_ref));
+      const refK = hatJahresendRef ? Number(p.kurs_ref) : Number(p.kaufkurs||0);
       const refV = (p.wert_ref != null && !isNaN(p.wert_ref)) ? Number(p.wert_ref) : Number(p.kaufwert||0);
       const bookingFb = getSoldBookingFallback(p);
       const fb = bookingFb || getSoldExcelFallback(p);
@@ -4555,10 +4560,12 @@ function renderDepot(id) {
       // Dieses Datum ist keine fachlich verlässliche Verkaufsinformation und wird deshalb nicht als RAUS-Badge gezeigt.
       // Neue Verkäufe ab App-Neustart behalten ihr echtes Verkaufsdatum und zeigen den Badge wieder automatisch.
       const dateBadge = (soldDate && soldDate !== '2026-05-19') ? `<span class="badge b-out">RAUS ${fdate(soldDate)}</span>` : '';
+      const refKLine = hatJahresendRef ? `<div class="dc-sub">31.12.: ${f(refK,2)}</div>` : '';
+      const refVLine = hatJahresendRef ? `<div class="dc-sub">31.12.: ${f(refV)} €</div>` : '';
       html+=`<article class="dc-card ${idx%2?'alt':''}" data-chart-wkn="${escapeHtml(p.wkn||'')}" data-chart-name="${escapeHtml(securityDisplayName(p.wkn, p.bezeichnung)||'')}"><div class="dc-grid dc-grid4">
         <div class="dc-col dc-name"><div class="dc-title">${securityDisplayName(p.wkn, p.bezeichnung)}</div><div class="dc-meta"><span>${p.wkn}</span><span>${f(p.stueck,0)} Stk.</span>${dateBadge}</div></div>
-        <div class="dc-col"><div class="dc-top">${sellK!=null?f(sellK,2):'—'}</div><div class="dc-sub">${refK?f(refK,2):'—'}</div></div>
-        <div class="dc-col"><div class="dc-top">${sellV!=null?f(sellV)+' €':'—'}</div><div class="dc-sub">${refV!=null?f(refV)+' €':'—'}</div></div>
+        <div class="dc-col"><div class="dc-top">${sellK!=null?f(sellK,2):'—'}</div>${refKLine}<div class="dc-sub">Kauf: ${f(p.kaufkurs,2)}</div></div>
+        <div class="dc-col"><div class="dc-top">${sellV!=null?f(sellV)+' €':'—'}</div>${refVLine}<div class="dc-sub">Kauf: ${f(p.kaufwert)} €</div></div>
         <div class="dc-col ${cl(diffAbs)}"><div class="dc-top">${diffPct!=null?fp(diffPct):'—'}</div><div class="dc-sub">${diffAbs!=null?fc(diffAbs):'—'}</div></div>
       </div></article>`;
     });
