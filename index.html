@@ -2,7 +2,7 @@
 <html lang="de">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, viewport-fit=cover">
 <!-- Folio.wax App Icon / Home-Screen Icon -->
 <link rel="icon" type="image/png" href="f-wax.png?v=20260625c">
 <link rel="apple-touch-icon" href="f-wax.png?v=20260625c">
@@ -78,11 +78,11 @@ body { background: var(--wax-page); color: var(--wax-text); font-family: 'DM San
 .pin-btn:hover { background: var(--wax-dark-2); }
 .pin-btn.del { font-size: 14px; color: var(--wax-muted-2); }
 .pin-err { color: var(--wax-accent); font-size: 12px; height: 16px; }
-.hd { background: var(--wax-dark); padding: 0 24px; display: flex; align-items: center; height: 64px; position: sticky; top: 0; z-index: 100; }
+.hd { background: var(--wax-dark); padding: 0 24px; display: flex; align-items: center; height: 64px; position: sticky; top: 0; z-index: 100; height: calc(64px + env(safe-area-inset-top,0px)); padding-top: env(safe-area-inset-top,0px); }
 .hd-logo img { height: 48px; display: block; object-fit: contain; }
 .hd-spacer { flex: 1; }
 .hd-date { font-size: 10px; color: var(--wax-muted); text-align: right; line-height: 1.6; }
-.nav { background: var(--wax-dark); border-bottom: 1px solid var(--wax-dark-2); display: flex; overflow-x: auto; padding: 0 24px; position: sticky; top: 64px; z-index: 99; scrollbar-width: none; -ms-overflow-style: none; }
+.nav { background: var(--wax-dark); border-bottom: 1px solid var(--wax-dark-2); display: flex; overflow-x: auto; padding: 0 24px; position: sticky; top: calc(64px + env(safe-area-inset-top,0px)); z-index: 99; scrollbar-width: none; -ms-overflow-style: none; }
 .nav::-webkit-scrollbar { display: none; }
 .nav-btn { font-size: 10px; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; color: #999; padding: 11px 14px; border: none; background: none; cursor: pointer; border-bottom: 2px solid transparent; margin-bottom: -1px; white-space: nowrap; transition: color .15s; }
 .nav-btn.active { color: var(--wax-card-soft); border-bottom-color: var(--wax-accent); }
@@ -179,7 +179,7 @@ td:nth-child(2) { text-align: left; }
 .chart-modal-empty{color:var(--wax-muted);font-size:13px;text-align:center;padding:40px 0}
 @media (max-width: 480px){.chart-modal{padding:16px}.chart-modal-price{font-size:22px}}
 .info-box { background: var(--wax-panel); border: 1px solid var(--wax-border); padding: 12px; border-radius: 3px; margin-bottom: 14px; font-size: 11px; color: #555; line-height: 1.6; }
-.statusbar { background: var(--wax-status); border-bottom: 1px solid #222; padding: 5px 24px; display: flex; align-items: center; gap: 8px; font-size: 10px; color: var(--wax-muted); position: sticky; top: 102px; z-index: 98; }
+.statusbar { background: var(--wax-status); border-bottom: 1px solid #222; padding: 5px 24px; display: flex; align-items: center; gap: 8px; font-size: 10px; color: var(--wax-muted); position: sticky; top: calc(102px + env(safe-area-inset-top,0px)); z-index: 98; }
 .sdot { width: 6px; height: 6px; border-radius: 50%; background: var(--wax-text-2); flex-shrink: 0; }
 .sdot.live { background: #2a9a5a; animation: pulse 2s infinite; }
 .sdot.loading { background: var(--wax-accent); animation: pulse 1s infinite; }
@@ -424,10 +424,10 @@ body{
   color:var(--wax-text)!important;
 }
 body.theme-classic{background:#EEF2F3!important;background-image:none!important;color:var(--wax-text)!important}
-.hd{height:78px!important;background:rgb(22,22,22)!important;border-bottom:1px solid var(--wax-line)!important;padding:0 24px!important}
+.hd{height:calc(78px + env(safe-area-inset-top,0px))!important;background:rgb(22,22,22)!important;border-bottom:1px solid var(--wax-line)!important;padding:0 24px!important;padding-top:env(safe-area-inset-top,0px)!important}
 .hd-logo img{height:62px!important;max-width:260px!important;object-fit:contain!important}
-.nav{top:78px!important;background:rgb(22,22,22)!important;border-bottom:1px solid var(--wax-line)!important}
-.statusbar{top:129px!important;background:rgb(18,18,18)!important;border-bottom:1px solid var(--wax-line)!important;color:var(--wax-muted-2)!important}
+.nav{top:calc(78px + env(safe-area-inset-top,0px))!important;background:rgb(22,22,22)!important;border-bottom:1px solid var(--wax-line)!important}
+.statusbar{top:calc(129px + env(safe-area-inset-top,0px))!important;background:rgb(18,18,18)!important;border-bottom:1px solid var(--wax-line)!important;color:var(--wax-muted-2)!important}
 .pin-logo img{height:78px!important;max-width:300px!important;object-fit:contain!important}
 #pinOverlay{background:radial-gradient(circle at 50% 30%, rgba(223,87,53,.10), transparent 34%), linear-gradient(180deg,#161616 0%,#101010 100%)!important}
 .pin-subtitle,.pin-help{color:var(--wax-muted)!important}.pin-btn,.pin-select{background:#232323!important;border-color:rgba(246,246,246,.12)!important;color:#F6F6F6!important}.pin-btn:hover{background:#2b2b2b!important}
@@ -447,7 +447,7 @@ body.theme-classic .tw,body.theme-classic .kpi-grid,body.theme-classic .bench-gr
 body.theme-classic thead th{background:#E7EEF1!important;color:#777!important;border-bottom:1px solid #D9E1E3!important}
 body.theme-classic tbody tr:hover{background:#FBFEFF!important}
 body.theme-classic .sum-row td{background:#452922!important;color:rgba(255,255,255,.9)!important}
-@media (max-width:640px){.hd-logo img{height:52px!important}.hd{height:70px!important}.nav{top:70px!important}.statusbar{top:121px!important}}
+@media (max-width:640px){.hd-logo img{height:52px!important}.hd{height:calc(70px + env(safe-area-inset-top,0px))!important}.nav{top:calc(70px + env(safe-area-inset-top,0px))!important}.statusbar{top:calc(121px + env(safe-area-inset-top,0px))!important}}
 
 
 
@@ -633,16 +633,17 @@ body.theme-classic{
 
 /* Header / Navigation wie Invest */
 .hd{
-  height:78px !important;
+  height:calc(78px + env(safe-area-inset-top,0px)) !important;
   background:rgb(22,35,42) !important;
   border-bottom:1px solid rgba(228,238,240,.08) !important;
   padding:0 24px !important;
+  padding-top:env(safe-area-inset-top,0px) !important;
 }
 .hd-logo img{height:62px !important;display:block !important;object-fit:contain !important}
 .hd-date{color:#81939A !important;font-size:10px !important;text-align:right !important}
 .hd-user{color:#AEBCC1 !important;font-size:10px !important;letter-spacing:.12em !important;text-transform:uppercase !important}
 .nav{
-  top:78px !important;
+  top:calc(78px + env(safe-area-inset-top,0px)) !important;
   background:rgb(22,35,42) !important;
   border-bottom:1px solid rgba(228,238,240,.08) !important;
   padding:0 24px !important;
@@ -652,7 +653,7 @@ body.theme-classic{
 .nav-btn:hover:not(.active){color:#E4EEF0 !important}
 #tab-pflege,.nav-btn-pflege{color:#FF7A00 !important}
 .statusbar{
-  top:115px !important;
+  top:calc(115px + env(safe-area-inset-top,0px)) !important;
   background:rgb(18,31,38) !important;
   border-bottom:1px solid rgba(228,238,240,.08) !important;
   color:#81939A !important;
@@ -819,7 +820,7 @@ body.theme-classic .pos,body.theme-classic .kpi-v.pos,body.theme-classic .bench-
 body.theme-classic .neg,body.theme-classic .kpi-v.neg,body.theme-classic .bench-v.neg{color:var(--brand-orange) !important}
 
 @media (max-width:640px){
-  .hd{height:70px !important}.hd-logo img{height:52px !important}.nav{top:70px !important}.statusbar{top:107px !important}
+  .hd{height:calc(70px + env(safe-area-inset-top,0px)) !important}.hd-logo img{height:52px !important}.nav{top:calc(70px + env(safe-area-inset-top,0px)) !important}.statusbar{top:calc(107px + env(safe-area-inset-top,0px)) !important}
   .content,.hd,.nav,.statusbar{padding-left:14px !important;padding-right:14px !important}
 }
 </style>
@@ -895,8 +896,10 @@ body.theme-classic{ --entw-blue:#2E7FA6; --entw-blue-soft:#4C97BE; --entw-tint:r
 .cnbc-ext{flex:none;font-size:11px;color:var(--wax-muted-2)}
 /* Folio.today — Verlinkung auf die tägliche Briefing-App (folio-today.de), Kachel im Format der Newsflash-Themen-Kacheln */
 .today-wrap{margin-bottom:24px;grid-template-columns:repeat(7,minmax(0,1fr))}
+@media(max-width:860px){.today-wrap{grid-template-columns:repeat(2,1fr)}}
+@media(max-width:480px){.today-wrap{grid-template-columns:1fr}}
 .today-tile{justify-content:center;padding:15px 16px;background:var(--wax-card);border-color:var(--wax-border)}
-.today-tile img{height:38px;width:auto;display:block}
+.today-tile img{height:38px;width:auto;max-width:100%;display:block}
 .dc-grid{display:grid;grid-template-columns:2.2fr 0.95fr 1.2fr 1fr 1.25fr;gap:0;align-items:stretch}
 .dc-grid.dc-grid4{grid-template-columns:2.4fr 1.3fr 1.1fr 1.35fr}
 .dc-grid.dc-grid6{grid-template-columns:2fr 0.9fr 1.15fr 1.05fr 1.1fr 1.2fr}
