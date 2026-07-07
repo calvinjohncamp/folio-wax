@@ -893,14 +893,10 @@ body.theme-classic{ --entw-blue:#2E7FA6; --entw-blue-soft:#4C97BE; --entw-tint:r
 .cnbc-link{flex:1;font-size:13.5px;line-height:1.55;font-weight:700;color:var(--wax-text);text-decoration:none}
 .cnbc-item:hover .cnbc-link{color:var(--entw-blue);text-decoration:underline}
 .cnbc-ext{flex:none;font-size:11px;color:var(--wax-muted-2)}
-/* Folio.today — Verlinkung auf die tägliche Briefing-App (folio-today.de) */
-.today-wrap{margin-bottom:24px}
-.today-link{display:flex;align-items:center;justify-content:center;gap:14px;padding:22px 24px;border:1px solid var(--wax-border);background:var(--wax-card);border-radius:14px;text-decoration:none;transition:transform .15s,box-shadow .15s,background .15s}
-.today-link:hover{transform:translateY(-2px);background:var(--entw-tint);box-shadow:0 8px 22px rgba(0,0,0,.18)}
-.today-link:focus-visible{outline:2px solid var(--entw-blue);outline-offset:3px}
-.today-link img{height:40px;width:auto;display:block}
-.today-link .today-cta{font-size:13px;font-weight:700;color:var(--wax-muted-2);letter-spacing:.02em}
-.today-link:hover .today-cta{color:var(--entw-blue)}
+/* Folio.today — Verlinkung auf die tägliche Briefing-App (folio-today.de), Kachel im Format der Newsflash-Themen-Kacheln */
+.today-wrap{margin-bottom:24px;grid-template-columns:repeat(7,minmax(0,1fr))}
+.today-tile{justify-content:center;padding:15px 16px;background:var(--wax-card);border-color:var(--wax-border)}
+.today-tile img{height:38px;width:auto;display:block}
 .dc-grid{display:grid;grid-template-columns:2.2fr 0.95fr 1.2fr 1fr 1.25fr;gap:0;align-items:stretch}
 .dc-grid.dc-grid4{grid-template-columns:2.4fr 1.3fr 1.1fr 1.35fr}
 .dc-grid.dc-grid6{grid-template-columns:2fr 0.9fr 1.15fr 1.05fr 1.1fr 1.2fr}
@@ -1132,11 +1128,10 @@ body.theme-classic .dc-mini-kpi.deviation .dc-kpi-line.total strong{color:#16232
   <div id="overviewEntwicklungen" class="entw-wrap"></div>
   <div class="dc-group"><span class="sec-n">4 ·</span> CNBC News <span id="cnbcStand" class="entw-stand"></span></div>
   <div id="overviewCnbc" class="cnbc-wrap"></div>
-  <div class="dc-group"><span class="sec-n">5 ·</span> Folio.today</div>
-  <div class="today-wrap">
-    <a class="today-link" href="https://folio-today.de" target="_blank" rel="noopener" title="Zu Folio.today — das tägliche Briefing">
+  <div class="dc-group" style="padding-top:0"><span class="sec-n">5 ·</span> Folio.today</div>
+  <div class="today-wrap entw-tiles">
+    <a class="entw-tile today-tile" href="https://folio-today.de" target="_blank" rel="noopener" title="Zu Folio.today — das tägliche Briefing">
       <img src="folio-today-transparent.png" alt="Folio.today">
-      <span class="today-cta">Zum täglichen Briefing →</span>
     </a>
   </div>
   <div class="sec-t" style="margin-top:24px"><span class="sec-n">6 ·</span> <span id="benchTitle">Benchmarks YTD</span></div>
