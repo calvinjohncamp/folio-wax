@@ -492,6 +492,26 @@ if ('serviceWorker' in navigator) {
 if (window.caches && caches.keys) {
   caches.keys().then(keys => Promise.all(keys.map(k => caches.delete(k)))).catch(()=>{});
 }
+// Update-Check: erkennt veraltete/zwischengespeicherte Fassungen (v.a. iOS Home-Bildschirm-App)
+// und lädt bei Abweichung einmalig eine frische Kopie nach, statt still mit altem Stand weiterzulaufen.
+(function(){
+  try {
+    if (sessionStorage.getItem('wax_update_checked') === WAX_BUILD) return;
+    fetch(location.pathname + '?_freshcheck=' + Date.now(), {cache:'no-store'})
+      .then(r => r.ok ? r.text() : null)
+      .then(html => {
+        if (!html) return;
+        const m = html.match(/const WAX_BUILD = '([^']+)'/);
+        if (m && m[1] && m[1] !== WAX_BUILD) {
+          try { sessionStorage.setItem('wax_update_checked', m[1]); } catch(e) {}
+          location.href = location.pathname + '?_r=' + Date.now();
+        } else {
+          try { sessionStorage.setItem('wax_update_checked', WAX_BUILD); } catch(e) {}
+        }
+      })
+      .catch(()=>{});
+  } catch(e) {}
+})();
 </script>
 
 
@@ -5575,7 +5595,8 @@ async function saveComdirect() {
   const datum = document.getElementById('cdDatum').value;
   if(!betrag||!datum){alert('Bitte Betrag und Datum angeben.');return;}
   // Als INFO-Buchung loggen (kein direkter Cash-Einfluss)
-  await sbPost('buchungen',{datum,typ:'KONTOSTAND',mitglied_id:null,bezeichnung:'Comdirect-Gesamtstand (Info)',betrag,notiz:`Manuell erfasst: ${f(betrag)} €`});
+  const ok = await sbPost('buchungen',{datum,typ:'KONTOSTAND',mitglied_id:null,bezeichnung:'Comdirect-Gesamtstand (Info)',betrag,notiz:`Manuell erfasst: ${f(betrag)} €`});
+  if(!ok){ alert('Speichern fehlgeschlagen (keine Verbindung zu Supabase). Bitte erneut versuchen.'); return; }
   closeModal();
   alert(`Comdirect-Stand ${f(betrag)} € gespeichert.`);
   await initApp();
