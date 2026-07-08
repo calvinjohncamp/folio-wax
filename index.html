@@ -22,7 +22,7 @@
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
-<link href="https://fonts.googleapis.com/css2?family=Exo+2:wght@500;600;700&family=DM+Sans:wght@300;400;500;600;700&family=Roboto+Mono:wght@500;600;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Exo+2:wght@500;600;700&family=DM+Sans:wght@300;400;500;600;700&family=DM+Serif+Display:ital@0;1&family=Roboto+Mono:wght@500;600;700&display=swap" rel="stylesheet">
 <style>
 * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
 :root,
@@ -188,6 +188,29 @@ td:nth-child(2) { text-align: left; }
 .bench-item { background: var(--wax-card); padding: 12px 14px; text-align: center; }
 .bench-l { font-size: 9px; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; color: var(--wax-muted-2); margin-bottom: 4px; }
 .bench-v { font-size: 18px; font-weight: 700; }
+/* Benchmarks-Kacheln (Abschnitt 6) — 1:1 aus Folio.today übernommene Kachel-Optik:
+   einzelne abgerundete Karten, Serif-Überschrift, Heute/YTD gestapelt unten rechts. */
+.bk-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin-bottom:24px}
+@media(max-width:760px){.bk-grid{grid-template-columns:repeat(2,1fr)}}
+@media(max-width:420px){.bk-grid{grid-template-columns:1fr}}
+.bk-item{background:linear-gradient(180deg,var(--card),var(--card-2));border:1px solid var(--line);border-radius:14px;padding:14px 16px;display:flex;flex-direction:column}
+.bk-l{font-family:'DM Serif Display',Georgia,serif;font-size:18px;font-weight:400;line-height:1.15;letter-spacing:-.2px;color:var(--text-muted);margin-bottom:8px}
+.bk-hero{display:flex;align-items:flex-start;justify-content:space-between;gap:10px;margin-bottom:9px}
+.bk-price{font-size:16.5px;font-weight:700;white-space:nowrap;color:var(--text);font-family:'DM Sans',sans-serif}
+.bk-chg{display:flex;flex-direction:column;gap:4px;align-items:flex-end;flex-shrink:0}
+.bk-chg-solo{align-items:flex-end;gap:9px;margin-top:2px}
+.bk-chg-solo .bk-v{font-size:15px}
+.bk-chg-solo.bk-chg-bottom{margin-top:auto}
+.bk-chg-row{display:flex;align-items:baseline;gap:6px}
+.bk-chg-l{font-family:'Roboto Mono',monospace;font-size:9px;letter-spacing:.06em;text-transform:uppercase;color:var(--text-muted)}
+.bk-v{font-family:'Roboto Mono',monospace;font-size:12px;font-weight:700}
+.bk-sub{display:flex;justify-content:space-between;gap:8px;font-family:'Roboto Mono',monospace;font-size:12px;color:var(--text-muted);padding-top:9px;border-top:1px solid var(--line-2)}
+.bk-cr{margin-top:6px;font-weight:700}
+.bk-wax-body{position:relative;flex:1}
+.bk-wax-stats{position:absolute;top:0;left:0;display:flex;flex-direction:column;gap:10px}
+.bk-wax-v{font-size:16.5px;font-weight:700;white-space:nowrap;color:var(--text);font-family:'DM Sans',sans-serif}
+.bk-wax-h{font-family:'Roboto Mono',monospace;font-size:9px;color:var(--text-muted);margin-top:2px}
+.bk-wax-chg{position:absolute;bottom:0;right:0;margin-top:0}
 .fx-note { font-size: 9px; color: var(--wax-muted-2); font-weight: 400; margin-left: 3px; }
 .kurs-loading { color: #bbb; font-style: italic; }
 
@@ -1160,14 +1183,7 @@ body.theme-classic .dc-mini-kpi.deviation .dc-kpi-line.total strong{color:#16232
     </a>
   </div>
   <div class="sec-t" style="margin-top:24px"><span class="sec-n">6 ·</span> <span id="benchTitle">Benchmarks YTD</span></div>
-  <div class="bench-grid">
-    <div class="bench-item"><div class="bench-l">WAX</div><div class="bench-v" id="bWax">—</div></div>
-    <div class="bench-item"><div class="bench-l">Nasdaq</div><div class="bench-v" id="bNasdaq">lädt…</div></div>
-    <div class="bench-item"><div class="bench-l">S&amp;P 500</div><div class="bench-v" id="bSp500">lädt…</div></div>
-    <div class="bench-item"><div class="bench-l">DAX</div><div class="bench-v" id="bDax">lädt…</div></div>
-    <div class="bench-item"><div class="bench-l">Hang Seng</div><div class="bench-v" id="bHsi">lädt…</div></div>
-    <div class="bench-item"><div class="bench-l">Durchschnitt Benchmarks</div><div class="bench-v" id="bTop4">lädt…</div></div>
-  </div>
+  <div class="bk-grid" id="bkGrid"></div>
   <div class="sec-t"><span class="sec-n">7 ·</span> Depotstruktur — Kategorien · Länder · Börsen</div>
   <div id="overviewStructure"></div>
   <div class="sec-t"><span class="sec-n">8 ·</span> Top Holdings (aktuell)</div>
@@ -2852,68 +2868,122 @@ async function refreshMarketData() {
   }
 }
 
+// Die 7 echten Kacheln — 1:1 Inhalt & Reihenfolge wie in Folio.today (3 Spalten × 3 Zeilen):
+// Zeile 1: S&P 500, DAX, Gold · Zeile 2: Nasdaq, Hang Seng, Bitcoin · Zeile 3: Dow, Durchschnitt, WAX.
+const BK_TICKERS = [
+  { t:'^GSPC', l:'S&amp;P 500', unit:'Pkt.', dec:0 },
+  { t:'^GDAXI', l:'DAX', unit:'Pkt.', dec:0 },
+  { t:'GC=F', l:'Gold', unit:'$', dec:0 },
+  { t:'^IXIC', l:'Nasdaq', unit:'Pkt.', dec:0 },
+  { t:'^HSI', l:'Hang Seng', unit:'Pkt.', dec:0 },
+  { t:'BTC-EUR', l:'Bitcoin', unit:'€', dec:0 },
+  { t:'^DJI', l:'Dow', unit:'Pkt.', dec:0 },
+];
+const BK_AVG_OF = ['^GSPC','^IXIC','^DJI','^GDAXI','^HSI']; // "Durchschnitt Benchmarks" = Mittel dieser 5
+let bkData = {}; // Ticker -> {price, today, ytd, high, low}
+function bkIdBase(t){ return t.replace(/[^A-Za-z0-9]/g,''); }
+function bkFmtLevel(v, unit, dec){ return (v==null||isNaN(v)) ? '—' : v.toLocaleString('de-DE',{minimumFractionDigits:dec,maximumFractionDigits:dec})+' '+unit; }
+function bkChgHTML(idToday, idYtd, extra){
+  return `<div class="bk-chg${extra?' '+extra:''}">
+    <div class="bk-chg-row"><span class="bk-chg-l">Heute</span><span class="bk-v" id="${idToday}">·</span></div>
+    <div class="bk-chg-row"><span class="bk-chg-l">YTD</span><span class="bk-v" id="${idYtd}">·</span></div>
+  </div>`;
+}
+function bkTileHTML(cfg){
+  const id = bkIdBase(cfg.t);
+  return `<div class="bk-item">
+  <div class="bk-l">${cfg.l}</div>
+  <div class="bk-hero"><span class="bk-price" id="bkPrice${id}">·</span>${bkChgHTML('bkToday'+id,'bkYtd'+id)}</div>
+  <div class="bk-sub"><span id="bkHi${id}">Hoch ·</span><span id="bkLo${id}">Tief ·</span></div>
+  <div class="bk-sub bk-cr"><span id="bkPot${id}">Potential ·</span><span id="bkRisk${id}">Risiko ·</span></div>
+</div>`;
+}
+function bkAvgTileHTML(){
+  return `<div class="bk-item">
+    <div class="bk-l">Durchschnitt<br>Benchmarks</div>
+    ${bkChgHTML('bTop4Today','bTop4Ytd','bk-chg-solo bk-chg-bottom')}
+  </div>`;
+}
+function bkWaxTileHTML(){
+  return `<div class="bk-item">
+    <div class="bk-l">WAX</div>
+    <div class="bk-wax-body">
+      <div class="bk-wax-stats">
+        <div><div class="bk-wax-v" id="bWaxGesamt">·</div><div class="bk-wax-h">Gesamtwert WAX-Club</div></div>
+        <div><div class="bk-wax-v" id="bWaxProPerson">·</div><div class="bk-wax-h">Ø pro Person</div></div>
+      </div>
+      <div class="bk-chg bk-chg-solo bk-wax-chg">
+        <div class="bk-chg-row"><span class="bk-chg-l">Heute</span><span class="bk-v" id="bWaxToday">·</span></div>
+        <div class="bk-chg-row"><span class="bk-chg-l">YTD</span><span class="bk-v" id="bWaxYtd">·</span></div>
+      </div>
+    </div>
+  </div>`;
+}
+function renderBkGrid(){
+  const box = document.getElementById('bkGrid');
+  if (!box) return;
+  box.innerHTML = BK_TICKERS.map(bkTileHTML).join('') + bkAvgTileHTML() + bkWaxTileHTML();
+}
+
 async function loadBenchmarks() {
-  const benchmarks = ['^IXIC','^GSPC','^GDAXI','^HSI'];
-  await Promise.all(benchmarks.map(async ticker => {
-    const quote = await cfFetchQuote(ticker);
-    if (!quote || !quote.price) return;
-    benchQuotes[ticker] = {
-      price: quote.price,
-      prev: quote.prev || null,
-      ytd: BENCH_BASIS[ticker] ? (quote.price - BENCH_BASIS[ticker]) / BENCH_BASIS[ticker] : null,
-      today: quote.prev ? (quote.price - quote.prev) / quote.prev : null,
-    };
+  await Promise.all(BK_TICKERS.map(async ({t}) => {
+    const [quote, hist] = await Promise.all([cfFetchQuote(t), cfFetchHistory(t)]);
+    let price=null, prev=null, today=null, ytd=null, high=null, low=null;
+    if (quote && quote.price) {
+      price = quote.price; prev = quote.prev || null;
+      if (prev) today = (price - prev) / prev;
+    }
+    if (Array.isArray(hist) && hist.length) {
+      const closes = hist.map(p=>p.close).filter(Number.isFinite);
+      if (closes.length) { high = Math.max(...closes); low = Math.min(...closes); }
+      // YTD-Basis = Schlusskurs vom ersten Handelstag des laufenden Jahres, aus derselben
+      // rollierenden 12-Monats-Historie wie das 52W-Hoch/Tief (identisch zu Folio.today,
+      // ersetzt die früher hier genutzte, manuell zu pflegende BENCH_BASIS-Tabelle).
+      const yearPrefix = String(new Date().getFullYear())+'-';
+      const firstOfYear = hist.find(p=>p.date && p.date.startsWith(yearPrefix));
+      if (firstOfYear && price) ytd = (price - firstOfYear.close) / firstOfYear.close;
+    }
+    bkData[t] = { price, today, ytd, high, low };
+    // Alte Struktur für den Monatsbericht (waxBerichtHtml) weiter befüllen — unverändertes Format.
+    benchQuotes[t] = { price, prev, ytd, today };
   }));
   renderBenchmarks();
   renderStructureOverviewSection();
 }
 
 function renderBenchmarks() {
-  const map = [
-    { ticker:'^IXIC', id:'bNasdaq' },
-    { ticker:'^GSPC', id:'bSp500' },
-    { ticker:'^GDAXI', id:'bDax' },
-    { ticker:'^HSI', id:'bHsi' },
-  ];
-  const values = [];
-  map.forEach(({ticker,id}) => {
+  // Zeigt Heute UND YTD gleichzeitig (keine Umschaltung mehr) — identische Kachel-Optik wie Folio.today.
+  const setVal = (id, val, list) => {
     const el = document.getElementById(id);
     if (!el) return;
-    const q = benchQuotes[ticker];
-    const val = overviewMode === 'today' ? q?.today : q?.ytd;
-    if (val == null || isNaN(val)) {
-      el.textContent = '—';
-      el.className = 'bench-v';
-    } else {
-      values.push(val);
-      el.textContent = fp(val);
-      el.className = 'bench-v ' + (val >= 0 ? 'pos' : 'neg');
-    }
+    if (val == null || isNaN(val)) { el.textContent = '—'; el.className = 'bk-v'; return; }
+    if (list) list.push(val);
+    el.textContent = fp(val);
+    el.className = 'bk-v ' + cl(val);
+  };
+  const todaysForAvg = [], ytdsForAvg = [];
+  BK_TICKERS.forEach(({t, unit, dec}) => {
+    const id = bkIdBase(t), d = bkData[t] || {};
+    const priceEl = document.getElementById('bkPrice'+id);
+    if (priceEl) priceEl.textContent = d.price!=null ? bkFmtLevel(d.price, unit, dec) : '—';
+    setVal('bkToday'+id, d.today, BK_AVG_OF.includes(t) ? todaysForAvg : null);
+    setVal('bkYtd'+id, d.ytd, BK_AVG_OF.includes(t) ? ytdsForAvg : null);
+    const hiEl = document.getElementById('bkHi'+id), loEl = document.getElementById('bkLo'+id);
+    if (hiEl) hiEl.textContent = 'Hoch ' + (d.high!=null ? bkFmtLevel(d.high, unit, dec) : '—');
+    if (loEl) loEl.textContent = 'Tief ' + (d.low!=null ? bkFmtLevel(d.low, unit, dec) : '—');
+    const potEl = document.getElementById('bkPot'+id), riskEl = document.getElementById('bkRisk'+id);
+    if (potEl) { if (d.price!=null && d.high!=null) { const up=d.high/d.price-1; potEl.textContent='Potential '+fp(up); potEl.className=cl(up); } else potEl.textContent='Potential —'; }
+    if (riskEl) { if (d.price!=null && d.low!=null) { const dn=d.low/d.price-1; riskEl.textContent='Risiko '+fp(dn); riskEl.className=cl(dn); } else riskEl.textContent='Risiko —'; }
   });
-  const waxEl = document.getElementById('bWax');
-  if (waxEl) {
-    const waxVal = Number(waxEl.dataset.value);
-    if (!isNaN(waxVal)) {
-      waxEl.textContent = fp(waxVal);
-      waxEl.className = 'bench-v ' + (waxVal >= 0 ? 'pos' : 'neg');
-    }
-  }
-  const top4El = document.getElementById('bTop4');
-  if (top4El) {
-    if (values.length) {
-      const avg = values.reduce((s,v)=>s+v,0) / values.length;
-      top4El.textContent = fp(avg);
-      top4El.className = 'bench-v ' + (avg >= 0 ? 'pos' : 'neg');
-    } else {
-      top4El.textContent = '—';
-      top4El.className = 'bench-v';
-    }
-  }
+  const avg = arr => arr.length ? arr.reduce((s,v)=>s+v,0) / arr.length : null;
+  setVal('bTop4Today', avg(todaysForAvg));
+  setVal('bTop4Ytd', avg(ytdsForAvg));
 }
 
 // INIT
 async function init() {
   setStatus('loading','Lade Daten…');
+  renderBkGrid(); // Kachel-Skelett sofort anzeigen, loadBenchmarks() befüllt die Werte weiter unten
   document.getElementById('hdDate').textContent = new Date().toLocaleDateString('de-DE',{weekday:'short',day:'2-digit',month:'short',year:'numeric'});
   // Jahresabschluss laden — neuestes vollständiges Jahr (alle 6 Mitglieder vorhanden)
   // limit=12 statt 6, damit nach dem Jahresabschluss 2026 beide Jahre (2025+2026) geladen
@@ -3569,14 +3639,14 @@ function applyOverviewModeLabels() {
   const absSub = document.getElementById('kModeSubAbs');
   const rankPct = document.getElementById('rankPctHead');
   const rankAbs = document.getElementById('rankAbsHead');
-  const benchTitle = document.getElementById('benchTitle');
   if (pct) pct.textContent = isToday ? 'Heute %' : 'YTD Performance';
   if (abs) abs.textContent = isToday ? 'Heute €' : 'Gewinn ytd';
   if (pctSub) pctSub.textContent = isToday ? 'Veränderung ggü. Vortag' : 'seit 31.12. des Vorjahres';
   if (absSub) absSub.textContent = 'Gewinn/Verlust';
   if (rankPct) rankPct.textContent = isToday ? 'Heute %' : 'YTD %';
   if (rankAbs) rankAbs.textContent = isToday ? 'Heute €' : 'YTD €';
-  if (benchTitle) benchTitle.textContent = isToday ? 'Benchmarks Heute' : 'Benchmarks YTD';
+  // benchTitle bleibt fest "Benchmarks YTD" (statisches HTML) — die neuen Kacheln zeigen
+  // Heute UND YTD gleichzeitig, eine Umschaltung der Überschrift ist nicht mehr nötig.
 }
 
 // === Aktuelle Entwicklungen (Übersicht, Abschnitt 2) =========================
@@ -3805,10 +3875,16 @@ function renderUebersicht() {
   const ytdPct = ref2025>0 ? ytdAbs/ref2025 : 0;
   const todayPct = gesamtEinzeldepotsPrev>0 ? (gesamtEinzeldepots-gesamtEinzeldepotsPrev)/gesamtEinzeldepotsPrev : 0;
   const todayAbs = gesamtEinzeldepots-gesamtEinzeldepotsPrev;
-  const modePct = overviewMode === 'today' ? todayPct : ytdPct;
-  const modeAbs = overviewMode === 'today' ? todayAbs : ytdAbs;
-  const waxEl = document.getElementById('bWax');
-  if (waxEl) waxEl.dataset.value = String(modePct);
+  // WAX-Kachel im neuen Benchmarks-Bereich: Heute UND YTD gleichzeitig, plus Gesamtwert/Ø pro Person
+  // — identisch zur "Gesamtwert WAX-Club" / "Ø pro Person"-KPI oben auf der Übersicht.
+  const bWaxTodayEl = document.getElementById('bWaxToday');
+  const bWaxYtdEl = document.getElementById('bWaxYtd');
+  if (bWaxTodayEl) { bWaxTodayEl.textContent = fp(todayPct); bWaxTodayEl.className = 'bk-v ' + cl(todayPct); }
+  if (bWaxYtdEl) { bWaxYtdEl.textContent = fp(ytdPct); bWaxYtdEl.className = 'bk-v ' + cl(ytdPct); }
+  const bWaxGesamtEl = document.getElementById('bWaxGesamt');
+  const bWaxProPersonEl = document.getElementById('bWaxProPerson');
+  if (bWaxGesamtEl) bWaxGesamtEl.textContent = f(gesamt) + ' €';
+  if (bWaxProPersonEl) bWaxProPersonEl.textContent = f(gesamt/6) + ' €';
 
   const liveAt = db.mitglieder.map(m=>calcAlltimeLive(m.id)).filter(Boolean);
   const totalAlltime = liveAt.reduce((s,a)=>s+a.wert_echt,0);
