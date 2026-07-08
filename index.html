@@ -482,7 +482,9 @@ body:not(.theme-original) .badge.b-new:hover {
 
 <script>
 // Cache-Bereinigung ohne aggressive Storage-Resets
-const WAX_BUILD = '1778547400000-report-archive-save-fix6-regexfix-20260605';
+// WICHTIG: Dieser String muss bei JEDER deploy-relevanten Änderung an dieser Datei
+// von Hand hochgezählt werden – er ist die einzige Grundlage für den Update-Check unten.
+const WAX_BUILD = '1783526768000-comdirect-error-handling-update-check-20260708';
 try {
   sessionStorage.setItem('wax_build_seen', WAX_BUILD);
 } catch(e) {}
