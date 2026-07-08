@@ -191,9 +191,15 @@ td:nth-child(2) { text-align: left; }
 /* Benchmarks-Kacheln (Abschnitt 6) — 1:1 aus Folio.today übernommene Kachel-Optik:
    einzelne abgerundete Karten, Serif-Überschrift, Heute/YTD gestapelt unten rechts. */
 .bk-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin-bottom:24px}
-@media(max-width:760px){.bk-grid{grid-template-columns:repeat(2,1fr)}}
+@media(max-width:760px){
+  .bk-grid{grid-template-columns:repeat(2,1fr)}
+  /* Schmales Format: S&P500+Nasdaq / Dow+DAX / HangSeng+Durchschnitt / Gold+Bitcoin / WAX allein */
+  .bk-item:nth-child(1){order:1} .bk-item:nth-child(4){order:2} .bk-item:nth-child(7){order:3}
+  .bk-item:nth-child(2){order:4} .bk-item:nth-child(5){order:5} .bk-item:nth-child(8){order:6}
+  .bk-item:nth-child(3){order:7} .bk-item:nth-child(6){order:8} .bk-item:nth-child(9){order:9}
+}
 @media(max-width:420px){.bk-grid{grid-template-columns:1fr}}
-.bk-item{background:linear-gradient(180deg,var(--card),var(--card-2));border:1px solid var(--line);border-radius:14px;padding:14px 16px;display:flex;flex-direction:column}
+.bk-item{background:linear-gradient(180deg,var(--card),var(--card-2));border:1px solid var(--line);border-radius:14px;padding:14px 16px;display:flex;flex-direction:column;overflow:hidden}
 .bk-l{font-family:'DM Serif Display',Georgia,serif;font-size:18px;font-weight:400;line-height:1.15;letter-spacing:-.2px;color:var(--text-muted);margin-bottom:8px}
 .bk-hero{display:flex;align-items:flex-start;justify-content:space-between;gap:10px;margin-bottom:9px}
 .bk-price{font-size:16.5px;font-weight:700;white-space:nowrap;color:var(--text);font-family:'DM Sans',sans-serif}
@@ -206,7 +212,10 @@ td:nth-child(2) { text-align: left; }
 .bk-v{font-family:'Roboto Mono',monospace;font-size:12px;font-weight:700}
 .bk-sub{display:flex;justify-content:space-between;gap:8px;font-family:'Roboto Mono',monospace;font-size:12px;color:var(--text-muted);padding-top:9px;border-top:1px solid var(--line-2)}
 .bk-cr{margin-top:6px;font-weight:700}
-.bk-wax-body{position:relative;flex:1}
+/* min-height nötig, weil das WAX-Feld im schmalen Format allein in seiner Zeile steht
+   (keine Nachbarkachel mehr, die die Zeilenhöhe vorgibt) — sonst kollabiert der Bereich
+   auf die Höhe der Überschrift und die absolut positionierten Werte laufen aus der Kachel. */
+.bk-wax-body{position:relative;flex:1;min-height:100px}
 .bk-wax-stats{position:absolute;top:0;left:0;display:flex;flex-direction:column;gap:10px}
 .bk-wax-v{font-size:16.5px;font-weight:700;white-space:nowrap;color:var(--text);font-family:'DM Sans',sans-serif}
 .bk-wax-h{font-family:'Roboto Mono',monospace;font-size:9px;color:var(--text-muted);margin-top:2px}
