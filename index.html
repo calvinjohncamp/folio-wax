@@ -523,7 +523,7 @@ body:not(.theme-original) .badge.b-new:hover {
 // Cache-Bereinigung ohne aggressive Storage-Resets
 // WICHTIG: Dieser String muss bei JEDER deploy-relevanten Änderung an dieser Datei
 // von Hand hochgezählt werden – er ist die einzige Grundlage für den Update-Check unten.
-const WAX_BUILD = '1783623600000-cap-update-redirect-loop-20260709';
+const WAX_BUILD = '1783629200000-ios-sticky-flicker-fix-20260709';
 try {
   sessionStorage.setItem('wax_build_seen', WAX_BUILD);
 } catch(e) {}
@@ -9169,6 +9169,27 @@ body.theme-modern .today-tile:hover{ background:var(--wax-card-soft) !important;
   width:auto;height:auto;
   object-fit:contain;
   display:block;
+}
+
+/* iOS-Sticky-Flicker-Fix: Header/Nav/Statusleiste sind drei unabhängige
+   position:sticky-Elemente uebereinander. Safari haelt sie beim schnellen
+   Scrollen (Momentum-Scroll) nicht zuverlaessig als eigene Compositing-Layer
+   und zeigt kurz den darunterliegenden Seiteninhalt durch die Naht durch.
+   Fix: jedes der drei Elemente explizit auf eine eigene GPU-Layer heben. */
+.hd,
+body.theme-modern .hd,
+body.theme-classic .hd,
+.nav,
+body.theme-modern .nav,
+body.theme-classic .nav,
+.statusbar,
+body.theme-modern .statusbar,
+body.theme-classic .statusbar{
+  -webkit-transform:translate3d(0,0,0);
+  transform:translate3d(0,0,0);
+  -webkit-backface-visibility:hidden;
+  backface-visibility:hidden;
+  will-change:transform;
 }
 
 </style>
