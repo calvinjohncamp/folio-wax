@@ -523,7 +523,7 @@ body:not(.theme-original) .badge.b-new:hover {
 // Cache-Bereinigung ohne aggressive Storage-Resets
 // WICHTIG: Dieser String muss bei JEDER deploy-relevanten Änderung an dieser Datei
 // von Hand hochgezählt werden – er ist die einzige Grundlage für den Update-Check unten.
-const WAX_BUILD = '1783629200000-ios-sticky-flicker-fix-20260709';
+const WAX_BUILD = '1783630400000-statusbar-dynamic-align-20260709';
 try {
   sessionStorage.setItem('wax_build_seen', WAX_BUILD);
 } catch(e) {}
@@ -9193,6 +9193,42 @@ body.theme-classic .statusbar{
 }
 
 </style>
+
+<script>
+// Statusleisten-Ausrichtung: .statusbar hatte bislang einen von Hand ausgerechneten
+// top-Wert (calc(117px + safe-area)), der an mehreren Stellen im CSS ueberschrieben
+// wurde (102/107/121/129/117px) und bei jeder Layout-Aenderung wieder auseinanderlief —
+// zuletzt sichtbar als 8px Luecke zwischen .nav-Unterkante und .statusbar auf mobilen
+// Breiten, durch die beim Scrollen kurz der Seiteninhalt durchblitzte.
+// Fix: top wird laufend aus der TATSAECHLICH gerenderten Hoehe von .hd + .nav berechnet,
+// statt aus einer geschaetzten Konstante — funktioniert automatisch bei jeder Breite,
+// jedem Theme und jeder Safe-Area, ohne weitere magische Zahlen.
+(function(){
+  function alignStatusbar(){
+    var hd = document.querySelector('.hd');
+    var nav = document.querySelector('.nav');
+    var sb = document.querySelector('.statusbar');
+    if(!hd || !nav || !sb) return;
+    var top = hd.offsetHeight + nav.offsetHeight;
+    sb.style.setProperty('top', top + 'px', 'important');
+  }
+  if('ResizeObserver' in window){
+    var ro = new ResizeObserver(alignStatusbar);
+    document.addEventListener('DOMContentLoaded', function(){
+      var hd = document.querySelector('.hd');
+      var nav = document.querySelector('.nav');
+      if(hd) ro.observe(hd);
+      if(nav) ro.observe(nav);
+      alignStatusbar();
+    });
+  } else {
+    document.addEventListener('DOMContentLoaded', alignStatusbar);
+  }
+  window.addEventListener('load', alignStatusbar);
+  window.addEventListener('resize', alignStatusbar);
+  window.addEventListener('orientationchange', alignStatusbar);
+})();
+</script>
 
 </body>
 </html>
