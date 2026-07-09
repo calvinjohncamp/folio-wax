@@ -11,7 +11,7 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="mobile-web-app-capable" content="yes">
-<meta name="theme-color" content="#16232A">
+<meta name="theme-color" content="#14253F">
 
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="mobile-web-app-capable" content="yes">
@@ -23,6 +23,10 @@
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
 <link href="https://fonts.googleapis.com/css2?family=Exo+2:wght@500;600;700&family=DM+Sans:wght@300;400;500;600;700&family=DM+Serif+Display:ital@0;1&family=Roboto+Mono:wght@500;600;700&display=swap" rel="stylesheet">
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="preconnect" href="https://api.fontshare.com">
+<link href="https://api.fontshare.com/v2/css?f[]=satoshi@700,900&f[]=general-sans@600,700&display=swap" rel="stylesheet">
 <style>
 * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
 :root,
@@ -2545,11 +2549,17 @@ function buildChartSvg(points, markerIdx){
   const coords = points.map((p,i) => xy(i).map(n=>n.toFixed(1)).join(',')).join(' ');
   const up = points[points.length-1].close >= points[0].close;
   const stroke = up ? 'var(--success)' : 'var(--brand-orange)';
+  const areaPoints = (padX).toFixed(1)+','+(h-padY).toFixed(1)+' '+coords+' '+(padX+(points.length-1)*stepX).toFixed(1)+','+(h-padY).toFixed(1);
   const dots = (markerIdx||[]).map(i => {
     const [x,y] = xy(i);
     return '<circle cx="'+x.toFixed(1)+'" cy="'+y.toFixed(1)+'" r="4.5" fill="var(--wax-card)" stroke="'+stroke+'" stroke-width="2.5"/>';
   }).join('');
   return '<svg viewBox="0 0 '+w+' '+h+'" preserveAspectRatio="none" style="width:100%;height:220px;display:block">'
+    + '<defs><linearGradient id="priceChartAreaGrad" x1="0" y1="0" x2="0" y2="1">'
+    + '<stop offset="0%" stop-color="'+stroke+'" stop-opacity="0.16"/>'
+    + '<stop offset="100%" stop-color="'+stroke+'" stop-opacity="0"/>'
+    + '</linearGradient></defs>'
+    + '<polygon points="'+areaPoints+'" fill="url(#priceChartAreaGrad)" stroke="none"/>'
     + '<polyline points="'+coords+'" fill="none" stroke="'+stroke+'" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round"/>'
     + dots
     + '</svg>';
@@ -2686,12 +2696,23 @@ function depotChartSvg(series, idPrefix){
   const xLabels=xi.map(i=>`<text x="${x(i).toFixed(1)}" y="${H-6}" class="dhc-xlab" text-anchor="${i===0?'start':i===series.length-1?'end':'middle'}">${fmtD(series[i].date)}</text>`).join('');
   const endV=series[series.length-1].gain;
   const endColor = endV>=0 ? 'var(--wax-positive)' : 'var(--brand-orange)';
+  const areaPts = `${x(0).toFixed(1)},${zeroY.toFixed(1)} ${pts} ${x(series.length-1).toFixed(1)},${zeroY.toFixed(1)}`;
   return `<svg viewBox="0 0 ${W} ${H}" class="dhc-svg">
     <defs>
       <clipPath id="${pfx}dhcPos"><rect x="0" y="0" width="${W}" height="${zeroY.toFixed(1)}"/></clipPath>
       <clipPath id="${pfx}dhcNeg"><rect x="0" y="${zeroY.toFixed(1)}" width="${W}" height="${(H-zeroY).toFixed(1)}"/></clipPath>
+      <linearGradient id="${pfx}dhcPosGrad" x1="0" y1="0" x2="0" y2="1">
+        <stop offset="0%" stop-color="var(--wax-positive)" stop-opacity="0.16"/>
+        <stop offset="100%" stop-color="var(--wax-positive)" stop-opacity="0"/>
+      </linearGradient>
+      <linearGradient id="${pfx}dhcNegGrad" x1="0" y1="1" x2="0" y2="0">
+        <stop offset="0%" stop-color="var(--brand-orange)" stop-opacity="0.16"/>
+        <stop offset="100%" stop-color="var(--brand-orange)" stop-opacity="0"/>
+      </linearGradient>
     </defs>
     ${yTicks}
+    <polygon points="${areaPts}" fill="url(#${pfx}dhcPosGrad)" stroke="none" clip-path="url(#${pfx}dhcPos)"/>
+    <polygon points="${areaPts}" fill="url(#${pfx}dhcNegGrad)" stroke="none" clip-path="url(#${pfx}dhcNeg)"/>
     <line x1="${padL}" y1="${zeroY.toFixed(1)}" x2="${W-padR}" y2="${zeroY.toFixed(1)}" class="dhc-zero"/>
     <polyline points="${pts}" class="dhc-line dhc-pos" clip-path="url(#${pfx}dhcPos)"/>
     <polyline points="${pts}" class="dhc-line dhc-neg" clip-path="url(#${pfx}dhcNeg)"/>
@@ -3759,9 +3780,10 @@ function renderHot(){
   if(!items.length){ hot.innerHTML = ''; return; }
   const list = items.map((h,i)=>{
     const active = (__hotOpen === i) ? ' active' : '';
-    return `<li class="hot-item"><button type="button" class="hot-item-btn${active}" onclick="waxHotToggle(${i})" aria-expanded="${__hotOpen===i}">${entwEscape(h.title)}</button></li>`;
+    const titleClean = entwEscape((h.title||'').replace(/!+\s*$/,''));
+    return `<li class="hot-item"><button type="button" class="hot-item-btn${active}" onclick="waxHotToggle(${i})" aria-expanded="${__hotOpen===i}">${titleClean}</button></li>`;
   }).join('');
-  hot.innerHTML = `<div class="hot-title">HEADLINES</div><ul class="hot-list">${list}</ul><div id="hotPanelMount"></div>`;
+  hot.innerHTML = `<ul class="hot-list">${list}</ul><div id="hotPanelMount"></div>`;
   renderHotPanel();
 }
 function renderHotPanel(){
@@ -3771,7 +3793,7 @@ function renderHotPanel(){
   const items = Array.isArray(__entwHighlights) ? __entwHighlights : [];
   const h = items[__hotOpen] || {};
   const href = entwLink(h.url, h.title);
-  pm.innerHTML = `<div class="entw-panel"><h4>${entwEscape(h.title||'')}</h4>`
+  pm.innerHTML = `<div class="entw-panel"><h4>${entwEscape((h.title||'').replace(/!+\s*$/,''))}</h4>`
     + (h.detail ? `<div class="ep-sum">${entwEscape(h.detail)}</div>` : `<div class="ep-sum">Noch kein Detailtext hinterlegt.</div>`)
     + `<a class="ep-src" href="${entwEscape(href)}" target="_blank" rel="noopener noreferrer">Quelle${h.src?': '+entwEscape(h.src):''} →</a>`
     + `</div>`;
@@ -4645,7 +4667,7 @@ function renderDepot(id) {
     <div class="dc-mini-kpi depot">
       <div class="dc-mini-label">Übersicht</div>
       <div class="dc-kpi-lines">
-        <div class="dc-kpi-line"><span>Aktuell <span class="dc-pct">(<b>${f(investSharePct*100,0)}%</b>)</span></span><strong><span class="dc-num">${f(investAkt)} €</span><em class="dc-basis">Basis ${f(currentDepotBase)} €</em></strong></div>
+        <div class="dc-kpi-line"><span>Aktuell <span class="dc-pct">(<b>${f(investSharePct*100,0)}%</b>)</span></span><strong><span class="dc-num">${f(investAkt)} €</span></strong></div>
         <div class="dc-kpi-line"><span>Cash <span class="dc-pct">(<b>${f(cashSharePct*100,0)}%</b>)</span></span><strong><span class="dc-num">${f(cash)} €</span></strong></div>
         <div class="dc-kpi-line total"><span>Gesamtdepot</span><strong><span class="dc-num">${f(gesamtAkt)} €</span><em class="dc-basis">Basis ${f(gesamtBase)} €</em></strong></div>
       </div>
@@ -7492,17 +7514,1221 @@ body.theme-classic .total-row td:not(.pos):not(.neg){ color:#16232A !important; 
 
 <script id="folioWaxForceDarkDefaultFinalFix">
 (function(){
-  try { localStorage.setItem('wax_color_theme','modern'); } catch(e) {}
-  function ensureDarkDefault(){
+  try { localStorage.setItem('wax_color_theme','classic'); } catch(e) {}
+  function ensureOriginalDefault(){
     if (!document.body) return;
-    document.body.classList.remove('theme-classic');
-    document.body.classList.add('theme-modern');
+    document.body.classList.remove('theme-modern');
+    document.body.classList.add('theme-classic');
     if (typeof updateThemeButton === 'function') updateThemeButton();
   }
-  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', ensureDarkDefault);
-  else ensureDarkDefault();
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', ensureOriginalDefault);
+  else ensureOriginalDefault();
 })();
 </script>
+
+<style id="folioWaxPremium2026Redesign">
+/* ============================================================
+   Premium-Redesign 2026 — Apple x Bloomberg x Stripe.
+   Additiver, gewinnender Layer ueber allen vorherigen Theme-Bloecken.
+   Ein einheitlicher Look fuer theme-modern UND theme-classic.
+   ============================================================ */
+
+/* ---------- Fonts ---------- */
+:root{
+  --font-display:'Satoshi','General Sans','Inter',system-ui,-apple-system,'Segoe UI',sans-serif;
+  --font-body:'Inter',system-ui,-apple-system,'Segoe UI',sans-serif;
+}
+
+/* ---------- Design-Tokens: "Original" (classic) = eingefrorenes Premium-System ---------- */
+:root,
+body.theme-classic{
+  --wax-page:#F5F1E8 !important;
+  --wax-card:#FFFFFF !important;
+  --wax-card-soft:#FAF8F4 !important;
+  --wax-panel:#F1ECE0 !important;
+  --wax-panel-2:#FAF8F4 !important;
+  --wax-dark:#14253F !important;
+  --wax-dark-2:#1C3050 !important;
+  --wax-border:#E7E2D8 !important;
+  --wax-border-soft:#E7E2D8 !important;
+  --wax-line:#E7E2D8 !important;
+  --wax-text:#1F2937 !important;
+  --wax-text-2:#1F2937 !important;
+  --wax-muted:#6B7280 !important;
+  --wax-muted-2:#9CA3AF !important;
+  --wax-accent:#F28B30 !important;
+  --wax-accent-hover:#E97C18 !important;
+  --wax-positive:#0FA971 !important;
+  --wax-negative:#F05A3A !important;
+  --wax-status:#14253F !important;
+  --brand-orange:#F05A3A !important;
+  --brand-green:#0FA971 !important;
+  --brand-light:#FAF8F4 !important;
+  --brand-dark:#14253F !important;
+  --card:#FFFFFF !important;
+  --card-2:#FAF8F4 !important;
+  --line:#E7E2D8 !important;
+  --line-2:#E7E2D8 !important;
+  --text:#1F2937 !important;
+  --text-soft:#1F2937 !important;
+  --text-muted:#6B7280 !important;
+  --text-dim:#9CA3AF !important;
+  --success:#0FA971 !important;
+  --warning:#F28B30 !important;
+  --midnight:#14253F !important;
+  --grey:#F1ECE0 !important;
+  --stone:#9CA3AF !important;
+  --silver:#E7E2D8 !important;
+  --orange:#F28B30 !important;
+  --track-bg:#F1ECE0 !important;
+  --btn-border:#DAD3C7 !important;
+}
+
+/* ---------- Design-Tokens: "Dark" (modern) = Palette vor Farbanpassung (20260708) ---------- */
+body.theme-modern{
+  --wax-page:#16232A !important;
+  --wax-card:#1B2C34 !important;
+  --wax-card-soft:#20323B !important;
+  --wax-panel:#20323B !important;
+  --wax-panel-2:#16232A !important;
+  --wax-dark:#16232A !important;
+  --wax-dark-2:#121F26 !important;
+  --wax-border:rgba(228,238,240,.08) !important;
+  --wax-border-soft:rgba(228,238,240,.14) !important;
+  --wax-line:rgba(228,238,240,.08) !important;
+  --wax-text:#E4EEF0 !important;
+  --wax-text-2:#C7D4D8 !important;
+  --wax-muted:#81939A !important;
+  --wax-muted-2:#AEBCC1 !important;
+  --wax-accent:#FF7A00 !important;
+  --wax-accent-hover:#FF8F2A !important;
+  --wax-positive:#4DD4A3 !important;
+  --wax-negative:#FF7A00 !important;
+  --wax-status:#121F26 !important;
+  --brand-orange:#FF7A00 !important;
+  --brand-green:#075056 !important;
+  --brand-light:#E4EEF0 !important;
+  --brand-dark:#16232A !important;
+  --card:#1B2C34 !important;
+  --card-2:#20323B !important;
+  --line:rgba(228,238,240,.08) !important;
+  --line-2:rgba(228,238,240,.14) !important;
+  --text:#E4EEF0 !important;
+  --text-soft:#C7D4D8 !important;
+  --text-muted:#81939A !important;
+  --text-dim:#81939A !important;
+  --success:#4DD4A3 !important;
+  --warning:#FF7A00 !important;
+  --midnight:#16232A !important;
+  --grey:#D8E5E8 !important;
+  --stone:#AEBCC1 !important;
+  --silver:#E4EEF0 !important;
+  --orange:#FF7A00 !important;
+  --track-bg:#263A43 !important;
+  --btn-border:rgba(228,238,240,.14) !important;
+}
+
+/* ---------- Basis: Hintergrund, Schrift, Zahlen ---------- */
+body,
+body.theme-modern,
+body.theme-classic,
+body:not(.theme-classic){
+  background:var(--wax-page) !important;
+  background-image:none !important;
+  color:var(--wax-text) !important;
+  font-family:var(--font-body) !important;
+  -webkit-font-smoothing:antialiased;
+}
+td,
+body.theme-modern td,
+body.theme-classic td,
+.kpi-v,
+body.theme-modern .kpi-v,
+body.theme-classic .kpi-v,
+.kpi-s,
+body.theme-modern .kpi-s,
+body.theme-classic .kpi-s,
+.bench-v,
+body.theme-modern .bench-v,
+body.theme-classic .bench-v,
+.dc-num,
+body.theme-modern .dc-num,
+body.theme-classic .dc-num,
+.dh-bigval,
+body.theme-modern .dh-bigval,
+body.theme-classic .dh-bigval,
+.dh-bigval-xl,
+body.theme-modern .dh-bigval-xl,
+body.theme-classic .dh-bigval-xl,
+.dh-kpi-rk-n,
+body.theme-modern .dh-kpi-rk-n,
+body.theme-classic .dh-kpi-rk-n,
+.dh-kpi-pct,
+body.theme-modern .dh-kpi-pct,
+body.theme-classic .dh-kpi-pct,
+.chart-modal-price,
+body.theme-modern .chart-modal-price,
+body.theme-classic .chart-modal-price,
+.dc-top,
+body.theme-modern .dc-top,
+body.theme-classic .dc-top,
+.structure-total,
+body.theme-modern .structure-total,
+body.theme-classic .structure-total,
+.bar-value,
+body.theme-modern .bar-value,
+body.theme-classic .bar-value,
+.legend-val,
+body.theme-modern .legend-val,
+body.theme-classic .legend-val,
+.dh-cash-label,
+body.theme-modern .dh-cash-label,
+body.theme-classic .dh-cash-label,
+.bk-v,
+body.theme-modern .bk-v,
+body.theme-classic .bk-v,
+.bk-price,
+body.theme-modern .bk-price,
+body.theme-classic .bk-price,
+.bk-wax-v,
+body.theme-modern .bk-wax-v,
+body.theme-classic .bk-wax-v{
+  font-variant-numeric:tabular-nums !important;
+  font-feature-settings:"tnum" 1 !important;
+}
+.kpi-v,
+body.theme-modern .kpi-v,
+body.theme-classic .kpi-v,
+.bench-v,
+body.theme-modern .bench-v,
+body.theme-classic .bench-v,
+.dc-num,
+body.theme-modern .dc-num,
+body.theme-classic .dc-num,
+.dh-bigval,
+body.theme-modern .dh-bigval,
+body.theme-classic .dh-bigval,
+.dh-bigval-xl,
+body.theme-modern .dh-bigval-xl,
+body.theme-classic .dh-bigval-xl,
+.dh-kpi-rk-n,
+body.theme-modern .dh-kpi-rk-n,
+body.theme-classic .dh-kpi-rk-n,
+.dh-kpi-pct,
+body.theme-modern .dh-kpi-pct,
+body.theme-classic .dh-kpi-pct,
+.chart-modal-price,
+body.theme-modern .chart-modal-price,
+body.theme-classic .chart-modal-price,
+.dc-top,
+body.theme-modern .dc-top,
+body.theme-classic .dc-top,
+.structure-total,
+body.theme-modern .structure-total,
+body.theme-classic .structure-total,
+.dh-cash-label,
+body.theme-modern .dh-cash-label,
+body.theme-classic .dh-cash-label{
+  font-family:var(--font-body) !important;
+  font-weight:600 !important;
+}
+.dc-title,
+body.theme-modern .dc-title,
+body.theme-classic .dc-title,
+.modal-title,
+body.theme-modern .modal-title,
+body.theme-classic .modal-title,
+.chart-modal-title,
+body.theme-modern .chart-modal-title,
+body.theme-classic .chart-modal-title,
+.structure-title,
+body.theme-modern .structure-title,
+body.theme-classic .structure-title,
+.entw-tile .et-ttl,
+body.theme-modern .entw-tile .et-ttl,
+body.theme-classic .entw-tile .et-ttl,
+.rules-title,
+body.theme-modern .rules-title,
+body.theme-classic .rules-title{
+  font-family:var(--font-display) !important;
+  letter-spacing:.01em;
+}
+.sec-t,
+body.theme-modern .sec-t,
+body.theme-classic .sec-t,
+.kpi-l,
+body.theme-modern .kpi-l,
+body.theme-classic .kpi-l,
+.bench-l,
+body.theme-modern .bench-l,
+body.theme-classic .bench-l{
+  font-family:var(--font-body) !important;
+  letter-spacing:.1em !important;
+}
+thead th,
+body.theme-modern thead th,
+body.theme-classic thead th,
+tbody td,
+body.theme-modern tbody td,
+body.theme-classic tbody td{ font-family:var(--font-body) !important; font-weight:500 !important; }
+td:first-child,
+body.theme-modern td:first-child,
+body.theme-classic td:first-child{ font-weight:600 !important; }
+table,
+body.theme-modern table,
+body.theme-classic table{ font-size:13px !important; }
+.bk-l,
+body.theme-modern .bk-l,
+body.theme-classic .bk-l{ font-family:var(--font-display) !important; font-weight:700 !important; font-style:normal !important; }
+.bk-v,
+body.theme-modern .bk-v,
+body.theme-classic .bk-v,
+.bk-chg-l,
+body.theme-modern .bk-chg-l,
+body.theme-classic .bk-chg-l,
+.bk-sub,
+body.theme-modern .bk-sub,
+body.theme-classic .bk-sub,
+.bk-wax-h,
+body.theme-modern .bk-wax-h,
+body.theme-classic .bk-wax-h,
+.bk-wax-v,
+body.theme-modern .bk-wax-v,
+body.theme-classic .bk-wax-v,
+.bk-price,
+body.theme-modern .bk-price,
+body.theme-classic .bk-price{ font-family:var(--font-body) !important; }
+.dc-kpi-line strong,
+body.theme-modern .dc-kpi-line strong,
+body.theme-classic .dc-kpi-line strong,
+.dc-kpi-line strong .dc-basis,
+body.theme-modern .dc-kpi-line strong .dc-basis,
+body.theme-classic .dc-kpi-line strong .dc-basis,
+#pinOverlay,
+body.theme-modern #pinOverlay,
+body.theme-classic #pinOverlay,
+.pin-btn,
+body.theme-modern .pin-btn,
+body.theme-classic .pin-btn,
+.pin-select,
+body.theme-modern .pin-select,
+body.theme-classic .pin-select,
+.form-input,
+body.theme-modern .form-input,
+body.theme-classic .form-input,
+.btn,
+body.theme-modern .btn,
+body.theme-classic .btn,
+.ticker-input,
+body.theme-modern .ticker-input,
+body.theme-classic .ticker-input,
+.ticker-select,
+body.theme-modern .ticker-select,
+body.theme-classic .ticker-select{
+  font-family:var(--font-body) !important;
+}
+.dc-kpi-line strong .dc-basis,
+body.theme-modern .dc-kpi-line strong .dc-basis,
+body.theme-classic .dc-kpi-line strong .dc-basis{ color:var(--wax-muted) !important; }
+.hd-logo img,
+body.theme-modern .hd-logo img,
+body.theme-classic .hd-logo img{ height:48px !important; }
+.dh-bigval-xl,
+body.theme-modern .dh-bigval-xl,
+body.theme-classic .dh-bigval-xl{ font-size:56px !important; line-height:1 !important; }
+.dh-bigval,
+body.theme-modern .dh-bigval,
+body.theme-classic .dh-bigval{ font-size:32px !important; }
+
+/* ---------- Karten: Content-Tier (18px, weicher Schatten) ---------- */
+.modal,
+body.theme-modern .modal,
+body.theme-classic .modal,
+.chart-modal,
+body.theme-modern .chart-modal,
+body.theme-classic .chart-modal,
+.dh-card,
+body.theme-modern .dh-card,
+body.theme-classic .dh-card,
+.structure-card,
+body.theme-modern .structure-card,
+body.theme-classic .structure-card,
+.entw-panel,
+body.theme-modern .entw-panel,
+body.theme-classic .entw-panel,
+.dc-head,
+body.theme-modern .dc-head,
+body.theme-classic .dc-head,
+.dc-card,
+body.theme-modern .dc-card,
+body.theme-classic .dc-card,
+.pin-select,
+body.theme-modern .pin-select,
+body.theme-classic .pin-select{
+  border-radius:18px !important;
+  border:1px solid var(--wax-border) !important;
+  box-shadow:0 8px 30px rgba(0,0,0,.06) !important;
+  background:var(--wax-card) !important;
+}
+.modal,
+body.theme-modern .modal,
+body.theme-classic .modal{ padding:28px !important; }
+.chart-modal,
+body.theme-modern .chart-modal,
+body.theme-classic .chart-modal{ padding:24px !important; }
+.structure-card,
+body.theme-modern .structure-card,
+body.theme-classic .structure-card{ padding:20px 20px 18px !important; }
+.entw-panel,
+body.theme-modern .entw-panel,
+body.theme-classic .entw-panel{ padding:20px 22px !important; }
+.dh-card,
+body.theme-modern .dh-card,
+body.theme-classic .dh-card{ padding:24px !important; }
+.dc-head,
+body.theme-modern .dc-head,
+body.theme-classic .dc-head,
+.dc-card,
+body.theme-modern .dc-card,
+body.theme-classic .dc-card{ border-radius:16px !important; box-shadow:0 6px 20px rgba(0,0,0,.05) !important; }
+.dc-head,
+body.theme-modern .dc-head,
+body.theme-classic .dc-head{ background:var(--wax-card-soft) !important; margin-bottom:8px !important; }
+
+/* ---------- Karten: dichte Kacheln ---------- */
+.kpi-grid,
+body.theme-modern .kpi-grid,
+body.theme-classic .kpi-grid,
+.bench-grid,
+body.theme-modern .bench-grid,
+body.theme-classic .bench-grid{
+  background:transparent !important;
+  border:none !important;
+  gap:20px !important;
+  overflow:visible !important;
+  margin-bottom:24px !important;
+}
+.kpi,
+body.theme-modern .kpi,
+body.theme-classic .kpi,
+.bench-item,
+body.theme-modern .bench-item,
+body.theme-classic .bench-item{
+  border-radius:16px !important;
+  border:1px solid var(--wax-border) !important;
+  box-shadow:0 8px 30px rgba(0,0,0,.06) !important;
+  background:var(--wax-card) !important;
+  padding:18px 20px !important;
+}
+.dc-mini-kpi,
+body.theme-modern .dc-mini-kpi,
+body.theme-classic .dc-mini-kpi,
+.dc-mini-kpi.depot,
+body.theme-modern .dc-mini-kpi.depot,
+body.theme-classic .dc-mini-kpi.depot,
+.dc-mini-kpi.deviation,
+body.theme-modern .dc-mini-kpi.deviation,
+body.theme-classic .dc-mini-kpi.deviation{
+  border-radius:16px !important;
+  box-shadow:0 8px 30px rgba(0,0,0,.06) !important;
+  background:linear-gradient(180deg,var(--wax-card-soft),var(--wax-card)) !important;
+  border:1px solid var(--wax-border) !important;
+}
+.dh-kpi,
+body.theme-modern .dh-kpi,
+body.theme-classic .dh-kpi{
+  border-radius:16px !important;
+  box-shadow:0 8px 30px rgba(0,0,0,.06) !important;
+  background:var(--wax-card) !important;
+  border:1px solid var(--wax-border) !important;
+}
+.tw,
+body.theme-modern .tw,
+body.theme-classic .tw{
+  border-radius:18px !important;
+  border:1px solid var(--wax-border) !important;
+  box-shadow:0 8px 30px rgba(0,0,0,.06) !important;
+  background:var(--wax-card) !important;
+  overflow:hidden !important;
+}
+.structure-grid,
+body.theme-modern .structure-grid,
+body.theme-classic .structure-grid,
+.dc-mini-kpis,
+body.theme-modern .dc-mini-kpis,
+body.theme-classic .dc-mini-kpis{ gap:20px !important; }
+.dc-card.sp500-row,
+body.theme-modern .dc-card.sp500-row,
+body.theme-classic .dc-card.sp500-row{ background:var(--wax-card-soft) !important; }
+
+/* ---------- Tabellen ---------- */
+thead th,
+body.theme-modern thead th,
+body.theme-classic thead th{
+  background:var(--wax-card-soft) !important;
+  color:var(--wax-muted) !important;
+  border-bottom:1px solid var(--wax-border) !important;
+  padding:12px 14px !important;
+}
+td,
+body.theme-modern td,
+body.theme-classic td{
+  padding:12px 14px !important;
+  color:var(--wax-text-2) !important;
+  border-bottom:1px solid var(--wax-border) !important;
+}
+tbody tr,
+body.theme-modern tbody tr,
+body.theme-classic tbody tr{ border-bottom:1px solid var(--wax-border) !important; }
+tbody tr:hover,
+body.theme-modern tbody tr:hover,
+body.theme-classic tbody tr:hover{ background:var(--wax-card-soft) !important; }
+.gr td,
+body.theme-modern .gr td,
+body.theme-classic .gr td{ background:var(--wax-panel) !important; color:var(--wax-muted) !important; border-top:1px solid var(--wax-border) !important; }
+.total-row td,
+body.theme-modern .total-row td,
+body.theme-classic .total-row td{ background:var(--wax-card-soft) !important; color:var(--wax-text) !important; border-top:2px solid var(--wax-border) !important; }
+.cash-row td,
+body.theme-modern .cash-row td,
+body.theme-classic .cash-row td{ background:var(--wax-card-soft) !important; color:var(--wax-text-2) !important; }
+.sum-row td,
+body.theme-modern .sum-row td,
+body.theme-classic .sum-row td{ background:var(--wax-dark) !important; color:#FFFFFF !important; border-top:2px solid var(--wax-accent) !important; }
+#rankingBody tr,
+body.theme-modern #rankingBody tr,
+body.theme-classic #rankingBody tr{ height:56px !important; }
+.kpi-s,
+body.theme-modern .kpi-s,
+body.theme-classic .kpi-s{ color:var(--wax-muted) !important; }
+
+/* ---------- Buttons ---------- */
+.btn,
+body.theme-modern .btn,
+body.theme-classic .btn{ border-radius:12px !important; font-family:var(--font-body) !important; }
+.btn-red,
+body.theme-modern .btn-red,
+body.theme-classic .btn-red{ background:var(--wax-accent) !important; border-color:var(--wax-accent) !important; color:#FFFFFF !important; }
+.btn-red:hover,
+body.theme-modern .btn-red:hover,
+body.theme-classic .btn-red:hover{ background:var(--wax-accent-hover) !important; border-color:var(--wax-accent-hover) !important; }
+.btn-outline,
+body.theme-modern .btn-outline,
+body.theme-classic .btn-outline{ background:var(--wax-card) !important; border-color:var(--btn-border) !important; color:var(--wax-dark) !important; }
+.btn-outline:hover,
+body.theme-modern .btn-outline:hover,
+body.theme-classic .btn-outline:hover{ border-color:var(--wax-accent) !important; color:var(--wax-accent) !important; }
+.icon-btn,
+body.theme-modern .icon-btn,
+body.theme-classic .icon-btn{ background:var(--wax-card) !important; border-color:var(--btn-border) !important; color:var(--wax-dark) !important; border-radius:999px !important; }
+.icon-btn:hover,
+body.theme-modern .icon-btn:hover,
+body.theme-classic .icon-btn:hover{ background:var(--wax-card-soft) !important; border-color:var(--wax-accent) !important; color:var(--wax-accent) !important; }
+.mode-toggle,
+body.theme-modern .mode-toggle,
+body.theme-classic .mode-toggle{ background:var(--wax-card) !important; border-color:var(--btn-border) !important; color:var(--wax-dark) !important; }
+.mode-toggle:hover,
+body.theme-modern .mode-toggle:hover,
+body.theme-classic .mode-toggle:hover{ border-color:var(--wax-accent) !important; color:var(--wax-accent) !important; background:var(--wax-card-soft) !important; }
+.mode-toggle.active,
+body.theme-modern .mode-toggle.active,
+body.theme-classic .mode-toggle.active{ background:var(--wax-accent) !important; border-color:var(--wax-accent) !important; color:#FFFFFF !important; }
+.kk-toggle,
+body.theme-modern .kk-toggle,
+body.theme-classic .kk-toggle{ background:var(--wax-card) !important; border-color:var(--wax-border) !important; color:var(--wax-text) !important; }
+.kk-toggle.active,
+body.theme-modern .kk-toggle.active,
+body.theme-classic .kk-toggle.active{ background:var(--wax-accent) !important; border-color:var(--wax-accent) !important; color:#FFFFFF !important; }
+
+/* ---------- Navigation ---------- */
+.hd,
+body.theme-modern .hd,
+body.theme-classic .hd,
+.nav,
+body.theme-modern .nav,
+body.theme-classic .nav,
+#pinOverlay,
+body.theme-modern #pinOverlay,
+body.theme-classic #pinOverlay,
+.statusbar,
+body.theme-modern .statusbar,
+body.theme-classic .statusbar{ background:var(--wax-dark) !important; }
+.nav,
+body.theme-modern .nav,
+body.theme-classic .nav{ border-bottom-color:var(--wax-dark-2) !important; }
+.nav-btn,
+body.theme-modern .nav-btn,
+body.theme-classic .nav-btn{ color:rgba(255,255,255,.65) !important; }
+.nav-btn.active,
+body.theme-modern .nav-btn.active,
+body.theme-classic .nav-btn.active{ color:#FFFFFF !important; border-bottom-color:var(--wax-accent) !important; }
+.nav-btn:hover:not(.active),
+body.theme-modern .nav-btn:hover:not(.active),
+body.theme-classic .nav-btn:hover:not(.active){ color:rgba(255,255,255,.9) !important; }
+#tab-pflege,
+body.theme-modern #tab-pflege,
+body.theme-classic #tab-pflege,
+.nav-btn-pflege,
+body.theme-modern .nav-btn-pflege,
+body.theme-classic .nav-btn-pflege{ color:var(--wax-accent) !important; }
+.hd-date,
+body.theme-modern .hd-date,
+body.theme-classic .hd-date,
+.hd-user,
+body.theme-modern .hd-user,
+body.theme-classic .hd-user{ color:rgba(255,255,255,.55) !important; }
+.sdot,
+body.theme-modern .sdot,
+body.theme-classic .sdot{ background:rgba(255,255,255,.4) !important; }
+.pin-subtitle,
+body.theme-modern .pin-subtitle,
+body.theme-classic .pin-subtitle{ color:rgba(255,255,255,.55) !important; }
+.pin-dot,
+body.theme-modern .pin-dot,
+body.theme-classic .pin-dot{ border-color:rgba(255,255,255,.35) !important; background:transparent !important; }
+.pin-dot.filled,
+body.theme-modern .pin-dot.filled,
+body.theme-classic .pin-dot.filled{ background:var(--wax-accent) !important; border-color:var(--wax-accent) !important; }
+.pin-btn,
+body.theme-modern .pin-btn,
+body.theme-classic .pin-btn{ background:rgba(255,255,255,.08) !important; color:#FFFFFF !important; border-color:rgba(255,255,255,.2) !important; }
+.pin-btn:hover,
+body.theme-modern .pin-btn:hover,
+body.theme-classic .pin-btn:hover{ background:rgba(255,255,255,.16) !important; }
+.pin-err,
+body.theme-modern .pin-err,
+body.theme-classic .pin-err{ color:var(--wax-negative) !important; }
+
+/* ---------- Positiv/Negativ: finales Wort ---------- */
+.pos,
+body.theme-modern .pos,
+body.theme-classic .pos,
+td.pos,
+body.theme-modern td.pos,
+body.theme-classic td.pos,
+span.pos,
+body.theme-modern span.pos,
+body.theme-classic span.pos,
+div.pos,
+body.theme-modern div.pos,
+body.theme-classic div.pos,
+.kpi-v.pos,
+body.theme-modern .kpi-v.pos,
+body.theme-classic .kpi-v.pos,
+.bench-v.pos,
+body.theme-modern .bench-v.pos,
+body.theme-classic .bench-v.pos,
+.kpi .v.pos,
+body.theme-modern .kpi .v.pos,
+body.theme-classic .kpi .v.pos,
+.mkpi .v.pos,
+body.theme-modern .mkpi .v.pos,
+body.theme-classic .mkpi .v.pos,
+body.theme-modern .pos,
+body.theme-modern td.pos,
+body.theme-modern span.pos,
+body.theme-modern div.pos,
+body.theme-modern .kpi-v.pos,
+body.theme-modern .bench-v.pos,
+body:not(.theme-classic) .pos,
+body:not(.theme-classic) td.pos,
+body:not(.theme-classic) span.pos,
+body:not(.theme-classic) div.pos,
+body:not(.theme-classic) .kpi-v.pos,
+body:not(.theme-classic) .bench-v.pos,
+body.theme-classic .pos,
+body.theme-classic td.pos,
+body.theme-classic span.pos,
+body.theme-classic div.pos,
+body.theme-classic .kpi-v.pos,
+body.theme-classic .bench-v.pos,
+body.theme-classic .kpi .v.pos,
+body.theme-classic .mkpi .v.pos{
+  color:var(--wax-positive) !important;
+}
+.neg,
+body.theme-modern .neg,
+body.theme-classic .neg,
+td.neg,
+body.theme-modern td.neg,
+body.theme-classic td.neg,
+span.neg,
+body.theme-modern span.neg,
+body.theme-classic span.neg,
+div.neg,
+body.theme-modern div.neg,
+body.theme-classic div.neg,
+.kpi-v.neg,
+body.theme-modern .kpi-v.neg,
+body.theme-classic .kpi-v.neg,
+.bench-v.neg,
+body.theme-modern .bench-v.neg,
+body.theme-classic .bench-v.neg,
+.kpi .v.neg,
+body.theme-modern .kpi .v.neg,
+body.theme-classic .kpi .v.neg,
+.mkpi .v.neg,
+body.theme-modern .mkpi .v.neg,
+body.theme-classic .mkpi .v.neg,
+body.theme-modern .neg,
+body.theme-modern td.neg,
+body.theme-modern span.neg,
+body.theme-modern div.neg,
+body.theme-modern .kpi-v.neg,
+body.theme-modern .bench-v.neg,
+body:not(.theme-classic) .neg,
+body:not(.theme-classic) td.neg,
+body:not(.theme-classic) span.neg,
+body:not(.theme-classic) div.neg,
+body:not(.theme-classic) .kpi-v.neg,
+body:not(.theme-classic) .bench-v.neg,
+body.theme-classic .neg,
+body.theme-classic td.neg,
+body.theme-classic span.neg,
+body.theme-classic div.neg,
+body.theme-classic .kpi-v.neg,
+body.theme-classic .bench-v.neg,
+body.theme-classic .kpi .v.neg,
+body.theme-classic .mkpi .v.neg{
+  color:var(--wax-negative) !important;
+}
+.total-row td:not(.pos):not(.neg),
+body.theme-modern .total-row td:not(.pos):not(.neg),
+body.theme-classic .total-row td:not(.pos):not(.neg){ color:var(--wax-text) !important; }
+.dim,
+body.theme-modern .dim,
+body.theme-classic .dim{ color:var(--wax-muted) !important; }
+
+/* ---------- Charts: Flaechenfuellung, Gitter, Achsen ---------- */
+.dhc-area,
+body.theme-modern .dhc-area,
+body.theme-classic .dhc-area{ stroke:none; }
+.dhc-area-pos,
+body.theme-modern .dhc-area-pos,
+body.theme-classic .dhc-area-pos{ fill:var(--wax-positive); fill-opacity:.1; }
+.dhc-area-neg,
+body.theme-modern .dhc-area-neg,
+body.theme-classic .dhc-area-neg{ fill:var(--brand-orange); fill-opacity:.1; }
+.dhc-grid,
+body.theme-modern .dhc-grid,
+body.theme-classic .dhc-grid{ stroke:var(--wax-border) !important; }
+.dhc-zero,
+body.theme-modern .dhc-zero,
+body.theme-classic .dhc-zero{ stroke:var(--wax-muted) !important; }
+.dhc-ylab,
+body.theme-modern .dhc-ylab,
+body.theme-classic .dhc-ylab,
+.dhc-xlab,
+body.theme-modern .dhc-xlab,
+body.theme-classic .dhc-xlab{ fill:var(--wax-muted) !important; }
+
+/* ---------- Donuts, Balken, Legenden ---------- */
+.donut,
+body.theme-modern .donut,
+body.theme-classic .donut{ background:var(--wax-panel) !important; }
+.donut::after,
+body.theme-modern .donut::after,
+body.theme-classic .donut::after{ background:var(--wax-card) !important; box-shadow:inset 0 0 0 1px var(--wax-border) !important; }
+.bar-track,
+body.theme-modern .bar-track,
+body.theme-classic .bar-track{ background:var(--wax-panel) !important; }
+.legend-item,
+body.theme-modern .legend-item,
+body.theme-classic .legend-item{ color:var(--wax-muted) !important; }
+.bar-label,
+body.theme-modern .bar-label,
+body.theme-classic .bar-label{ color:var(--wax-muted) !important; }
+
+/* ---------- Badges / Hinweise ---------- */
+.b-new,
+body.theme-classic .b-new,
+body:not(.theme-original) .badge.b-new,
+.badge.b-new,
+body.theme-classic .badge.b-new{ background:rgba(15,169,113,.12) !important; color:var(--wax-positive) !important; border-color:rgba(15,169,113,.35) !important; }
+.b-out,
+body.theme-classic .b-out,
+body:not(.theme-original) .badge.b-out,
+.badge.b-out,
+body.theme-classic .badge.b-out{ background:rgba(240,90,58,.10) !important; color:var(--wax-negative) !important; border-color:rgba(240,90,58,.3) !important; }
+.ticker-warn,
+body.theme-classic .ticker-warn{ background:rgba(240,90,58,.10) !important; color:var(--wax-negative) !important; border-color:rgba(240,90,58,.3) !important; }
+body.theme-modern .b-new,
+body.theme-modern .badge.b-new{ background:rgba(77,212,163,.14) !important; color:var(--wax-positive) !important; border-color:rgba(77,212,163,.35) !important; }
+body.theme-modern .b-out,
+body.theme-modern .badge.b-out{ background:rgba(255,122,0,.14) !important; color:var(--wax-negative) !important; border-color:rgba(255,122,0,.35) !important; }
+body.theme-modern .ticker-warn{ background:rgba(255,122,0,.14) !important; color:var(--wax-negative) !important; border-color:rgba(255,122,0,.35) !important; }
+
+/* ============================================================
+   Premium Polish Pass — Spacing, Typografie, Schatten, Border,
+   Tabellen, Buttons, Charts, News. Keine Farb-/Struktur-/Nav-
+   Aenderungen, nur Feinschliff bestehender Werte.
+   ============================================================ */
+
+/* ---------- Spacing-Rhythmus ---------- */
+.kpi-l,
+body.theme-modern .kpi-l,
+body.theme-classic .kpi-l{ margin-bottom:6px; }
+.kpi-s,
+body.theme-modern .kpi-s,
+body.theme-classic .kpi-s{ margin-top:6px; }
+.sec-t,
+body.theme-modern .sec-t,
+body.theme-classic .sec-t{ padding-bottom:12px; margin-bottom:20px; }
+.modal-title,
+body.theme-modern .modal-title,
+body.theme-classic .modal-title{ margin-bottom:18px; }
+.kpi-grid,
+body.theme-modern .kpi-grid,
+body.theme-classic .kpi-grid,
+.bench-grid,
+body.theme-modern .bench-grid,
+body.theme-classic .bench-grid{ margin-bottom:26px; }
+.structure-card,
+body.theme-modern .structure-card,
+body.theme-classic .structure-card{ padding:22px 22px 20px; }
+.structure-title,
+body.theme-modern .structure-title,
+body.theme-classic .structure-title{ margin-bottom:14px; }
+.chart-modal-price-row,
+body.theme-modern .chart-modal-price-row,
+body.theme-classic .chart-modal-price-row{ margin:16px 0 14px; }
+
+/* ---------- Typografie ---------- */
+.dh-bigval-xl,
+body.theme-modern .dh-bigval-xl,
+body.theme-classic .dh-bigval-xl{ letter-spacing:-.02em; }
+.dh-bigval,
+body.theme-modern .dh-bigval,
+body.theme-classic .dh-bigval,
+.kpi-v,
+body.theme-modern .kpi-v,
+body.theme-classic .kpi-v,
+.dc-num,
+body.theme-modern .dc-num,
+body.theme-classic .dc-num{ letter-spacing:-.01em; }
+thead th,
+body.theme-modern thead th,
+body.theme-classic thead th{ letter-spacing:.08em !important; }
+
+/* ---------- Navigation (nur Uebergaenge, keine Hoehe/Farbe) ---------- */
+.nav-btn,
+body.theme-modern .nav-btn,
+body.theme-classic .nav-btn{ transition:color .2s ease, border-color .2s ease; }
+
+/* ---------- Buttons ---------- */
+.btn,
+body.theme-modern .btn,
+body.theme-classic .btn{ padding:10px 18px !important; border-radius:14px !important; transition:background .2s ease, border-color .2s ease, color .2s ease, box-shadow .2s ease; }
+.btn-red,
+body.theme-modern .btn-red,
+body.theme-classic .btn-red{ box-shadow:0 1px 2px rgba(0,0,0,.06) !important; }
+.btn-red:hover,
+body.theme-modern .btn-red:hover,
+body.theme-classic .btn-red:hover{ box-shadow:0 4px 12px rgba(0,0,0,.12) !important; }
+.btn-outline,
+body.theme-modern .btn-outline,
+body.theme-classic .btn-outline,
+.icon-btn,
+body.theme-modern .icon-btn,
+body.theme-classic .icon-btn,
+.mode-toggle,
+body.theme-modern .mode-toggle,
+body.theme-classic .mode-toggle{ border-color:var(--wax-border) !important; transition:background .2s ease, border-color .2s ease, color .2s ease, box-shadow .2s ease; }
+
+/* ---------- Tabellen ---------- */
+thead th,
+body.theme-modern thead th,
+body.theme-classic thead th,
+td,
+body.theme-modern td,
+body.theme-classic td{ padding:13px 14px !important; vertical-align:middle !important; }
+tbody tr,
+body.theme-modern tbody tr,
+body.theme-classic tbody tr{ transition:background .15s ease; }
+#rankingBody tr,
+body.theme-modern #rankingBody tr,
+body.theme-classic #rankingBody tr{ height:58px !important; }
+
+/* ---------- Charts ---------- */
+.dhc-line,
+body.theme-modern .dhc-line,
+body.theme-classic .dhc-line{ stroke-width:2.6 !important; }
+.dhc-grid,
+body.theme-modern .dhc-grid,
+body.theme-classic .dhc-grid{ opacity:.55; }
+.dhc-svg circle,
+body.theme-modern .dhc-svg circle,
+body.theme-classic .dhc-svg circle{ filter:drop-shadow(0 0 2px rgba(20,37,63,.18)); }
+#chartModalMount polyline,
+body.theme-modern #chartModalMount polyline,
+body.theme-classic #chartModalMount polyline{ stroke-width:2.7 !important; }
+#chartModalMount circle,
+body.theme-modern #chartModalMount circle,
+body.theme-classic #chartModalMount circle{ filter:drop-shadow(0 0 2px rgba(20,37,63,.18)); }
+
+/* ---------- Schatten-Vereinheitlichung ---------- */
+.dc-head,
+body.theme-modern .dc-head,
+body.theme-classic .dc-head,
+.dc-card,
+body.theme-modern .dc-card,
+body.theme-classic .dc-card{ box-shadow:0 8px 30px rgba(0,0,0,.06) !important; }
+.entw-tile:hover,
+body.theme-modern .entw-tile:hover,
+body.theme-classic .entw-tile:hover,
+.entw-tile.active,
+body.theme-modern .entw-tile.active,
+body.theme-classic .entw-tile.active{ box-shadow:inset 3px 0 0 var(--entw-blue), inset 0 3px 0 var(--entw-blue), 0 8px 24px rgba(0,0,0,.10) !important; }
+
+/* ---------- Newsbereich ---------- */
+.entw-tiles,
+body.theme-modern .entw-tiles,
+body.theme-classic .entw-tiles{ gap:12px; }
+.entw-tile,
+body.theme-modern .entw-tile,
+body.theme-classic .entw-tile{ padding:18px 34px 18px 20px; min-height:80px; }
+.entw-tile .et-ttl,
+body.theme-modern .entw-tile .et-ttl,
+body.theme-classic .entw-tile .et-ttl{ line-height:1.3; }
+.cnbc-wrap,
+body.theme-modern .cnbc-wrap,
+body.theme-classic .cnbc-wrap{ margin-bottom:28px; }
+.cnbc-item,
+body.theme-modern .cnbc-item,
+body.theme-classic .cnbc-item{ padding:8px 6px; gap:12px; }
+.cnbc-rank,
+body.theme-modern .cnbc-rank,
+body.theme-classic .cnbc-rank{ opacity:.6; }
+.cnbc-link,
+body.theme-modern .cnbc-link,
+body.theme-classic .cnbc-link{ line-height:1.6; }
+.cnbc-ext,
+body.theme-modern .cnbc-ext,
+body.theme-classic .cnbc-ext{ letter-spacing:.02em; }
+.hot-item-btn,
+body.theme-modern .hot-item-btn,
+body.theme-classic .hot-item-btn{ padding:8px 6px 8px 20px; line-height:1.6; }
+
+
+/* ============================================================
+   Premium Finishing Pass 3 — Pixel-Perfection, Fokus-Zustaende,
+   Chart-/Donut-Feinschliff, Modal-Detailarbeit. Keine neuen
+   Farben/Schriften/Layout-Aenderungen, nur Feinjustierung.
+   ============================================================ */
+
+/* ---------- Raster-Nachjustierung ---------- */
+.structure-card,
+body.theme-modern .structure-card,
+body.theme-classic .structure-card{ padding:24px 24px 20px; }
+.kpi,
+body.theme-modern .kpi,
+body.theme-classic .kpi,
+.bench-item,
+body.theme-modern .bench-item,
+body.theme-classic .bench-item{ padding:20px; }
+.dh-chartcard,
+body.theme-modern .dh-chartcard,
+body.theme-classic .dh-chartcard{ padding:20px 24px; }
+
+/* ---------- Typografische Hierarchie ---------- */
+.dc-basis,
+body.theme-modern .dc-basis,
+body.theme-classic .dc-basis{ opacity:.85; }
+
+/* ---------- Tabellen ---------- */
+tbody tr:hover,
+body.theme-modern tbody tr:hover,
+body.theme-classic tbody tr:hover{ transition:background .18s ease; }
+
+/* ---------- Charts ---------- */
+.dhc-grid,
+body.theme-modern .dhc-grid,
+body.theme-classic .dhc-grid{ opacity:.4; }
+.dhc-ylab,
+body.theme-modern .dhc-ylab,
+body.theme-classic .dhc-ylab,
+.dhc-xlab,
+body.theme-modern .dhc-xlab,
+body.theme-classic .dhc-xlab{ font-size:9.5px; letter-spacing:.02em; }
+#chartModalMount svg,
+body.theme-modern #chartModalMount svg,
+body.theme-classic #chartModalMount svg{ height:240px !important; }
+.chart-modal-price-row,
+body.theme-modern .chart-modal-price-row,
+body.theme-classic .chart-modal-price-row{ margin:18px 0 16px; }
+
+/* ---------- Donuts ---------- */
+.donut::after,
+body.theme-modern .donut::after,
+body.theme-classic .donut::after{ inset:26px; }
+.legend-item,
+body.theme-modern .legend-item,
+body.theme-classic .legend-item{ align-items:center; line-height:1.5; }
+
+/* ---------- Buttons: Zentrierung & Fokus ---------- */
+.btn,
+body.theme-modern .btn,
+body.theme-classic .btn,
+.mode-toggle,
+body.theme-modern .mode-toggle,
+body.theme-classic .mode-toggle,
+.kk-toggle,
+body.theme-modern .kk-toggle,
+body.theme-classic .kk-toggle,
+.btn-outline,
+body.theme-modern .btn-outline,
+body.theme-classic .btn-outline,
+.btn-red,
+body.theme-modern .btn-red,
+body.theme-classic .btn-red{ text-align:center; }
+.btn:focus-visible,
+body.theme-modern .btn:focus-visible,
+body.theme-classic .btn:focus-visible,
+.icon-btn:focus-visible,
+body.theme-modern .icon-btn:focus-visible,
+body.theme-classic .icon-btn:focus-visible,
+.mode-toggle:focus-visible,
+body.theme-modern .mode-toggle:focus-visible,
+body.theme-classic .mode-toggle:focus-visible,
+.kk-toggle:focus-visible,
+body.theme-modern .kk-toggle:focus-visible,
+body.theme-classic .kk-toggle:focus-visible,
+.btn-outline:focus-visible,
+body.theme-modern .btn-outline:focus-visible,
+body.theme-classic .btn-outline:focus-visible{ outline:2px solid var(--wax-accent); outline-offset:2px; }
+
+/* ---------- News: weichere Uebergaenge ---------- */
+.cnbc-item,
+body.theme-modern .cnbc-item,
+body.theme-classic .cnbc-item,
+.hot-item-btn,
+body.theme-modern .hot-item-btn,
+body.theme-classic .hot-item-btn{ transition:background .18s ease; }
+
+/* ---------- Modal: Close-Button besser integriert ---------- */
+.chart-modal-close,
+body.theme-modern .chart-modal-close,
+body.theme-classic .chart-modal-close{ width:32px; height:32px; border-radius:999px; display:inline-flex; align-items:center; justify-content:center; transition:background .18s ease, color .18s ease; }
+.chart-modal-close:hover,
+body.theme-modern .chart-modal-close:hover,
+body.theme-classic .chart-modal-close:hover{ background:var(--wax-card-soft); color:var(--wax-text); }
+
+
+/* ============================================================
+   Fixes aus Nutzer-Feedback (Live-Screenshots): Logo-Groesse,
+   Kontrast-Bug in Einzeldepot-Mini-KPIs (Reste des alten
+   Dark-Theme-Textfarben-Systems), Folio.today-Kachel, CNBC-Liste
+   an Newsflash-Stil angeglichen.
+   ============================================================ */
+
+/* ---------- Header-Logo: markanter ---------- */
+.hd-logo img,
+body.theme-modern .hd-logo img,
+body.theme-classic .hd-logo img{ height:56px; }
+
+/* ---------- Folio.today-Kachel: Navy wie Header, Logo nicht verzerrt ---------- */
+.today-tile,
+body.theme-modern .today-tile,
+body.theme-classic .today-tile{ background:var(--wax-dark); border-color:var(--wax-dark); }
+.today-tile:hover,
+body.theme-modern .today-tile:hover,
+body.theme-classic .today-tile:hover{ background:var(--wax-dark-2); border-color:var(--wax-dark-2); }
+.today-tile,
+body.theme-modern .today-tile,
+body.theme-classic .today-tile{ padding:10px 16px !important; }
+.today-tile img,
+body.theme-modern .today-tile img,
+body.theme-classic .today-tile img{ height:auto; max-height:48px; width:auto; max-width:100%; object-fit:contain; }
+
+/* ---------- Einzeldepot Mini-KPI-Kacheln: Kontrast-Fix ---------- */
+.dc-mini-kpi.depot .dc-mini-label,
+body.theme-modern .dc-mini-kpi.depot .dc-mini-label,
+body.theme-classic .dc-mini-kpi.depot .dc-mini-label,
+.dc-mini-kpi.deviation .dc-mini-label,
+body.theme-modern .dc-mini-kpi.deviation .dc-mini-label,
+body.theme-classic .dc-mini-kpi.deviation .dc-mini-label{ color:var(--wax-muted-2) !important; }
+.dc-mini-kpi.depot .dc-kpi-line strong,
+body.theme-modern .dc-mini-kpi.depot .dc-kpi-line strong,
+body.theme-classic .dc-mini-kpi.depot .dc-kpi-line strong{ color:var(--wax-text) !important; }
+.dc-mini-kpi.deviation .dc-kpi-line strong,
+body.theme-modern .dc-mini-kpi.deviation .dc-kpi-line strong,
+body.theme-classic .dc-mini-kpi.deviation .dc-kpi-line strong,
+.dc-mini-kpi.deviation .dc-kpi-line strong.pos,
+body.theme-modern .dc-mini-kpi.deviation .dc-kpi-line strong.pos,
+body.theme-classic .dc-mini-kpi.deviation .dc-kpi-line strong.pos,
+.dc-mini-kpi.deviation .dc-kpi-line strong.neg,
+body.theme-modern .dc-mini-kpi.deviation .dc-kpi-line strong.neg,
+body.theme-classic .dc-mini-kpi.deviation .dc-kpi-line strong.neg{ color:var(--wax-text) !important; }
+.dc-kpi-line .dc-pct,
+body.theme-modern .dc-kpi-line .dc-pct,
+body.theme-classic .dc-kpi-line .dc-pct{ color:var(--wax-muted) !important; }
+.dc-kpi-line.total span,
+body.theme-modern .dc-kpi-line.total span,
+body.theme-classic .dc-kpi-line.total span{ color:var(--wax-muted-2) !important; }
+
+/* ---------- CNBC News: identischer Stil wie Newsflash-Headlines ---------- */
+.cnbc-rank,
+body.theme-modern .cnbc-rank,
+body.theme-classic .cnbc-rank,
+.cnbc-ext,
+body.theme-modern .cnbc-ext,
+body.theme-classic .cnbc-ext{ display:none; }
+.cnbc-item,
+body.theme-modern .cnbc-item,
+body.theme-classic .cnbc-item{ padding:8px 6px 8px 20px; }
+.cnbc-item::before,
+body.theme-modern .cnbc-item::before,
+body.theme-classic .cnbc-item::before{ content:''; position:absolute; left:2px; top:15px; width:7px; height:7px; border-radius:50%; background:var(--entw-blue); }
+.cnbc-item:hover .cnbc-link,
+body.theme-modern .cnbc-item:hover .cnbc-link,
+body.theme-classic .cnbc-item:hover .cnbc-link{ text-decoration:none; color:var(--wax-text); }
+
+
+/* ---------- dc-mini-kpi: Hauptzahl dunkel, Delta/Prozent farbig wie Positionszeilen ---------- */
+.dc-mini-kpi .dc-kpi-line strong .dc-num,
+body.theme-modern .dc-mini-kpi .dc-kpi-line strong .dc-num,
+body.theme-classic .dc-mini-kpi .dc-kpi-line strong .dc-num{ color:var(--wax-text) !important; }
+.dc-mini-kpi .dc-kpi-line strong.pos .dc-delta,
+body.theme-modern .dc-mini-kpi .dc-kpi-line strong.pos .dc-delta,
+body.theme-classic .dc-mini-kpi .dc-kpi-line strong.pos .dc-delta{ color:var(--wax-positive) !important; }
+.dc-mini-kpi .dc-kpi-line strong.neg .dc-delta,
+body.theme-modern .dc-mini-kpi .dc-kpi-line strong.neg .dc-delta,
+body.theme-classic .dc-mini-kpi .dc-kpi-line strong.neg .dc-delta{ color:var(--wax-negative) !important; }
+
+
+/* ---------- Statusbar-Position: an tatsaechliche Nav-Hoehe angleichen ----------
+   .hd ist fest 78px hoch (Alt-Override), .nav ist ~39px hoch (11px Padding +
+   2px aktive Linie + Zeilenhoehe). Mehrere aeltere !important-Regeln setzen
+   unterschiedliche top-Werte fuer .statusbar (102px/107px/121px/129px), von
+   denen keine mehr zur tatsaechlichen Hoehe passt -> die Statusbar ueberlappt
+   die Nav-Leiste um ~2px und schneidet die aktive Unterstreichung an. */
+.statusbar,
+body.theme-modern .statusbar,
+body.theme-classic .statusbar{ top:calc(117px + env(safe-area-inset-top,0px)) !important; }
+
+
+/* ============================================================
+   Premium-Refinement Pass — ruhigere Schatten, feinere Charts,
+   beruhigter Newsbereich, einheitlicher vertikaler Rhythmus.
+   Keine neuen Farben/Elemente/Layout-Ideen, nur Feinschliff.
+   ============================================================ */
+
+/* ---------- Karten: ruhigerer, dezenterer Schatten ---------- */
+.modal,
+body.theme-modern .modal,
+body.theme-classic .modal,
+.chart-modal,
+body.theme-modern .chart-modal,
+body.theme-classic .chart-modal,
+.dh-card,
+body.theme-modern .dh-card,
+body.theme-classic .dh-card,
+.structure-card,
+body.theme-modern .structure-card,
+body.theme-classic .structure-card,
+.entw-panel,
+body.theme-modern .entw-panel,
+body.theme-classic .entw-panel,
+.dc-head,
+body.theme-modern .dc-head,
+body.theme-classic .dc-head,
+.dc-card,
+body.theme-modern .dc-card,
+body.theme-classic .dc-card,
+.kpi,
+body.theme-modern .kpi,
+body.theme-classic .kpi,
+.bench-item,
+body.theme-modern .bench-item,
+body.theme-classic .bench-item,
+.dc-mini-kpi,
+body.theme-modern .dc-mini-kpi,
+body.theme-classic .dc-mini-kpi,
+.dc-mini-kpi.depot,
+body.theme-modern .dc-mini-kpi.depot,
+body.theme-classic .dc-mini-kpi.depot,
+.dc-mini-kpi.deviation,
+body.theme-modern .dc-mini-kpi.deviation,
+body.theme-classic .dc-mini-kpi.deviation,
+.dh-kpi,
+body.theme-modern .dh-kpi,
+body.theme-classic .dh-kpi,
+.tw,
+body.theme-modern .tw,
+body.theme-classic .tw{
+  box-shadow:0 4px 16px rgba(0,0,0,.045) !important;
+}
+
+/* ---------- Charts: feinere Linien, dezentere Endpunkte, ruhigeres Gitter ---------- */
+.dhc-line,
+body.theme-modern .dhc-line,
+body.theme-classic .dhc-line{ stroke-width:2.2 !important; }
+#chartModalMount polyline,
+body.theme-modern #chartModalMount polyline,
+body.theme-classic #chartModalMount polyline{ stroke-width:2.3 !important; }
+.dhc-grid,
+body.theme-modern .dhc-grid,
+body.theme-classic .dhc-grid{ opacity:.3; }
+.dhc-svg circle,
+body.theme-modern .dhc-svg circle,
+body.theme-classic .dhc-svg circle{ r:3px; filter:drop-shadow(0 0 1.5px rgba(20,37,63,.14)); }
+#chartModalMount circle,
+body.theme-modern #chartModalMount circle,
+body.theme-classic #chartModalMount circle{ r:4px; filter:drop-shadow(0 0 1.5px rgba(20,37,63,.14)); }
+.dhc-ylab,
+body.theme-modern .dhc-ylab,
+body.theme-classic .dhc-ylab,
+.dhc-xlab,
+body.theme-modern .dhc-xlab,
+body.theme-classic .dhc-xlab{ opacity:.85; }
+
+/* ---------- News: weniger "Kachel", mehr Informationsoberflaeche ---------- */
+.entw-tile,
+body.theme-modern .entw-tile,
+body.theme-classic .entw-tile{ padding:14px 30px 14px 16px; min-height:64px; }
+.entw-tiles,
+body.theme-modern .entw-tiles,
+body.theme-classic .entw-tiles{ gap:10px; }
+.entw-panel .ep-sum,
+body.theme-modern .entw-panel .ep-sum,
+body.theme-classic .entw-panel .ep-sum{ font-weight:400; }
+
+/* ---------- Einheitlicher vertikaler Rhythmus zwischen Sektionen ---------- */
+.kpi-grid,
+body.theme-modern .kpi-grid,
+body.theme-classic .kpi-grid,
+.bench-grid,
+body.theme-modern .bench-grid,
+body.theme-classic .bench-grid,
+.tw,
+body.theme-modern .tw,
+body.theme-classic .tw,
+.dc-summary-kpis,
+body.theme-modern .dc-summary-kpis,
+body.theme-classic .dc-summary-kpis,
+.entw-wrap,
+body.theme-modern .entw-wrap,
+body.theme-classic .entw-wrap,
+.cnbc-wrap,
+body.theme-modern .cnbc-wrap,
+body.theme-classic .cnbc-wrap,
+.today-wrap,
+body.theme-modern .today-wrap,
+body.theme-classic .today-wrap{ margin-bottom:28px !important; }
+
+
+/* ---------- Dark Mode: Kontrast-Fix (dunkler Text auf dunkler Karte war unlesbar) ---------- */
+body.theme-modern .btn-outline{ color:var(--wax-text-2) !important; }
+
+/* ---------- Dark Mode: Original-Button + Refresh-Icon staendig in Orange (wie Hover) ---------- */
+body.theme-modern .mode-toggle,
+body.theme-modern .icon-btn{ color:var(--wax-accent) !important; border-color:var(--wax-accent) !important; }
+
+/* ---------- Dark Mode: Folio.today-Kachel als eigene Flaeche erkennbar ---------- */
+body.theme-modern .today-tile{ background:var(--wax-card) !important; border-color:var(--wax-border) !important; }
+body.theme-modern .today-tile:hover{ background:var(--wax-card-soft) !important; }
+
+</style>
 
 </body>
 </html>
