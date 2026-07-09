@@ -25,6 +25,9 @@
 <link href="https://fonts.googleapis.com/css2?family=Exo+2:wght@500;600;700&family=DM+Sans:wght@300;400;500;600;700&family=DM+Serif+Display:ital@0;1&family=Roboto+Mono:wght@500;600;700&display=swap" rel="stylesheet">
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<!-- Montserrat + Garet: 1:1-Look der Zitat-Kaertchen von mein-lieber-sohn.de (nur fuer den Werbung-Teaser) -->
+<link href="https://fonts.googleapis.com/css2?family=Montserrat:ital,wght@0,300;0,400;0,500;0,600;0,700;0,800;1,400&display=swap" rel="stylesheet">
+<link href="https://api.fontshare.com/v2/css?f[]=garet@400,700,900&display=swap" rel="stylesheet">
 <link rel="preconnect" href="https://api.fontshare.com">
 <link href="https://api.fontshare.com/v2/css?f[]=satoshi@700,900&f[]=general-sans@600,700&display=swap" rel="stylesheet">
 <style>
@@ -520,7 +523,7 @@ body:not(.theme-original) .badge.b-new:hover {
 // Cache-Bereinigung ohne aggressive Storage-Resets
 // WICHTIG: Dieser String muss bei JEDER deploy-relevanten Änderung an dieser Datei
 // von Hand hochgezählt werden – er ist die einzige Grundlage für den Update-Check unten.
-const WAX_BUILD = '1783526768000-comdirect-error-handling-update-check-20260708';
+const WAX_BUILD = '1783623600000-cap-update-redirect-loop-20260709';
 try {
   sessionStorage.setItem('wax_build_seen', WAX_BUILD);
 } catch(e) {}
@@ -532,16 +535,25 @@ if (window.caches && caches.keys) {
 }
 // Update-Check: erkennt veraltete/zwischengespeicherte Fassungen (v.a. iOS Home-Bildschirm-App)
 // und lädt bei Abweichung einmalig eine frische Kopie nach, statt still mit altem Stand weiterzulaufen.
+// Auf maximal 1 Redirect pro Sitzung gedeckelt: bei inkonsistenten CDN-Edge-Caches (z.B. Mobilfunknetz
+// mit Transparent-Proxy) sonst mögliche Reload-Schleife, die den PIN-Login unbenutzbar macht.
 (function(){
   try {
     if (sessionStorage.getItem('wax_update_checked') === WAX_BUILD) return;
+    if (sessionStorage.getItem('wax_update_redirected') === '1') {
+      try { sessionStorage.setItem('wax_update_checked', WAX_BUILD); } catch(e) {}
+      return;
+    }
     fetch(location.pathname + '?_freshcheck=' + Date.now(), {cache:'no-store'})
       .then(r => r.ok ? r.text() : null)
       .then(html => {
         if (!html) return;
         const m = html.match(/const WAX_BUILD = '([^']+)'/);
         if (m && m[1] && m[1] !== WAX_BUILD) {
-          try { sessionStorage.setItem('wax_update_checked', m[1]); } catch(e) {}
+          try {
+            sessionStorage.setItem('wax_update_checked', m[1]);
+            sessionStorage.setItem('wax_update_redirected', '1');
+          } catch(e) {}
           location.href = location.pathname + '?_r=' + Date.now();
         } else {
           try { sessionStorage.setItem('wax_update_checked', WAX_BUILD); } catch(e) {}
@@ -3920,29 +3932,32 @@ async function renderDiscoverQuotes(){
     const quotes = await res.json();
     if(!Array.isArray(quotes) || quotes.length < 2) return;
     // Nur angepinnte Zitate (classes enthaelt "pin-…") und nicht zu lang, sonst sprengen
-    // sie die kleine Kartenhoehe. Variante (cream/gold/dark/sage) kommt 1:1 aus "classes".
+    // sie die kleine Kartenhoehe. Variante (cream/gold/dark/sage) UND "pin-wide" (groesser/fetter,
+    // ca. jedes 3. Zitat im Original) kommen 1:1 aus "classes".
     const pinned = quotes
       .map(q => {
         const m = /pin-(cream|gold|dark|sage)/.exec(q.classes || '');
-        return m ? { q, variant: 'pin-' + m[1] } : null;
+        if(!m) return null;
+        const wide = /pin-wide/.test(q.classes || '');
+        return { q, variant: 'pin-' + m[1], wide };
       })
       .filter(x => x && x.q.de && x.q.de.length <= 140);
-    const pool = pinned.length > 1 ? pinned : quotes.map(q => ({ q, variant: 'pin-cream' }));
+    const pool = pinned.length > 1 ? pinned : quotes.map(q => ({ q, variant: 'pin-cream', wide:false }));
     const idx1 = Math.floor(Math.random() * pool.length);
     let idx2 = Math.floor(Math.random() * pool.length);
     while(idx2 === idx1 && pool.length > 1) idx2 = Math.floor(Math.random() * pool.length);
-    fillDiscoverQuote(1, pool[idx1].q, pool[idx1].variant);
-    fillDiscoverQuote(2, pool[idx2].q, pool[idx2].variant);
+    fillDiscoverQuote(1, pool[idx1].q, pool[idx1].variant, pool[idx1].wide);
+    fillDiscoverQuote(2, pool[idx2].q, pool[idx2].variant, pool[idx2].wide);
   }catch(e){ /* Netzwerk/CORS — Karten bleiben einfach ausgeblendet */ }
 }
-function fillDiscoverQuote(n, q, variant){
+function fillDiscoverQuote(n, q, variant, wide){
   const el = document.getElementById('discoverQuote'+n);
   const textEl = document.getElementById('discoverQuote'+n+'Text');
   const authorEl = document.getElementById('discoverQuote'+n+'Author');
   if(!el || !textEl || !authorEl || !q) return;
   textEl.textContent = q.de || '';
   authorEl.textContent = q.author_de || '';
-  el.className = 'discover-quote ' + (variant || 'pin-cream');
+  el.className = 'discover-quote ' + (variant || 'pin-cream') + (wide ? ' pin-wide' : '');
   el.style.display = '';
 }
 let __discoverSongs = [];
@@ -9016,10 +9031,10 @@ body.theme-modern .today-tile:hover{ background:var(--wax-card-soft) !important;
   z-index:2;
 }
 .discover-quote:hover{ transform:translateY(-4px); box-shadow:0 20px 48px rgba(0,0,0,.28); }
-.discover-quote-text{ margin:0; font-family:var(--font-display); letter-spacing:-.005em; }
+.discover-quote-text{ margin:0; font-family:'Montserrat',var(--font-display),sans-serif; letter-spacing:-.005em; }
 .discover-quote-author{
   display:block;margin-top:12px;
-  font-family:-apple-system,'Helvetica Neue',Arial,sans-serif;
+  font-family:'Montserrat',-apple-system,'Helvetica Neue',Arial,sans-serif;
   font-size:13px;letter-spacing:.16em;font-weight:700;
   color:#2B5575;
 }
@@ -9027,16 +9042,19 @@ body.theme-modern .today-tile:hover{ background:var(--wax-card-soft) !important;
 .discover-quote.pin-cream{ background:#fdf8f0; box-shadow:4px 5px 18px rgba(0,0,0,.22); transform:rotate(-1.2deg); }
 .discover-quote.pin-cream .discover-quote-text{ color:#02111E; font-size:19px; line-height:1.5; font-weight:400; }
 .discover-quote.pin-gold{ background:linear-gradient(135deg,#85ACC9,#5884A4); box-shadow:4px 5px 18px rgba(0,0,0,.3); transform:rotate(-.5deg); }
-.discover-quote.pin-gold .discover-quote-text{ color:#1a1208; font-size:20px; line-height:1.45; font-weight:700; }
+.discover-quote.pin-gold .discover-quote-text{ font-family:'Garet','Montserrat',sans-serif; color:#1a1208; font-size:20px; line-height:1.45; font-weight:700; }
 .discover-quote.pin-gold::before{ background:#fff; opacity:.5; }
 .discover-quote.pin-dark{ background:linear-gradient(135deg,#02111E,#072337); border:1px solid rgba(133,172,201,.24); box-shadow:4px 5px 18px rgba(0,0,0,.4); transform:rotate(.8deg); }
 .discover-quote.pin-dark .discover-quote-text{ color:#f5e8cc; font-size:19px; line-height:1.5; font-weight:500; }
 .discover-quote.pin-dark::before{ background:rgba(255,255,255,.4); }
 .discover-quote.pin-sage{ background:linear-gradient(135deg,#dbe9f4,#bdd5e8); box-shadow:4px 5px 18px rgba(0,0,0,.22); transform:rotate(1.4deg); }
 .discover-quote.pin-sage .discover-quote-text{ color:#2a3424; font-size:18px; line-height:1.55; font-weight:400; }
+/* pin-wide: ca. jedes 3. Zitat im Original — unabhaengig von der Farbe groesser/fetter fuer Abwechslung */
+.discover-quote.pin-wide .discover-quote-text{ font-size:23px !important; font-weight:700 !important; letter-spacing:-.01em; line-height:1.35 !important; }
 @media(max-width:480px){
   .discover-quote{ padding:16px 15px 14px; }
   .discover-quote-text{ font-size:14px !important; line-height:1.45 !important; }
+  .discover-quote.pin-wide .discover-quote-text{ font-size:17px !important; line-height:1.3 !important; }
   .discover-quote-author{ font-size:10px; margin-top:8px; }
 }
 
