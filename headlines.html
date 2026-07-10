@@ -1,0 +1,655 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Folio.wax – Headlines (Ausgabe Nr. 190, 9. Juli 2026)</title>
+<style>
+  :root{
+    --paper:#F5F1E8;
+    --ink:#14253F;
+    --ink-soft:#6B6255;
+    --ink-faint:#8C8474;
+    --rule:#C7BFA9;
+    --rule-strong:#14253F;
+    --flag:#C8632A;
+    --flag-ink:#FBF3E7;
+    --box-navy:#14253F;
+    --box-navy-ink:#F5F1E8;
+    --font-display:Georgia,"Iowan Old Style","Times New Roman",Times,serif;
+    --font-sans:"Satoshi","General Sans",-apple-system,BlinkMacSystemFont,"Segoe UI",Inter,Roboto,sans-serif;
+  }
+  /* Bewusst einthemig: eine Zeitungsseite hat kein "Dark Mode"-Gegenstück. */
+
+  *{box-sizing:border-box;}
+  a{color:inherit;text-decoration:none;}
+  .wx-root{
+    background:var(--paper);
+    color:var(--ink);
+    font-family:var(--font-sans);
+    padding:0 0 60px;
+    -webkit-font-smoothing:antialiased;
+  }
+  .wx-wrap{max-width:1180px;margin:0 auto;padding:0 26px;}
+
+  /* ================= MASTHEAD ================= */
+  .wx-back-link{display:inline-block;margin:18px 0 0;font-family:var(--font-sans);font-size:11px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--ink-faint);}
+  .wx-back-link:hover{color:var(--flag);}
+  .wx-masthead{border-bottom:1px solid var(--rule);padding:34px 0 0;margin-bottom:30px;}
+  .wx-nameplate{text-align:center;font-family:var(--font-display);font-weight:700;font-size:44px;letter-spacing:.02em;color:var(--ink);margin:0;}
+  .wx-nameplate .dot{color:var(--flag);padding:0 10px;}
+  .wx-tagline{text-align:center;font-size:11px;letter-spacing:.32em;text-transform:uppercase;color:var(--ink-soft);margin:6px 0 18px;}
+  .wx-dateline{display:flex;align-items:center;justify-content:space-between;border-top:1px solid var(--rule-strong);border-bottom:3px solid var(--rule-strong);padding:9px 0;font-size:12px;color:var(--ink-soft);}
+  .wx-dateline b{color:var(--ink);font-weight:700;}
+  .wx-dateline .mid{font-family:var(--font-display);font-style:italic;font-size:13px;color:var(--ink);}
+  .wx-dateline .ed{font-weight:700;color:var(--flag);letter-spacing:.03em;}
+
+  /* ================= LEAD + RAIL ================= */
+  .wx-top{display:grid;grid-template-columns:2fr 1fr;gap:44px;margin-bottom:8px;}
+  @media (max-width:940px){ .wx-top{grid-template-columns:1fr;gap:30px;} }
+  .wx-top aside{display:flex;flex-direction:column;}
+
+  .wx-kicker{font-size:11px;font-weight:700;letter-spacing:.16em;text-transform:uppercase;color:var(--flag);margin-bottom:8px;display:block;}
+
+  /* Ganzer Leitartikel (Ueberschrift+Text) ist EIN Link — kein separater "Quelle"-Link mehr noetig */
+  a.wx-lead-link{display:block;color:inherit;}
+  a.wx-lead-link:hover h1{color:var(--flag);}
+  .wx-lead h1{font-family:var(--font-display);font-weight:700;font-size:34px;line-height:1.12;margin:0 0 12px;text-wrap:balance;color:var(--ink);}
+  .wx-lead .dek{font-family:var(--font-display);font-style:italic;font-size:17px;line-height:1.4;color:var(--ink-soft);margin:0 0 18px;padding-bottom:18px;border-bottom:1px solid var(--rule);}
+  .wx-lead .body{columns:2;column-gap:28px;column-rule:1px solid var(--rule);font-size:14.5px;line-height:1.6;color:var(--ink);}
+  .wx-lead .body p{margin:0 0 14px;}
+  .wx-lead .dropcap{float:left;font-family:var(--font-display);font-weight:700;font-size:58px;line-height:.72;padding:5px 7px 0 0;color:var(--ink);}
+  .wx-byline{margin-top:12px;font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:var(--ink-faint);}
+
+  /* ---- "Am Rande": mehrere kurze Meldungen, fuellen die Flaeche unter dem Leitartikel ---- */
+  .wx-hl-row{display:grid;grid-template-columns:repeat(3,1fr);gap:24px;margin-top:6px;}
+  @media (max-width:900px){ .wx-hl-row{grid-template-columns:repeat(2,1fr);} }
+  @media (max-width:560px){ .wx-hl-row{grid-template-columns:1fr;} }
+  a.wx-hl-card{display:block;}
+  a.wx-hl-card:hover h3{color:var(--flag);}
+  .wx-hl-card h3{font-family:var(--font-display);font-weight:700;font-size:15.5px;line-height:1.28;margin:0 0 6px;color:var(--ink);}
+  .wx-hl-card p{font-size:12px;line-height:1.48;color:var(--ink-soft);margin:0 0 6px;}
+  .wx-hl-card .src{font-size:10px;letter-spacing:.08em;text-transform:uppercase;color:var(--ink-faint);}
+
+  /* ---- Zweite Meldung unter den Kaesten ---- */
+  .wx-lead2{margin-top:24px;padding-top:22px;border-top:1px solid var(--rule);}
+  .wx-lead2 a.wx-lead-link:hover h2{color:var(--flag);}
+  .wx-lead2 h2{font-family:var(--font-display);font-weight:700;font-size:23px;line-height:1.2;margin:0 0 10px;text-wrap:balance;color:var(--ink);}
+  .wx-lead2 .dek{font-family:var(--font-display);font-style:italic;font-size:14.5px;line-height:1.42;color:var(--ink-soft);margin:0 0 14px;padding-bottom:14px;border-bottom:1px solid var(--rule);}
+  .wx-lead2 .body{columns:1;font-size:13.5px;line-height:1.58;color:var(--ink);}
+  .wx-lead2 .body p{margin:0 0 12px;}
+
+  /* ---- Boxen ---- */
+  .wx-box{border:1.5px solid var(--ink);margin-bottom:26px;}
+  .wx-box-head{background:var(--flag);color:var(--flag-ink);font-size:11.5px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;padding:8px 14px;}
+  .wx-box--dark .wx-box-head{background:var(--box-navy);color:var(--box-navy-ink);}
+  .wx-box-body{padding:6px 16px 4px;}
+  .wx-tickrow{display:flex;flex-direction:column;padding:11px 0;border-bottom:1px solid var(--rule);font-variant-numeric:tabular-nums;}
+  .wx-tickrow:last-child{border-bottom:none;}
+  .wx-tickrow .t-head{font-family:var(--font-display);font-weight:700;font-size:13.5px;line-height:1.32;margin-bottom:3px;}
+  .wx-tickrow .t-dek{font-size:11px;color:var(--ink-soft);line-height:1.4;}
+  a.wx-tickrow:hover .t-head{color:var(--flag);}
+
+  /* ---- Anspieltipp: zurueck zur schlanken Box (dunkles Navy, orangener Button, Querformat) ---- */
+  .wx-box--dark{border-color:var(--box-navy);background:var(--box-navy);color:var(--box-navy-ink);}
+  .wx-box--dark .wx-box-head{background:var(--box-navy);color:var(--box-navy-ink);padding-left:16px;}
+  .wx-anspiel{display:flex;align-items:center;padding:16px 0 16px 16px;}
+  .wx-play-btn{width:40px;height:40px;margin-right:16px;border-radius:50%;background:var(--flag);border:0;flex:none;display:flex;align-items:center;justify-content:center;cursor:pointer;padding:0;}
+  .wx-play-btn:active{transform:scale(.92);}
+  .wx-play-btn svg{width:20px;height:20px;color:var(--box-navy);}
+  .wx-play-btn .icon-pause{display:none;}
+  .wx-play-btn.is-playing .icon-play{display:none;}
+  .wx-play-btn.is-playing .icon-pause{display:block;}
+  .wx-anspiel-txt{flex:0 1 auto;min-width:0;max-width:190px;font-size:12.5px;line-height:1.4;color:#CBD3E0;}
+  .wx-anspiel-txt b{display:block;color:#fff;font-family:var(--font-display);font-size:15px;margin-bottom:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+  .wx-anspiel-txt span{display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+  .wx-anspiel-spacer{flex:1 1 0;}
+  .wx-random-btn{width:60px;height:60px;border-radius:50%;flex:none;border:0;padding:0;cursor:pointer;background:transparent;display:block;overflow:hidden;}
+  .wx-random-btn img{width:100%;height:100%;display:block;}
+  .wx-random-btn:active{transform:scale(.92);}
+  .wx-anspiel-link{display:block;padding:0 16px 20px;font-family:var(--font-sans);font-size:11px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:#9FD8EA;}
+  .wx-anspiel-link:hover{text-decoration:underline;}
+
+  /* ================= RUBRIK-KOPF ================= */
+  .wx-rubric{
+    break-inside:avoid;break-after:avoid;
+    display:flex;align-items:baseline;gap:8px;
+    font-family:var(--font-sans);font-weight:700;font-style:normal;
+    font-size:14px;letter-spacing:.13em;text-transform:uppercase;
+    color:var(--flag);
+    margin:26px 0 14px;padding-bottom:8px;
+    border-bottom:1px solid var(--ink);
+  }
+  .wx-rubric:first-child{margin-top:0;}
+  .wx-rubric .dot{color:var(--flag);font-size:10px;}
+  /* "Am Rande" sitzt in der Leitartikel-Spalte, oberhalb der 5er-Reihe, ohne Spaltenfluss-Kontext */
+  .wx-lead .wx-rubric{margin-top:22px;padding-top:20px;border-top:1px solid var(--rule);}
+
+  /* ================= SPALTENFLUSS ================= */
+  .wx-columns{columns:3;column-gap:34px;column-rule:1px solid var(--rule);border-top:3px double var(--rule-strong);padding-top:26px;margin-top:18px;}
+  @media (max-width:940px){ .wx-columns{columns:2;} }
+  @media (max-width:600px){ .wx-columns{columns:1;} }
+
+  /* Digest-Items: 3 kompakte Meldungen pro Rubrik, Ueberschrift+Text komplett verlinkt */
+  a.wx-digest-item{display:block;break-inside:avoid;margin:0 0 12px;padding-bottom:11px;border-bottom:1px solid var(--rule);}
+  a.wx-digest-item:last-of-type{border-bottom:none;}
+  a.wx-digest-item:hover h4{color:var(--flag);}
+  .wx-digest-item h4{font-family:var(--font-display);font-weight:700;font-size:14.5px;line-height:1.3;margin:0 0 3px;color:var(--ink);}
+  .wx-digest-item p{font-size:11.8px;line-height:1.46;color:var(--ink-soft);margin:0;}
+
+  /* Kein Rahmen mehr oben/unten — Zitat sitzt frei, mit gleich grossem Abstand nach oben/unten */
+  .wx-pullquote{column-span:all;text-align:center;max-width:680px;margin:56px auto 56px;padding:0;}
+  .wx-pullquote a{display:block;color:inherit;}
+  .wx-pullquote a:hover p{color:var(--flag);}
+  .wx-pullquote .mark{font-family:var(--font-display);font-size:56px;color:var(--flag);line-height:.4;display:block;margin-bottom:10px;}
+  .wx-pullquote p{font-family:var(--font-display);font-style:italic;font-size:26px;line-height:1.46;color:var(--ink);margin:0 0 12px;text-wrap:balance;}
+  .wx-pullquote .src{font-size:12px;letter-spacing:.14em;text-transform:uppercase;color:var(--ink-faint);}
+
+  .wx-aside-quote{flex:1 1 auto;display:flex;flex-direction:column;justify-content:center;margin:-26px 0 0;text-align:center;padding:0 6px;}
+  .wx-aside-quote a{display:block;color:inherit;}
+  .wx-aside-quote a:hover p{color:var(--flag);}
+  .wx-aside-quote .mark{font-family:var(--font-display);font-size:56px;color:var(--flag);line-height:.4;display:block;margin-bottom:10px;}
+  .wx-aside-quote p{font-family:var(--font-display);font-style:italic;font-size:26px;line-height:1.46;color:var(--ink);margin:0 0 12px;text-wrap:balance;}
+  .wx-aside-quote .src{font-size:12px;letter-spacing:.14em;text-transform:uppercase;color:var(--ink-faint);}
+
+  /* ================= PODCASTS ================= */
+  .wx-pod-section{border-top:3px double var(--rule-strong);padding-top:22px;margin-top:34px;}
+  .wx-pod-head{display:flex;align-items:baseline;gap:14px;margin-bottom:8px;flex-wrap:wrap;}
+  .wx-pod-eyebrow{font-size:11px;font-weight:700;letter-spacing:.24em;text-transform:uppercase;color:var(--flag);}
+  .wx-pod-head h2{font-family:var(--font-display);font-weight:700;font-size:24px;margin:0;color:var(--ink);}
+  .wx-pod-count{margin-left:auto;font-size:11px;color:var(--ink-faint);letter-spacing:.05em;align-self:flex-end;}
+  .wx-pod-dek{font-family:var(--font-display);font-style:italic;font-size:15px;line-height:1.5;color:var(--ink-soft);margin:0 0 22px;max-width:680px;}
+  .wx-pod-sub{display:flex;align-items:baseline;gap:9px;font-size:11px;font-weight:700;letter-spacing:.2em;text-transform:uppercase;color:var(--ink-faint);margin:0 0 12px;padding-bottom:6px;border-bottom:1px solid var(--rule);}
+
+  .wx-wave{flex:none;display:flex;align-items:flex-end;gap:2px;width:16px;height:14px;}
+  .wx-wave i{display:block;width:2.5px;background:var(--flag);border-radius:1px;}
+
+  .wx-fav-strip{display:grid;grid-template-columns:repeat(3,1fr);gap:22px;margin-bottom:30px;}
+  @media (max-width:760px){ .wx-fav-strip{grid-template-columns:1fr;gap:16px;} }
+  a.wx-fav-card{display:block;border-left:2px solid var(--flag);padding-left:14px;}
+  a.wx-fav-card:hover h3{color:var(--flag);}
+  .wx-fav-top{display:flex;align-items:center;gap:8px;margin-bottom:6px;}
+  .wx-fav-show{font-size:10.5px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;color:var(--ink-soft);}
+  .wx-fav-card h3{font-family:var(--font-display);font-weight:700;font-size:16px;line-height:1.28;margin:0 0 5px;color:var(--ink);}
+  .wx-fav-card p{font-size:12px;line-height:1.48;color:var(--ink-soft);margin:0;}
+
+  a.wx-podbar{display:flex;align-items:center;gap:16px;padding:13px 0;border-bottom:1px solid var(--rule);}
+  a.wx-podbar:last-child{border-bottom:none;}
+  a.wx-podbar:hover h3{color:var(--flag);}
+  .wx-pod-mark{flex:none;width:20px;text-align:center;font-family:var(--font-display);font-weight:700;font-size:14px;color:var(--flag);}
+  .wx-pod-show{flex:0 0 172px;line-height:1.3;}
+  .wx-pod-show .name{display:block;font-size:10.5px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;color:var(--ink);}
+  .wx-pod-show .genre{display:block;font-size:10px;color:var(--ink-faint);margin-top:1px;}
+  .wx-pod-mid{flex:1 1 auto;min-width:0;}
+  .wx-pod-mid h3{font-family:var(--font-display);font-weight:700;font-size:14.5px;line-height:1.25;margin:0 0 2px;color:var(--ink);}
+  .wx-pod-mid p{font-size:11.8px;line-height:1.4;color:var(--ink-soft);margin:0;}
+  @media (max-width:700px){
+    a.wx-podbar{flex-wrap:wrap;}
+    .wx-pod-show{flex:0 0 100%;order:-1;display:flex;gap:8px;align-items:baseline;}
+    .wx-pod-mid{flex:1 1 100%;order:1;margin:2px 0 0;}
+  }
+
+  .wx-endnote{margin-top:36px;padding-top:16px;border-top:1px solid var(--rule);font-size:11.5px;color:var(--ink-faint);line-height:1.6;max-width:760px;}
+  .wx-endnote b{color:var(--ink-soft);}
+</style>
+
+
+</head>
+<body>
+<div class="wx-root">
+  <div class="wx-wrap">
+
+    <a class="wx-back-link" href="index.html">&larr; Folio.wax</a>
+
+    <header class="wx-masthead">
+      <h1 class="wx-nameplate">FOLIO<span class="dot">·</span>WAX</h1>
+      <div class="wx-tagline">Headlines</div>
+      <div class="wx-dateline">
+        <span><b>Freitag, 10. Juli 2026</b></span>
+        <span class="mid">Sorgfältig kuratiert für den Aktienclub</span>
+        <span class="ed">Ausgabe Nr. 191-1</span>
+      </div>
+    </header>
+
+    <div class="wx-top">
+      <article class="wx-lead">
+        <span class="wx-kicker">Ausland · Leitartikel</span>
+        <a class="wx-lead-link" href="https://www.t-online.de/nachrichten/ausland/id_101333042/trump-waffenruhe-im-iran-krieg-ist-aus-meiner-sicht-beendet.html" target="_blank" rel="noopener">
+          <h1>Trump erklärt die Iran-Waffenruhe für beendet</h1>
+          <p class="dek">Nach neuen US-Angriffen auf rund 170 Ziele im Iran schlägt Teheran mit Drohnen gegen US-Stützpunkte am Golf zurück — die Börsen weltweit reagieren nervös.</p>
+          <div class="body">
+            <p><span class="dropcap">A</span>m Rande des Nato-Gipfels in Ankara erklärte US-Präsident Donald Trump die im Juni vereinbarte Waffenruhe mit dem Iran für gescheitert: „Ich denke, es ist vorbei." In der Nacht zuvor hatten US-Streitkräfte nach eigenen Angaben rund 170 iranische Ziele angegriffen — Luftabwehrsysteme, Küstenüberwachung, Raketen- und Drohnenlager sowie Marineeinrichtungen entlang der iranischen Küste.</p>
+            <p>Der Iran reagierte nach Angaben der Revolutionsgarden mit Drohnenangriffen auf „US-Stützpunkte und strategische Zentren" in Bahrain, Kuwait und Katar. Auslöser des neuen Schlagabtauschs ist ein Streit über die Auslegung des im Juni geschlossenen Rahmenabkommens, das eine 60-tägige Verhandlungsphase über das iranische Atomprogramm, die Kontrolle der Straße von Hormus und Teherans Einfluss in der Region vorsah.</p>
+            <p>An den Finanzmärkten sorgt die Eskalation für Verunsicherung: Der Ölpreis zog binnen weniger Tage um mehr als zehn Prozent an, der DAX rutschte zeitweise unter die Marke von 25.000 Punkten. Wie lange sich die Lage zuspitzt, dürfte auch davon abhängen, ob es am Rande der laufenden Gespräche noch zu einer diplomatischen Kehrtwende kommt.</p>
+          </div>
+        </a>
+
+        <div class="wx-rubric"><span class="dot">◆</span>Finanzen · Börse</div>
+        <div class="wx-hl-row">
+          <a class="wx-hl-card" href="https://www.wallstreet-online.de/nachricht/21090528-zweiwochenhoch-oelpreise-us-angriffen-iran" target="_blank" rel="noopener">
+            <h3>Ölpreis auf Zweiwochenhoch</h3>
+            <p>Brent-Rohöl springt nach der erneuten Iran-Eskalation auf 78,94 Dollar je Barrel — mehr als zehn Prozent teurer als noch vor drei Tagen.</p>
+          </a>
+          <a class="wx-hl-card" href="https://www.wiwo.de/finanzen/boerse/boerse-waffenruhe-im-iran-krieg-wohl-vorbei-dax-knickt-ein/100238790.html" target="_blank" rel="noopener">
+            <h3>DAX rutscht unter 25.000 Punkte</h3>
+            <p>Der Leitindex verliert zeitweise 2,3 Prozent, nachdem Trump die Waffenruhe mit dem Iran für beendet erklärt hat.</p>
+          </a>
+          <a class="wx-hl-card" href="https://www.deraktionaer.de/artikel/aktien/rheinmetall-iran-konflikt-raketen-offensive-aktie-groesster-dax-gewinner-20396758.html" target="_blank" rel="noopener">
+            <h3>Rheinmetall größter DAX-Verlierer</h3>
+            <p>Die Rüstungsaktie gibt trotz der Kriegsangst rund vier Prozent ab und bleibt Schlusslicht im Leitindex.</p>
+          </a>
+          <a class="wx-hl-card" href="https://markteinblicke.de/131458/2026/07/goldpreis-schwankt-newmont-liefert/" target="_blank" rel="noopener">
+            <h3>Gold nähert sich wieder 4.100 Dollar</h3>
+            <p>Anleger suchen angesichts der Nahost-Eskalation erneut Zuflucht im Edelmetall.</p>
+          </a>
+          <a class="wx-hl-card" href="https://www.bundesbank.de/de/aufgaben/themen/deutschland-prognose-der-bundesbank-sinkende-inflation-aber-noch-keine-entwarnung-920362" target="_blank" rel="noopener">
+            <h3>Inflation sinkt auf 2,4 Prozent</h3>
+            <p>Die Bundesbank sieht trotz des Rückgangs noch keine Entwarnung — die EZB entscheidet am 23. Juli über die Zinsen.</p>
+          </a>
+        </div>
+
+        <article class="wx-lead2">
+          <span class="wx-kicker">Wirtschaft</span>
+          <a class="wx-lead-link" href="https://www.nw.de/nachrichten/wirtschaft/24371471_VW-Aufsichtsrat-endet-ohne-Klarheit-zu-Sparplaenen.html" target="_blank" rel="noopener">
+            <h2>VW-Aufsichtsrat billigt Sparplan — Werksschließungen bleiben vertagt</h2>
+            <p class="dek">Bis zu 100.000 Stellen und vier Werke stehen im Raum, doch der Aufsichtsrat verschiebt die entscheidenden Beschlüsse auf später.</p>
+            <div class="body">
+              <p>Der Aufsichtsrat von Volkswagen hat am Donnerstagabend den Spar- und Renditeplan von Konzernchef Oliver Blume gebilligt — zentrale Entscheidungen zu Werksschließungen und konkretem Stellenabbau aber vertagt. Bis 2030 soll die Modellpalette um bis zu 50 Prozent schrumpfen, im Raum stehen Einsparungen bei Personal und Kapazitäten von bis zu 100.000 Stellen an vier Standorten.</p>
+              <p>Betroffen wären Zwickau und Emden, die laut Berichten ab 2031 schließen könnten, ein Jahr später Hannover; das Audi-Werk in Neckarsulm stünde ab 2034 vor dem Aus. Konkrete Zahlen zum Stellenabbau nannte der Vorstand nicht — an mehr als einem Dutzend Standorten hatten zuvor Beschäftigte protestiert, allein in Emden zählte die IG Metall 1.500 Teilnehmer.</p>
+            </div>
+          </a>
+        </article>
+      </article>
+
+      <aside>
+        <div class="wx-box">
+          <div class="wx-box-head">Märkte · USA</div>
+          <div class="wx-box-body">
+            <a class="wx-tickrow" href="https://www.cnbc.com/2026/07/08/stock-market-today-live-updates.html" target="_blank" rel="noopener"><div class="t-head">US-Indizes im Höhenflug</div><div class="t-dek">Nasdaq +1,3&nbsp;% auf 26.207 Punkte, S&amp;P&nbsp;500 +0,81&nbsp;%, Dow +139 Punkte — Chip-Rally treibt die Kurse.</div></a>
+            <a class="wx-tickrow" href="https://www.cnbc.com/2026/06/24/micron-is-techs-margin-king-memory-crisis-pushes-it-past-nvidia-meta.html" target="_blank" rel="noopener"><div class="t-head">Micron überholt Nvidia und Meta</div><div class="t-dek">Speicher-Krise macht Micron zum neuen Margen-König — Sandisk-Aktie springt um 7,6&nbsp;%.</div></a>
+            <a class="wx-tickrow" href="https://www.cnbc.com/2026/07/08/fed-minutes-june-2026-.html" target="_blank" rel="noopener"><div class="t-head">Fed-Protokoll zeigt tiefe Uneinigkeit</div><div class="t-dek">Notenbanker streiten laut Sitzungsprotokoll vom Juni offen über den weiteren Zinskurs.</div></a>
+            <a class="wx-tickrow" href="https://www.cnbc.com/2026/07/01/warsh-faces-multiple-alternative-inflation-signs-as-fed-charts-new-course.html" target="_blank" rel="noopener"><div class="t-head">Warsh: Inflation bleibt zu hoch</div><div class="t-dek">Fed-Chef sieht trotz KI-Optimismus noch keinen Grund für schnelle Zinssenkungen.</div></a>
+            <a class="wx-tickrow" href="https://www.cnbc.com/2026/07/09/5-things-to-know-before-the-stock-market-opens.html" target="_blank" rel="noopener"><div class="t-head">Delta eröffnet die Berichtssaison</div><div class="t-dek">Fluggesellschaft gilt als erster Stimmungstest für Reiselust und US-Konjunktur.</div></a>
+            <a class="wx-tickrow" href="https://www.cnbc.com/2026/07/06/nvidia-kyber-rack-system-delays-manufacturing-taiwan-rubin-chips-.html" target="_blank" rel="noopener"><div class="t-head">Nvidias KI-Racks verspätet</div><div class="t-dek">Nächste Generation laut SemiAnalysis erst 2028, Fertigungsprobleme in Taiwan.</div></a>
+            <a class="wx-tickrow" href="https://www.cnbc.com/2026/06/30/nike-nke-q4-2026-earnings.html" target="_blank" rel="noopener"><div class="t-head">Nike übertrifft Erwartungen</div><div class="t-dek">Trotz 12&nbsp;% weniger Umsatz in China winkt eine Zollrückerstattung von 986&nbsp;Mio.&nbsp;$.</div></a>
+            <a class="wx-tickrow" href="https://www.cnbc.com/2026/06/29/aerovironment-stock-soars-on-earnings-beat-backlog-grows-to-1point2b.html" target="_blank" rel="noopener"><div class="t-head">AeroVironment schießt um 28&nbsp;% hoch</div><div class="t-dek">Auftragsbestand wächst nach starken Zahlen auf 1,2&nbsp;Mrd.&nbsp;$.</div></a>
+            <a class="wx-tickrow" href="https://www.cnbc.com/2026/06/26/spacex-added-to-nasdaq-100.html" target="_blank" rel="noopener"><div class="t-head">SpaceX kommt in den Nasdaq-100</div><div class="t-dek">Fast-Track-Aufnahme dürfte massive ETF-Nachfrage auslösen.</div></a>
+            <a class="wx-tickrow" href="https://www.cnbc.com/2026/07/02/jersey-mikes-files-for-ipo.html" target="_blank" rel="noopener"><div class="t-head">Jersey Mike's strebt an die Börse</div><div class="t-dek">Sandwich-Kette meldet zuletzt 50&nbsp;% Wachstum im Filialgeschäft.</div></a>
+          </div>
+        </div>
+
+        <div class="wx-box wx-box--dark">
+          <div class="wx-box-head">Anspieltipp</div>
+          <div class="wx-anspiel">
+            <button class="wx-play-btn" id="anspielPlayBtn" type="button" aria-label="Abspielen/Pause" title="Abspielen/Pause">
+              <svg class="icon-play" viewBox="0 0 24 24" aria-hidden="true">
+                <path d="M8 5.5v13a1 1 0 0 0 1.53.85l10.2-6.5a1 1 0 0 0 0-1.7L9.53 4.65A1 1 0 0 0 8 5.5Z" fill="currentColor"/>
+              </svg>
+              <svg class="icon-pause" viewBox="0 0 24 24" aria-hidden="true">
+                <rect x="6.5" y="5" width="4" height="14" rx="1.5" fill="currentColor"/>
+                <rect x="13.5" y="5" width="4" height="14" rx="1.5" fill="currentColor"/>
+              </svg>
+            </button>
+            <div class="wx-anspiel-txt"><b id="anspielTitle">—</b><span id="anspielArtist"></span></div>
+            <span class="wx-anspiel-spacer" aria-hidden="true"></span>
+            <button class="wx-random-btn" id="anspielRandomBtn" type="button" aria-label="Zufälligen Song abspielen" title="Zufälligen Song abspielen">
+              <img src="Random%20Play%20Button.png" alt="" draggable="false">
+            </button>
+            <span class="wx-anspiel-spacer" aria-hidden="true"></span>
+          </div>
+          <a class="wx-anspiel-link" href="https://hitjourney.com" target="_blank" rel="noopener">hitjourney.com</a>
+        </div>
+
+        <blockquote class="wx-aside-quote" id="asideQuote" style="display:none">
+          <a href="https://mein-lieber-sohn.de" target="_blank" rel="noopener">
+            <span class="mark">&ldquo;</span>
+            <p id="asideQuoteText"></p>
+            <span class="src" id="asideQuoteSrc"></span>
+          </a>
+        </blockquote>
+      </aside>
+    </div>
+
+    <div class="wx-columns">
+
+      <div class="wx-rubric"><span class="dot">◆</span>Politik</div>
+      <a class="wx-digest-item" href="https://www.ad-hoc-news.de/wirtschaft/gesundheitsreform-bundestag-beschliesst-kassensparpaket-ab-10-juli/69734778" target="_blank" rel="noopener">
+        <h4>Bundestag beschließt Gesundheitsreform</h4>
+        <p>Das GKV-Beitragssatzstabilisierungsgesetz kommt trotz abgelehnter Eilanträge von Grünen und Linken vor dem Verfassungsgericht — ab 2027 soll die Kassenlage um 16,3 Milliarden Euro entlastet werden.</p>
+      </a>
+      <a class="wx-digest-item" href="https://www.zdfheute.de/politik/deutschland/afd-parteitag-erfurt-chrupalla-weidel-100.html" target="_blank" rel="noopener">
+        <h4>AfD bestätigt Doppelspitze</h4>
+        <p>Weidel und Chrupalla werden beim Parteitag in Erfurt mit großer Mehrheit wiedergewählt, während rund 30.000 Menschen dagegen protestieren.</p>
+      </a>
+      <a class="wx-digest-item" href="https://www.news.de/politik/859715628/demos-gegen-rechtsextremismus-gegen-afd-heute-freitag-10-juli-2026-demonstrationen-termine-aktuell-neumuenster-betzdorf-erlangen/1/" target="_blank" rel="noopener">
+        <h4>Bundesweite Demos gegen Rechtsextremismus</h4>
+        <p>Am Freitag sind in zahlreichen Städten Kundgebungen gegen AfD, Menschenhass und Rechtsruck angemeldet.</p>
+      </a>
+
+      <div class="wx-rubric"><span class="dot">◆</span>Wirtschaft</div>
+      <a class="wx-digest-item" href="https://www.onvista.de/news/2026/07-09-deutsche-exporte-steigen-vierten-monat-in-folge-us-geschaeft-waechst-0-20-26530395" target="_blank" rel="noopener">
+        <h4>Exporte legen viertes Mal in Folge zu</h4>
+        <p>Die deutschen Ausfuhren in die USA wachsen im Mai um 23 Prozent, auch das China-Geschäft zieht an.</p>
+      </a>
+      <a class="wx-digest-item" href="https://www.zdfheute.de/wirtschaft/insolvenzen-deutschland-pleitewelle-firmen-chancen-wirtschaft-100.html" target="_blank" rel="noopener">
+        <h4>Insolvenzwelle nimmt Rekordtempo an</h4>
+        <p>12.900 Firmenpleiten im ersten Halbjahr, Höchststand seit der Finanzkrise laut IWH — Besserung frühestens 2027.</p>
+      </a>
+      <a class="wx-digest-item" href="https://www.adac.de/news/kerosin-knappheit-sommerurlaub-flug/" target="_blank" rel="noopener">
+        <h4>Kerosin-Knappheit trübt Reisesaison</h4>
+        <p>Der ADAC warnt vor steigenden Ticketpreisen und Engpässen im Sommerreiseverkehr.</p>
+      </a>
+
+      <div class="wx-rubric"><span class="dot">◆</span>Tech &amp; Digital</div>
+      <a class="wx-digest-item" href="https://www.ad-hoc-news.de/wissenschaft/alibaba-sperrt-claude-ab-10-juli-28-8-millionen-angriffe-entdeckt/69691721" target="_blank" rel="noopener">
+        <h4>Alibaba sperrt Zugriff auf Claude</h4>
+        <p>Anthropic wirft dem chinesischen Konzern den größten bekannten Distillation-Angriff auf seine KI-Modelle vor.</p>
+      </a>
+      <a class="wx-digest-item" href="https://www.heise.de/en/news/Five-Eyes-warn-AI-is-rapidly-changing-cyber-risks-11340692.html" target="_blank" rel="noopener">
+        <h4>Five Eyes warnen vor KI-Cyberrisiko</h4>
+        <p>Die Geheimdienste von fünf Staaten sehen die Sicherheitslage künftig als Chefsache, nicht mehr nur als IT-Thema.</p>
+      </a>
+      <a class="wx-digest-item" href="https://www.ad-hoc-news.de/wissenschaft/android-google-startet-fake-call-detection-gegen-ki-betrug/69601222" target="_blank" rel="noopener">
+        <h4>Google schützt Android vor KI-Betrugsanrufen</h4>
+        <p>Die neue Fake-Call-Erkennung prüft eingehende Anrufe direkt auf dem Gerät, ganz ohne Cloud-Abgleich.</p>
+      </a>
+
+      <div class="wx-rubric"><span class="dot">◆</span>Sport</div>
+      <a class="wx-digest-item" href="https://www.t-online.de/sport/fussball/nationalmannschaft-deutschland/id_101332108/klopp-intimus-watzke-wird-aktiv-signal-zu-voeller-aus-usa.html" target="_blank" rel="noopener">
+        <h4>Klopp-Poker nimmt Fahrt auf</h4>
+        <p>DFB-Chef Neuendorf und Vize Watzke fliegen zu Gesprächen mit dem designierten Bundestrainer nach New York.</p>
+      </a>
+      <a class="wx-digest-item" href="https://www.sportschau.de/radsport/tourdefrance/pogacar-faehrt-am-tourmalet-allen-davon-und-holt-gelb-zurueck,etappenbericht-6-102.html" target="_blank" rel="noopener">
+        <h4>Pogačar holt sich Gelb mit Solo zurück</h4>
+        <p>42 Kilometer im Alleingang durch die Pyrenäen auf Etappe 6 der Tour de France.</p>
+      </a>
+      <a class="wx-digest-item" href="https://www.skysports.com/tennis/news/12110/13562014/wimbledon-2026-karolina-muchova-beats-coco-gauff-after-epic-tie-break-to-set-up-all-czech-final-against-linda-noskova" target="_blank" rel="noopener">
+        <h4>Erstes Tschechien-Duell im Wimbledon-Finale</h4>
+        <p>Karolina Muchová wirft Coco Gauff im Tiebreak-Krimi raus und trifft nun auf Landsfrau Linda Nosková.</p>
+      </a>
+
+      <div class="wx-rubric"><span class="dot">◆</span>Wissen</div>
+      <a class="wx-digest-item" href="https://www.scinexx.de/news/geowissen/das-kaspische-meer-schrumpft/" target="_blank" rel="noopener">
+        <h4>Kaspisches Meer trocknet aus</h4>
+        <p>Der Pegel des größten Binnengewässers der Welt sinkt jährlich um sieben Zentimeter — Forscher warnen vor einem zweiten Aralsee.</p>
+      </a>
+      <a class="wx-digest-item" href="https://www.scinexx.de/news/medizin/neue-therapie-fuer-unbehandelbaren-lungenkrebs-entdeckt/" target="_blank" rel="noopener">
+        <h4>Hoffnung bei bislang unbehandelbarem Lungenkrebs</h4>
+        <p>Der Wirkstoff RMC-8839 bremst im Labor gezielt Tumoren mit KRAS-G13C-Mutation, klinische Studien sollen bald folgen.</p>
+      </a>
+      <a class="wx-digest-item" href="https://www.scinexx.de/news/kosmos/weltraumteleskop-euclid-hat-frueheste-bisher-bekannte-quasare-entdeckt/" target="_blank" rel="noopener">
+        <h4>Euclid entdeckt älteste Quasare des Universums</h4>
+        <p>Eine KI filtert 31 Kandidaten aus zig Millionen Lichtquellen heraus und verdoppelt den bekannten Bestand aus der Frühzeit des Kosmos.</p>
+      </a>
+
+      <div class="wx-rubric"><span class="dot">◆</span>Leben &amp; Kultur</div>
+      <a class="wx-digest-item" href="https://www.tagesschau.de/inland/regional/hessen/buechner-preis-wunnicke-100.html" target="_blank" rel="noopener">
+        <h4>Christine Wunnicke erhält den Büchner-Preis</h4>
+        <p>Die Jury würdigt ihre Romane als „brillante Kunst" — eine der höchsten Auszeichnungen der deutschsprachigen Literatur.</p>
+      </a>
+      <a class="wx-digest-item" href="https://berlinmagazine.de/dikka-berlin-2026-boah-ist-das-krass-2-uber-arena-tickets" target="_blank" rel="noopener">
+        <h4>Nashorn Dikka rockt die Uber Arena</h4>
+        <p>Die Doppel-Show des Kinder-Acts in Berlin ist im Nu ausverkauft.</p>
+      </a>
+      <a class="wx-digest-item" href="https://www.berlin-live.de/berlin/aktuelles/finch-rapper-berlin-konzert-kuendigt-id569311.html" target="_blank" rel="noopener">
+        <h4>Rapper Finch bespielt die Alte Försterei</h4>
+        <p>23.000 Tickets für sein Stadion-Heimspiel in Köpenick waren binnen einer Minute vergriffen.</p>
+      </a>
+
+      <div class="wx-rubric"><span class="dot">◆</span>Talk of Town</div>
+      <a class="wx-digest-item" href="https://www.klatsch-tratsch.de/aktuelles/bill-kaulitz-findet-klare-worte-zu-taylor-swifts-mega-hochzeit-2113232/" target="_blank" rel="noopener">
+        <h4>Bill Kaulitz nennt Taylor Swifts Hochzeit einen „dunklen Tag"</h4>
+        <p>Der Tokio-Hotel-Star spottet im eigenen Podcast über die Mega-Feier in New York.</p>
+      </a>
+      <a class="wx-digest-item" href="https://www.klatsch-tratsch.de/aktuelles/heidi-klum-verteidigt-altersunterschied-zu-ehemann-tom-kaulitz-2113207/" target="_blank" rel="noopener">
+        <h4>Heidi Klum verteidigt Altersunterschied zu Tom Kaulitz</h4>
+        <p>Gemeinsame deutsche Wurzeln seien der Schlüssel zu ihrer stabilen Ehe.</p>
+      </a>
+      <a class="wx-digest-item" href="https://www.klatsch-tratsch.de/aktuelles/timothee-chalamet-verraet-dune-part-three-ist-ein-anderer-film-als-die-beiden-vorgaenger-2113234/" target="_blank" rel="noopener">
+        <h4>Chalamet: „Dune: Teil Drei" wird ein anderer Film</h4>
+        <p>Der Schauspieler spricht von der emotionalsten Rolle seiner bisherigen Karriere.</p>
+      </a>
+
+      <blockquote class="wx-pullquote" id="mainQuote" style="display:none">
+        <a href="https://mein-lieber-sohn.de" target="_blank" rel="noopener">
+          <span class="mark">&ldquo;</span>
+          <p id="mainQuoteText"></p>
+          <span class="src" id="mainQuoteSrc"></span>
+        </a>
+      </blockquote>
+
+    </div>
+
+    <section class="wx-pod-section">
+      <div class="wx-pod-head">
+        <span class="wx-pod-eyebrow">🎧 Zum Reinhören</span>
+        <h2>Unsere Podcast-Empfehlungen</h2>
+        <span class="wx-pod-count">3 Favoriten · 6 Tagestipps</span>
+      </div>
+      <p class="wx-pod-dek">Vom Kriegsschauplatz am Golf bis zur Höhenluft der Tour de France — sechs frische Empfehlungen zu den Themen des Tages, plus drei Dauerbrenner, die immer eine Folge wert sind.</p>
+
+      <div class="wx-pod-sub">Die Dauerbrenner</div>
+      <div class="wx-fav-strip">
+        <a class="wx-fav-card" href="https://open.spotify.com/show/3tMwolVmLPxyXuZPQu26kQ" target="_blank" rel="noopener">
+          <div class="wx-fav-top"><span class="wx-wave"><i style="height:40%"></i><i style="height:90%"></i><i style="height:60%"></i></span><span class="wx-fav-show">The Pioneer Morning Briefing</span></div>
+          <h3>Der tägliche News-Espresso</h3>
+          <p>Steingart &amp; Team ordnen Politik und Wirtschaft — jeden Morgen in 20 Minuten.</p>
+        </a>
+        <a class="wx-fav-card" href="https://open.spotify.com/show/0ivn4wyUBScv57XS8vbVaa" target="_blank" rel="noopener">
+          <div class="wx-fav-top"><span class="wx-wave"><i style="height:70%"></i><i style="height:30%"></i><i style="height:95%"></i></span><span class="wx-fav-show">Hotel Matze</span></div>
+          <h3>Große Namen, ganz offen</h3>
+          <p>Matze Hielscher im langen, persönlichen Gespräch — Kult unter den Interview-Podcasts.</p>
+        </a>
+        <a class="wx-fav-card" href="https://open.spotify.com/show/4bGWMQA1ANGTgcysDo14aX" target="_blank" rel="noopener">
+          <div class="wx-fav-top"><span class="wx-wave"><i style="height:55%"></i><i style="height:95%"></i><i style="height:45%"></i></span><span class="wx-fav-show">Lanz + Precht</span></div>
+          <h3>Der Freitags-Disput fürs Denken</h3>
+          <p>Markus Lanz und Richard David Precht streiten sich wöchentlich durch die großen Fragen der Zeit.</p>
+        </a>
+      </div>
+
+      <div class="wx-pod-sub">Tagestipps</div>
+
+      <a class="wx-podbar" href="https://open.spotify.com/show/6kyGUIbKUH7G506XGX4lNk" target="_blank" rel="noopener">
+        <span class="wx-pod-mark">1</span>
+        <span class="wx-pod-show"><span class="name">Apokalypse &amp; Filterkaffee</span><span class="genre">Politik &amp; Tagesaktuelles</span></span>
+        <div class="wx-pod-mid"><h3>Iran, Nato und die neue Kriegsgefahr am Golf</h3><p>Micky Beisenherz ordnet Trumps Ansage zur geplatzten Waffenruhe und die Folgen für die Weltwirtschaft ein.</p></div>
+      </a>
+      <a class="wx-podbar" href="https://open.spotify.com/show/3qCwTQvK0ZwNnX23KMdUL6" target="_blank" rel="noopener">
+        <span class="wx-pod-mark">2</span>
+        <span class="wx-pod-show"><span class="name">Handelsblatt Today</span><span class="genre">Wirtschaft &amp; Börse</span></span>
+        <div class="wx-pod-mid"><h3>Volkswagen in der Krise: Was jetzt auf Arbeitnehmer zukommt</h3><p>Analyse der drastischen Sparmaßnahmen bei VW und deren Auswirkungen auf Industrie und Arbeitsmarkt.</p></div>
+      </a>
+      <a class="wx-podbar" href="https://open.spotify.com/show/2qiP4pYQXi8NMjHlCICmSq" target="_blank" rel="noopener">
+        <span class="wx-pod-mark">3</span>
+        <span class="wx-pod-show"><span class="name">Alles auf Aktien</span><span class="genre">Börse &amp; Finanzen</span></span>
+        <div class="wx-pod-mid"><h3>Öl, Gold und Rheinmetall: Wie der Iran-Konflikt die Märkte bewegt</h3><p>Warum der DAX unter 25.000 Punkte rutscht und welche Werte jetzt als sicherer Hafen gelten.</p></div>
+      </a>
+      <a class="wx-podbar" href="https://open.spotify.com/show/3gZaAYXAQAh09UlKbYaK49" target="_blank" rel="noopener">
+        <span class="wx-pod-mark">4</span>
+        <span class="wx-pod-show"><span class="name">ZEIT Verbrechen</span><span class="genre">True Crime &amp; Panorama</span></span>
+        <div class="wx-pod-mid"><h3>30.000 gegen einen Parteitag: Wenn Protest zum Sicherheitsrisiko wird</h3><p>Wie Behörden Großdemonstrationen wie die gegen den AfD-Parteitag in Erfurt absichern — ein Blick hinter die Kulissen.</p></div>
+      </a>
+      <a class="wx-podbar" href="https://open.spotify.com/show/2wlX1atNT6NG5rVs0Kmvqg" target="_blank" rel="noopener">
+        <span class="wx-pod-mark">5</span>
+        <span class="wx-pod-show"><span class="name">Rasenfunk – Bundesliga</span><span class="genre">Fußball &amp; Sport</span></span>
+        <div class="wx-pod-mid"><h3>Pogačar dominiert die Tour: Wer kann ihn noch stoppen?</h3><p>Eigentlich ein Fußball-Podcast — diesmal mit Blick auf die Machtdemonstration in den Pyrenäen.</p></div>
+      </a>
+      <a class="wx-podbar" href="https://open.spotify.com/show/0xkq762OekJOnosa34C8Se" target="_blank" rel="noopener">
+        <span class="wx-pod-mark">6</span>
+        <span class="wx-pod-show"><span class="name">Methodisch Inkorrekt!</span><span class="genre">Wissenschaft</span></span>
+        <div class="wx-pod-mid"><h3>Schrumpfendes Meer, neue Krebstherapie, älteste Quasare</h3><p>Die Wissenschaftswoche im Schnelldurchlauf — vom Kaspischen Meer bis zum jungen Universum.</p></div>
+      </a>
+    </section>
+
+    <p class="wx-endnote">
+      <b>Änderungen in dieser Runde:</b> Redaktionelle Struktur neu aufgesetzt — acht feste Rubriken (Politik, Wirtschaft, Finanzen &amp; Börse, Tech, Sport, Wissen, Leben &amp; Kultur, Talk of Town). Der Leitartikel trägt jetzt immer das echte Thema des Tages (heute: die geplatzte Iran-Waffenruhe), danach folgen fünf Finanzen-&amp;-Börse-Schlagzeilen an der Stelle der früheren „Am Rande"-Reihe. Darunter füllt ein zweiter, kleinerer Leitartikel (heute: VW-Aufsichtsrat) die bislang freie Fläche der Leitartikel-Spalte über deren volle Breite — unabhängig von der Zahl der Themen weiter unten. „Märkte · USA" (CNBC) und der Anspieltipp-Player bleiben unangetastet in der Seitenspalte. Die sieben übrigen Rubriken folgen weiter unten mit je mindestens drei Schlagzeilen, die Podcast-Tagestipps sind inhaltlich an die neuen Top-Themen angepasst. Ausgabennummer zählt jetzt den Tag des Jahres (10.&nbsp;Juli = Tag&nbsp;191), mit Suffix „-1" für die Morgenausgabe ab 6&nbsp;Uhr und „-2" für die Abendausgabe ab 18&nbsp;Uhr. Die zuvor freie Fläche unter dem Anspieltipp-Player zeigt jetzt ein zweites Zitat; beide Zitate (Haupt-Pullquote unten und das neue in der Seitenspalte) werden bei jedem Aufruf per Zufall aus dem echten Fundus von mein-lieber-sohn.de/data/quotes.json gezogen — gefiltert auf kurze, „angepinnte" Einträge (≤110&nbsp;Zeichen), damit nichts abgeschnitten werden muss, statt hartkodiertem Text.
+    </p>
+
+  </div>
+</div>
+
+<script>
+(function(){
+  const HJ_SB_URL = 'https://hioaqcwqzeqcvvikollq.supabase.co';
+  const HJ_SB_ANON = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imhpb2FxY3dxemVxY3Z2aWtvbGxxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzIzNTQ3MTgsImV4cCI6MjA4NzkzMDcxOH0.IvZ7YZwrhjNg8SwwO9rnXoiDwOVncY8iVcucmipmuFI';
+  const HJ_STATE_KEY = 'folioHitjourneyState';
+  let songs = [], idx = -1, audio = null, loaded = false;
+
+  function showSong(song){
+    const t = document.getElementById('anspielTitle');
+    const a = document.getElementById('anspielArtist');
+    if(t) t.textContent = song.title || '—';
+    if(a) a.textContent = song.artist || '';
+  }
+  function setPlayIcon(playing){
+    const btn = document.getElementById('anspielPlayBtn');
+    if(btn) btn.classList.toggle('is-playing', playing);
+  }
+  function saveState(){
+    if(idx < 0 || !songs.length) return;
+    try{
+      localStorage.setItem(HJ_STATE_KEY, JSON.stringify({
+        slug: songs[idx].slug,
+        currentTime: audio ? audio.currentTime : 0,
+        paused: audio ? audio.paused : true,
+        ts: Date.now()
+      }));
+    }catch(e){}
+  }
+  let __lastSave = 0;
+  function saveStateThrottled(){
+    const now = Date.now();
+    if(now - __lastSave > 3000){ __lastSave = now; saveState(); }
+  }
+  function ensureAudio(){
+    if(audio) return audio;
+    audio = new Audio();
+    audio.addEventListener('play', () => { setPlayIcon(true); saveState(); });
+    audio.addEventListener('pause', () => { setPlayIcon(false); saveState(); });
+    audio.addEventListener('timeupdate', saveStateThrottled);
+    // Nach Songende laeuft die Playlist automatisch in Zufallswiedergabe weiter.
+    audio.addEventListener('ended', () => playRandom());
+    return audio;
+  }
+  function playSong(song){
+    showSong(song);
+    const au = ensureAudio();
+    au.src = song.mp3_url; au.currentTime = 0;
+    loaded = true;
+    au.play().catch(()=>{});
+    saveState();
+  }
+  function togglePlayPause(){
+    if(!songs.length) return;
+    if(!loaded){ playSong(songs[idx]); return; }
+    const au = ensureAudio();
+    if(au.paused){ au.play().catch(()=>{}); } else { au.pause(); }
+  }
+  function playRandom(){
+    if(!songs.length) return;
+    if(songs.length > 1){
+      let n; do{ n = Math.floor(Math.random()*songs.length); }while(n===idx);
+      idx = n;
+    } else { idx = 0; }
+    playSong(songs[idx]);
+  }
+  window.addEventListener('pagehide', saveState);
+  window.addEventListener('beforeunload', saveState);
+
+  (async function init(){
+    try{
+      const headers = { apikey: HJ_SB_ANON, Authorization: 'Bearer ' + HJ_SB_ANON };
+      const tracksRes = await fetch(HJ_SB_URL + '/rest/v1/playlist_tracks?select=song_slug,position&playlist_slug=eq.songwriters-picks&order=position.asc', { headers });
+      if(!tracksRes.ok) return;
+      const tracks = await tracksRes.json();
+      if(!Array.isArray(tracks) || !tracks.length) return;
+      const orderedSlugs = tracks.map(t => t.song_slug);
+      const slugList = orderedSlugs.map(s=>'"'+s+'"').join(',');
+      const url = HJ_SB_URL + '/rest/v1/songs?select=slug,title,artist,mp3_url&slug=in.(' + slugList + ')';
+      const res = await fetch(url, { headers });
+      if(!res.ok) return;
+      const raw = await res.json();
+      if(!Array.isArray(raw) || !raw.length) return;
+      const bySlug = {};
+      raw.forEach(s => bySlug[s.slug] = s);
+      songs = orderedSlugs.map(slug => bySlug[slug]).filter(Boolean);
+      if(!songs.length) return;
+
+      // Laufende Wiedergabe von der anderen Folio.wax-Seite (Home/Headlines) übernehmen,
+      // statt neu von vorn/zufällig zu starten.
+      let resumed = false;
+      try{
+        const raw2 = localStorage.getItem(HJ_STATE_KEY);
+        if(raw2){
+          const st = JSON.parse(raw2);
+          if(st && st.slug && Date.now() - (st.ts||0) < 6*3600*1000){
+            const foundIdx = songs.findIndex(s => s.slug === st.slug);
+            if(foundIdx !== -1){
+              idx = foundIdx;
+              showSong(songs[idx]);
+              const au = ensureAudio();
+              const resumeTime = st.currentTime || 0;
+              const wasPlaying = !st.paused;
+              au.src = songs[idx].mp3_url;
+              loaded = true;
+              au.addEventListener('loadedmetadata', function onMeta(){
+                au.currentTime = resumeTime;
+                au.removeEventListener('loadedmetadata', onMeta);
+                if(wasPlaying) au.play().catch(()=>{});
+              });
+              resumed = true;
+            }
+          }
+        }
+      }catch(e){}
+      if(!resumed){
+        idx = Math.floor(Math.random() * songs.length);
+        showSong(songs[idx]);
+      }
+
+      const playBtn = document.getElementById('anspielPlayBtn');
+      if(playBtn) playBtn.addEventListener('click', function(e){
+        e.preventDefault(); e.stopPropagation();
+        togglePlayPause();
+      });
+      const randomBtn = document.getElementById('anspielRandomBtn');
+      if(randomBtn) randomBtn.addEventListener('click', function(e){
+        e.preventDefault(); e.stopPropagation();
+        playRandom();
+      });
+    }catch(e){ /* Netzwerk — Titel bleibt leer */ }
+  })();
+})();
+
+(async function(){
+  // Zwei Zitate aus dem echten Fundus von mein-lieber-sohn.de (data/quotes.json),
+  // zufällig gezogen und nach Länge gefiltert statt gekürzt, damit sie in die
+  // jeweilige Kartenhöhe passen — gleiche Logik wie renderDiscoverQuotes() in index.html.
+  try{
+    const res = await fetch('https://mein-lieber-sohn.de/data/quotes.json');
+    if(!res.ok) return;
+    const quotes = await res.json();
+    if(!Array.isArray(quotes) || quotes.length < 2) return;
+    const pool = quotes.filter(q => /pin/.test(q.classes || '') && q.de && q.de.length <= 110);
+    if(pool.length < 2) return;
+    const idx1 = Math.floor(Math.random() * pool.length);
+    let idx2 = Math.floor(Math.random() * pool.length);
+    while(idx2 === idx1) idx2 = Math.floor(Math.random() * pool.length);
+    fillQuote('mainQuote', pool[idx1]);
+    fillQuote('asideQuote', pool[idx2]);
+  }catch(e){ /* Netzwerk/CORS — Zitat-Karten bleiben ausgeblendet */ }
+
+  function fillQuote(id, q){
+    const el = document.getElementById(id);
+    const textEl = document.getElementById(id + 'Text');
+    const srcEl = document.getElementById(id + 'Src');
+    if(!el || !textEl || !srcEl || !q) return;
+    textEl.textContent = q.de;
+    srcEl.textContent = (q.author_de || 'Unbekannt') + ' · mein-lieber-sohn.de';
+    el.style.display = '';
+  }
+})();
+</script>
+
+</body>
+</html>

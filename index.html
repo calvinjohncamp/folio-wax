@@ -915,61 +915,46 @@ body.theme-classic .neg, body.theme-classic .kpi-v.neg, body.theme-classic .benc
 .dc-card:hover{border-color:var(--wax-accent)}
 .overview-depot-link{cursor:pointer;transition:border-color .15s, transform .15s, background .15s}
 .overview-depot-link:hover{border-color:var(--wax-accent)!important}
+/* Headlines-Teaser: 1:1-Ausschnitt aus dem Masthead der Unterseite headlines.html,
+   bewusst immer in deren Ivory/Navy/Orange-Optik statt im WAX-Theme des Tabs. */
+.headlines-teaser{display:block;background:#F5F1E8;border:2.5px solid #C8632A;border-radius:14px;padding:22px 26px 16px;text-decoration:none;color:inherit;transition:transform .15s,box-shadow .15s,border-color .15s;margin-bottom:24px;box-shadow:0 2px 10px rgba(200,99,42,.12)}
+.headlines-teaser:hover{transform:translateY(-2px);border-color:#A84E1E;box-shadow:0 10px 26px rgba(200,99,42,.28)}
+.headlines-teaser-name{text-align:center;font-family:Georgia,"Iowan Old Style","Times New Roman",Times,serif;font-weight:700;font-size:30px;letter-spacing:.01em;color:#14253F}
+.headlines-teaser-name .dot{color:#C8632A;padding:0 8px}
+.headlines-teaser-tag{text-align:center;font-size:10px;letter-spacing:.28em;text-transform:uppercase;color:#6B6255;margin:4px 0 14px}
+.headlines-teaser-dateline{display:flex;align-items:center;justify-content:space-between;gap:12px;border-top:1px solid #14253F;padding-top:8px;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Inter,Roboto,sans-serif;font-size:11px;color:#6B6255}
+.headlines-teaser-dateline span:first-child{font-weight:700;color:#14253F}
+.headlines-teaser-dateline .mid{font-style:italic;font-family:Georgia,"Iowan Old Style","Times New Roman",Times,serif}
+.headlines-teaser-dateline span:last-child{font-weight:700;color:#C8632A}
+@media(max-width:600px){.headlines-teaser-dateline{flex-wrap:wrap;justify-content:center;text-align:center}.headlines-teaser-dateline .mid{order:3;flex:0 0 100%;margin-top:4px}}
+/* Headlines-Zeile: Teaser schließt rechtsbündig mit der DAX-Kachel (Spalte 2 von 3 in .bk-grid)
+   ab, der hitjourney-Player nimmt die dritte Spalte ein und wird auf Teaser-Höhe gestreckt. */
+.headlines-row{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin-bottom:24px;align-items:stretch}
+.headlines-row .headlines-teaser{grid-column:1/3;margin-bottom:0}
+.headlines-row .wx-box--dark{grid-column:3/4;margin-bottom:0}
+@media(max-width:760px){.headlines-row{grid-template-columns:1fr}.headlines-row .headlines-teaser,.headlines-row .wx-box--dark{grid-column:1/-1}}
+
+/* Anspieltipp-Player (1:1 aus headlines.html/headlines-test.html übernommen, Farben hartkodiert
+   wie beim Headlines-Teaser, unabhängig vom WAX-Theme). Höhe passt sich per Flex der Teaser-Höhe an. */
+.wx-box--dark{display:flex;flex-direction:column;border:1.5px solid #14253F;border-radius:14px;background:#14253F;color:#F5F1E8;overflow:hidden}
+.wx-box--dark .wx-box-head{background:#14253F;color:#F5F1E8;font-size:11.5px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;padding:8px 14px 8px 16px;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Inter,Roboto,sans-serif}
+.wx-anspiel{flex:1 1 auto;display:flex;align-items:center;padding:16px 0 16px 16px}
+.wx-play-btn{width:40px;height:40px;margin-right:16px;border-radius:50%;background:#C8632A;border:0;flex:none;display:flex;align-items:center;justify-content:center;cursor:pointer;padding:0}
+.wx-play-btn:active{transform:scale(.92)}
+.wx-play-btn svg{width:20px;height:20px;color:#14253F}
+.wx-play-btn .icon-pause{display:none}
+.wx-play-btn.is-playing .icon-play{display:none}
+.wx-play-btn.is-playing .icon-pause{display:block}
+.wx-anspiel-txt{flex:0 1 auto;min-width:0;max-width:190px;font-size:12.5px;line-height:1.4;color:#CBD3E0}
+.wx-anspiel-txt b{display:block;color:#fff;font-family:Georgia,"Iowan Old Style","Times New Roman",Times,serif;font-size:15px;margin-bottom:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.wx-anspiel-txt span{display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.wx-anspiel-spacer{flex:1 1 0}
+.wx-random-btn{width:60px;height:60px;border-radius:50%;flex:none;border:0;padding:0;cursor:pointer;background:transparent;display:block;overflow:hidden}
+.wx-random-btn img{width:100%;height:100%;display:block}
+.wx-random-btn:active{transform:scale(.92)}
+.wx-anspiel-link{display:block;padding:0 16px 20px;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Inter,Roboto,sans-serif;font-size:11px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:#9FD8EA;text-decoration:none}
+.wx-anspiel-link:hover{text-decoration:underline}
 .overview-depot-link:focus-visible{outline:2px solid var(--wax-accent);outline-offset:3px}
-/* === Aktuelle Entwicklungen (5 Themen-Kacheln, helleres Blau) === */
-:root,body.theme-modern,body:not(.theme-classic){ --entw-blue:#6FC2E0; --entw-blue-soft:#9BD6EE; --entw-tint:rgba(95,179,212,.30); --entw-tint-strong:rgba(95,179,212,.44); --entw-border:rgba(120,200,228,.45); }
-body.theme-classic{ --entw-blue:#2E7FA6; --entw-blue-soft:#4C97BE; --entw-tint:rgba(46,127,166,.16); --entw-tint-strong:rgba(46,127,166,.26); --entw-border:rgba(46,127,166,.40); }
-.entw-wrap{margin-bottom:24px}
-.entw-tiles{display:grid;grid-template-columns:repeat(7,1fr);gap:10px}
-@media(max-width:860px){.entw-tiles{grid-template-columns:repeat(2,1fr)}}
-@media(max-width:480px){.entw-tiles{grid-template-columns:1fr}}
-.entw-tile{position:relative;display:flex;align-items:center;min-height:74px;text-align:left;cursor:pointer;border:1px solid var(--entw-border);background:var(--entw-tint);border-radius:12px;padding:15px 32px 15px 17px;font-family:inherit;color:var(--wax-text);transition:transform .15s,background .15s,box-shadow .15s}
-.entw-tile:hover{transform:translateY(-2px);background:var(--entw-tint-strong);box-shadow:inset 3px 0 0 var(--entw-blue),inset 0 3px 0 var(--entw-blue),0 8px 22px rgba(0,0,0,.18)}
-.entw-tile:focus-visible{outline:2px solid var(--entw-blue);outline-offset:3px}
-.entw-tile.active{background:var(--entw-tint-strong);box-shadow:inset 3px 0 0 var(--entw-blue),inset 0 3px 0 var(--entw-blue),0 8px 22px rgba(0,0,0,.18)}
-.entw-tile .et-ttl{font-size:18px;font-weight:700;line-height:1.2;letter-spacing:-.01em;color:var(--wax-text)}
-.entw-tile .et-chev{position:absolute;right:13px;top:50%;transform:translateY(-50%);color:var(--entw-blue);font-size:12px;transition:transform .2s,opacity .15s;opacity:0}
-.entw-tile:hover .et-chev,.entw-tile.active .et-chev{opacity:.85}
-.entw-tile.active .et-chev{transform:translateY(-50%) rotate(180deg)}
-.entw-panel{margin-top:12px;border:1px solid var(--wax-border);border-left:3px solid var(--entw-blue);background:var(--wax-card);border-radius:12px;padding:16px 18px;box-shadow:0 6px 16px rgba(0,0,0,.10)}
-.entw-panel h4{font-size:18px;font-weight:700;color:var(--wax-text);letter-spacing:-.01em;margin-bottom:10px}
-.entw-panel .ep-sum{font-size:13.5px;line-height:1.6;color:var(--wax-text);font-weight:700;margin-bottom:14px}
-.entw-panel .ep-blabel{font-size:9px;font-weight:600;letter-spacing:.13em;text-transform:uppercase;color:var(--wax-muted-2);margin-bottom:6px}
-.entw-panel ul{list-style:none;margin:0;padding:0}
-.entw-panel li{position:relative;font-size:12.5px;line-height:1.5;color:var(--wax-text-2);padding:4px 0 4px 16px}
-.entw-panel li::before{content:"";position:absolute;left:0;top:11px;width:6px;height:6px;border-radius:50%;background:var(--entw-blue)}
-.entw-panel .ep-bullet-link{color:inherit;text-decoration:none}
-.entw-panel .ep-bullet-link:hover{color:var(--entw-blue);text-decoration:underline}
-.entw-panel .ep-src-tag{color:var(--wax-muted-2);font-weight:400}
-.entw-panel .ep-src{display:inline-block;margin-top:2px;font-size:11px;font-weight:600;color:var(--entw-blue);text-decoration:none}
-.entw-panel .ep-src:hover{text-decoration:underline}
-.entw-foot{margin-top:11px;font-size:10px;color:var(--wax-muted);line-height:1.5}
-.entw-stand{font-size:10px;font-weight:600;letter-spacing:.04em;color:var(--entw-blue);text-transform:none}
-/* Headlines — Boulevard-Highlights oberhalb der Newsflash-Kacheln (6 Positionen, Pos. 6 = Sport) */
-.hot-wrap{margin-bottom:20px}
-.hot-title{font-size:18px;font-weight:700;line-height:1.2;letter-spacing:-.01em;color:var(--wax-text);margin-bottom:12px}
-.hot-list{list-style:none;margin:0;padding:0}
-.hot-item{position:relative;padding:1px 0}
-.hot-item-btn{display:block;width:100%;text-align:left;background:none;border:none;cursor:pointer;font-family:inherit;position:relative;font-size:13.5px;line-height:1.55;font-weight:700;color:var(--wax-text);padding:5px 4px 5px 18px;border-radius:6px;transition:background .15s}
-.hot-item-btn::before{content:"";position:absolute;left:0;top:11px;width:7px;height:7px;border-radius:50%;background:var(--entw-blue)}
-.hot-item-btn:hover{background:var(--entw-tint)}
-.hot-item-btn.active{background:var(--entw-tint-strong)}
-.hot-item-btn:focus-visible{outline:2px solid var(--entw-blue);outline-offset:2px}
-/* CNBC News — Top-10-Headlines des Tages, direkter Link auf CNBC (US-Marktfokus) */
-.cnbc-wrap{margin-bottom:24px}
-.cnbc-list{list-style:none;margin:0;padding:0}
-.cnbc-item{position:relative;display:flex;align-items:baseline;gap:10px;padding:5px 4px;border-radius:6px;transition:background .15s}
-.cnbc-item:hover{background:var(--entw-tint)}
-.cnbc-rank{flex:none;width:18px;font-size:12px;font-weight:800;color:var(--entw-blue);text-align:right}
-.cnbc-link{flex:1;font-size:13.5px;line-height:1.55;font-weight:700;color:var(--wax-text);text-decoration:none}
-.cnbc-item:hover .cnbc-link{color:var(--entw-blue);text-decoration:underline}
-.cnbc-ext{flex:none;font-size:11px;color:var(--wax-muted-2)}
-/* Folio.today — Verlinkung auf die tägliche Briefing-App (folio-today.de), Kachel im Format der Newsflash-Themen-Kacheln */
-.today-wrap{margin-bottom:24px;grid-template-columns:repeat(7,minmax(0,1fr))}
-@media(max-width:860px){.today-wrap{grid-template-columns:repeat(2,1fr)}}
-@media(max-width:480px){.today-wrap{grid-template-columns:1fr}}
-.today-tile{justify-content:center;padding:15px 16px;background:var(--wax-card);border-color:var(--wax-border)}
-.today-tile img{height:38px;width:auto;max-width:100%;display:block}
 .dc-grid{display:grid;grid-template-columns:2.2fr 0.95fr 1.2fr 1fr 1.25fr;gap:0;align-items:stretch}
 .dc-grid.dc-grid4{grid-template-columns:2.4fr 1.3fr 1.1fr 1.35fr}
 .dc-grid.dc-grid6{grid-template-columns:2fr 0.9fr 1.15fr 1.05fr 1.1fr 1.2fr}
@@ -1179,6 +1164,7 @@ body.theme-classic .dc-mini-kpi.deviation .dc-kpi-line.total strong{color:#16232
   <button class="nav-btn active" onclick="showTab('uebersicht')" id="tab-uebersicht">▣ Übersicht</button>
   <button class="nav-btn" onclick="showTab('depots')" id="tab-depots">◎ Einzeldepots</button>
   <button class="nav-btn" onclick="showTab('investments')" id="tab-investments">◈ Investments</button>
+  <a class="nav-btn" href="headlines.html" id="tab-headlines">▤ Headlines</a>
   <button class="nav-btn" onclick="showTab('kapital')" id="tab-kapital">⊕ Kapital & Performance</button>
   <button class="nav-btn" onclick="showTab('log')" id="tab-log">≡ Transaktionen</button>
   <button class="nav-btn" onclick="showTab('pflege')" id="tab-pflege" style="color:var(--wax-accent)">✎ Pflege</button>
@@ -1196,60 +1182,50 @@ body.theme-classic .dc-mini-kpi.deviation .dc-kpi-line.total strong{color:#16232
   <div id="overviewHeroMount" style="margin-top:4px"></div>
   <div class="dc-group"><span class="sec-n">2 ·</span> Ranking — aktuell &amp; Alltime</div>
   <div id="overviewRankMount" class="dc-wrap"></div>
-  <div class="dc-group"><span class="sec-n">3 ·</span> Newsflash <span id="entwStand" class="entw-stand"></span></div>
-  <div id="overviewHighlights" class="hot-wrap"></div>
-  <div id="overviewEntwicklungen" class="entw-wrap"></div>
-  <div class="dc-group"><span class="sec-n">4 ·</span> CNBC News <span id="cnbcStand" class="entw-stand"></span></div>
-  <div id="overviewCnbc" class="cnbc-wrap"></div>
-  <div class="dc-group" style="padding-top:0"><span class="sec-n">5 ·</span> Folio.today</div>
-  <div class="today-wrap entw-tiles">
-    <a class="entw-tile today-tile" href="https://folio-today.de" target="_blank" rel="noopener" title="Zu Folio.today — das tägliche Briefing">
-      <img src="folio-today-transparent.png" alt="Folio.today">
+  <div class="dc-group" style="padding-top:0"><span class="sec-n">3 ·</span> Headlines</div>
+  <div class="headlines-row">
+    <a class="headlines-teaser" href="headlines.html" title="Zu Folio.wax Headlines">
+      <div class="headlines-teaser-name">FOLIO<span class="dot">·</span>WAX</div>
+      <div class="headlines-teaser-tag">Headlines</div>
+      <div class="headlines-teaser-dateline">
+        <span id="headlinesTeaserDate"></span>
+        <span class="mid">Sorgfältig kuratiert für den Aktienclub</span>
+        <span id="headlinesTeaserEdition"></span>
+      </div>
     </a>
+    <div class="wx-box--dark">
+      <div class="wx-box-head">Anspieltipp</div>
+      <div class="wx-anspiel">
+        <button class="wx-play-btn" id="anspielPlayBtn" type="button" aria-label="Abspielen/Pause" title="Abspielen/Pause">
+          <svg class="icon-play" viewBox="0 0 24 24" aria-hidden="true">
+            <path d="M8 5.5v13a1 1 0 0 0 1.53.85l10.2-6.5a1 1 0 0 0 0-1.7L9.53 4.65A1 1 0 0 0 8 5.5Z" fill="currentColor"/>
+          </svg>
+          <svg class="icon-pause" viewBox="0 0 24 24" aria-hidden="true">
+            <rect x="6.5" y="5" width="4" height="14" rx="1.5" fill="currentColor"/>
+            <rect x="13.5" y="5" width="4" height="14" rx="1.5" fill="currentColor"/>
+          </svg>
+        </button>
+        <div class="wx-anspiel-txt"><b id="anspielTitle">—</b><span id="anspielArtist"></span></div>
+        <span class="wx-anspiel-spacer" aria-hidden="true"></span>
+        <button class="wx-random-btn" id="anspielRandomBtn" type="button" aria-label="Zufälligen Song abspielen" title="Zufälligen Song abspielen">
+          <img src="Random%20Play%20Button.png" alt="" draggable="false">
+        </button>
+        <span class="wx-anspiel-spacer" aria-hidden="true"></span>
+      </div>
+      <a class="wx-anspiel-link" href="https://hitjourney.com" target="_blank" rel="noopener">hitjourney.com</a>
+    </div>
   </div>
-  <div class="sec-t" style="margin-top:24px"><span class="sec-n">6 ·</span> <span id="benchTitle">Benchmarks YTD</span></div>
+  <div class="sec-t" style="margin-top:24px"><span class="sec-n">4 ·</span> <span id="benchTitle">Benchmarks YTD</span></div>
   <div class="bk-grid" id="bkGrid"></div>
-  <div class="sec-t"><span class="sec-n">7 ·</span> Depotstruktur — Kategorien · Länder · Börsen</div>
+  <div class="sec-t"><span class="sec-n">5 ·</span> Depotstruktur — Kategorien · Länder · Börsen</div>
   <div id="overviewStructure"></div>
-  <div class="sec-t"><span class="sec-n">8 ·</span> Top Holdings (aktuell)</div>
+  <div class="sec-t"><span class="sec-n">6 ·</span> Top Holdings (aktuell)</div>
   <div class="tw"><table>
     <thead><tr><th>Rang</th><th>Titel</th><th>WKN</th><th>Wert (€)</th><th>Anteil</th><th>Kumuliert</th></tr></thead>
     <tbody id="topHoldingsBody"></tbody>
   </table></div>
 
-  <div class="sec-t" style="margin-top:24px"><span class="sec-n">9 ·</span> Werbung</div>
-  <div class="discover-grid" id="discoverGrid">
-    <div class="discover-deck-tile" id="discoverDeckTile" style="display:none">
-      <div class="discover-deck" id="discoverDeck">
-        <div class="deck-cover-wrap" id="discoverDeckCoverWrap"><div class="deck-cover-inner"><img class="deck-cover-img" id="discoverDeckCover" src="" alt=""></div></div>
-        <img class="deck-tonearm" id="discoverDeckTonearm" src="" alt="">
-        <div class="deck-center-pin"></div>
-        <button class="deck-red-btn" type="button" id="discoverDeckSignatureBtn" aria-label="Lyrics anzeigen" title="Lyrics"></button>
-        <div class="deck-info"><div class="deck-title" id="discoverDeckTitle">—</div><div class="deck-artist" id="discoverDeckArtist"></div></div>
-      </div>
-      <a class="discover-deck-brand" href="https://hitjourney.com" target="_blank" rel="noopener" aria-label="hitjourney.com">
-        <button class="discover-deck-dice" type="button" id="discoverDeckDiceBtn" aria-label="Zufälligen Song abspielen">
-          <img alt="" src="https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Random%2520Play%2520Button.png" onerror="this.onerror=null;this.src='https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Random%20Play%20Button.png';">
-        </button>
-        <span class="discover-deck-brand-gap"></span>
-        <img class="discover-deck-logo-h" alt="hitjourney" src="https://hitjourney.com/logo-hitjourney.png">
-        <span class="discover-deck-brand-gap"></span>
-      </a>
-    </div>
-    <div class="discover-quotes-col">
-      <a class="discover-quote" id="discoverQuote1" href="https://mein-lieber-sohn.de" target="_blank" rel="noopener" style="display:none">
-        <div class="discover-quote-text" id="discoverQuote1Text"></div>
-        <div class="discover-quote-author" id="discoverQuote1Author"></div>
-      </a>
-      <a class="discover-quote" id="discoverQuote2" href="https://mein-lieber-sohn.de" target="_blank" rel="noopener" style="display:none">
-        <div class="discover-quote-text" id="discoverQuote2Text"></div>
-        <div class="discover-quote-author" id="discoverQuote2Author"></div>
-      </a>
-      <a class="discover-quotes-link" href="https://mein-lieber-sohn.de" target="_blank" rel="noopener">mein-lieber-sohn.de</a>
-    </div>
-  </div>
-
-  <div class="sec-t" style="margin-top:24px"><span class="sec-n">10 ·</span> Spielregeln WAX 2026</div>
+  <div class="sec-t" style="margin-top:24px"><span class="sec-n">7 ·</span> Spielregeln WAX 2026</div>
   <div class="tw rules-box">
     <div class="rules-title">WAX-Spielregeln 2026</div>
     <div class="rules-columns">
@@ -1523,10 +1499,6 @@ body.theme-classic .dc-mini-kpi.deviation .dc-kpi-line.total strong{color:#16232
   </div>
 </div>
 
-<!-- hitjourney Lyrics-Viewer (Entdecken-Streifen): vollflaechig, ohne Rahmen/Effekt, wie bei hitjourney.com -->
-<div class="discover-lyrics-view" id="discoverLyricsView" onclick="closeDiscoverViewer()">
-  <img class="discover-lyrics-img" id="discoverLyricsImg" alt="Lyrics">
-</div>
 
 <!-- MODALS -->
 <div id="modalOverlay" style="display:none" class="modal-overlay" onclick="closeModal(event)">
@@ -2679,7 +2651,7 @@ document.addEventListener('click', function(e){
   if(!el) return;
   openPriceChart(el.getAttribute('data-chart-wkn'), el.getAttribute('data-chart-name') || '');
 });
-document.addEventListener('keydown', function(e){ if(e.key === 'Escape'){ closePriceChart(); closeDiscoverViewer(); } });
+document.addEventListener('keydown', function(e){ if(e.key === 'Escape'){ closePriceChart(); } });
 // Echte historische Depotwerte 2026 je Mitglied (aus den gepflegten Excel-Dateien, Stand bis 19.05.).
 // Stichtag -> { mitglied_id: Depotwert(Invest+Cash) }. Basis (01.01.) = 31.12.-Referenzwert.
 const WERT_HIST_SEED={"2026-01-01":{1:14811.28,2:21602.89,3:62003.3,4:29311.6,5:33593.55,6:39923.51},"2026-01-05":{1:14590.1,2:22293.35,3:62593.1,4:29938.34,5:36509.14,6:41404.8},"2026-01-12":{1:15030.14,2:22734.94,3:63895.34,4:30443.04,5:42198.89,6:41404.8},"2026-01-26":{1:14479.13,2:22694.04,3:66792.84,4:29553.54,5:41351.49,6:41854.48},"2026-01-30":{1:14479.13,2:22694.04,3:65345.84,4:29553.54,5:41351.49,6:40554.48},"2026-02-02":{1:13801.36,2:22204.77,3:61341.64,4:27897.54,5:39381.88,6:37995.74},"2026-02-03":{1:14207.85,2:22623.75,3:66067.04,4:28477.19,5:40163.24,6:39109.35},"2026-02-04":{1:13942.98,2:22420.63,3:64901.74,4:26681.94,5:37104.39,6:36601.95},"2026-02-18":{1:13604.74,2:23397.57,3:64465.2,4:25318.34,5:38275.67,6:35958.81},"2026-03-18":{1:13421.03,2:20768.02,3:64741.6,4:26605.64,5:38258.45,6:35748.2},"2026-03-23":{1:13044.76,2:19777.39,3:61926.8,4:25723.14,5:37477.98,6:33675.89},"2026-04-06":{1:12945.3,2:20194.2,3:61926.8,4:25316.84,5:38490.28,6:33674.8},"2026-05-05":{1:13956.77,2:19705.05,3:61926.8,4:29068.19,5:40675.04,6:35893.98},"2026-05-06":{1:13956.77,2:19705.05,3:61926.8,4:29068.19,5:40675.04,6:35893.98},"2026-05-08":{1:13956.77,2:19705.05,3:61926.8,4:29068.19,5:40675.04,6:35723.58},"2026-05-11":{1:13735.03,2:20380.14,3:62010.49,4:29647.39,5:42816.89,6:40138.23},"2026-05-14":{1:13735.03,2:20380.14,3:62010.49,4:29647.39,5:42816.89,6:40138.23},"2026-05-15":{1:13735.03,2:20380.14,3:62010.49,4:29647.39,5:43260.09,6:40138.23},"2026-05-19":{1:13970.86,2:19397.5,3:62097.06,4:29427.31,5:42195.94,6:39073.42}};
@@ -3729,411 +3701,25 @@ function applyOverviewModeLabels() {
   // Heute UND YTD gleichzeitig, eine Umschaltung der Überschrift ist nicht mehr nötig.
 }
 
-// === Aktuelle Entwicklungen (Übersicht, Abschnitt 2) =========================
-// Frontend (Phase 1): liest die jeweils neueste Zeile aus Supabase-Tabelle
-// `entwicklungen` { stand: date, themen: jsonb }. themen ist ein Objekt mit den
-// 6 Schlüsseln politik/wirtschaft/gesellschaft/finanzen/boerse/sport, je { summary, bullets[] }.
-// Solange das Backend (Phase 2: Worker + News + Claude, 1×/Tag) noch keine Daten
-// liefert, wird der eingebettete Beispielinhalt (ENTW_SEED) angezeigt.
-const ENTW_THEMEN = [
-  { key:'politik',      no:'①', titel:'Politik' },
-  { key:'wirtschaft',   no:'②', titel:'Wirtschaft' },
-  { key:'gesellschaft', no:'③', titel:'Gesellschaft' },
-  { key:'finanzen',     no:'④', titel:'Finanzen' },
-  { key:'boerse',       no:'⑤', titel:'Börse & Unternehmen' },
-  { key:'tech',         no:'⑥', titel:'Tech & Digital' },
-  { key:'sport',        no:'⑦', titel:'Sport' },
-];
-const ENTW_SEED = {
-  politik:      { summary:'Teilweise Entspannung im Konflikt USA–Iran senkt die Angst vor Energie-Engpässen; Ukraine und die Rivalität USA–China bleiben. Die Welt bewegt sich Richtung multipolarer Ordnung mit dauerhaft höheren geopolitischen Risiken.', bullets:['Energiepreise bleiben ein struktureller Unsicherheitsfaktor.','Verteidigungsausgaben bleiben langfristig hoch.','Lieferketten werden weiter regionalisiert.'] },
-  wirtschaft:   { summary:'Erstmals wieder spürbar bessere Stimmung in der deutschen Wirtschaft — ifo und Unternehmenseinschätzungen deuten auf eine Bodenbildung. Von einem kräftigen Aufschwung kann aber noch keine Rede sein.', bullets:['Deutschland könnte den Tiefpunkt hinter sich haben.','Industrie und Export bleiben anfällig.','Infrastrukturprogramme beginnen langsam zu wirken.'] },
-  gesellschaft: { summary:'KI wird vom Technologie- zunehmend zum Gesellschaftsthema: massive Investitionen, zugleich wachsende Sorgen über Arbeitsplätze, Informationsqualität und Alltag. Studien zeigen Verunsicherung durch das Tempo des Wandels.', bullets:['Produktivität dürfte steigen.','Gewinner sind Unternehmen mit echten KI-Anwendungen.','Der Wettbewerb um Fachkräfte verschiebt sich erheblich.'] },
-  finanzen:     { summary:'Nach den Nahost-Turbulenzen richtet sich der Blick wieder auf Inflation und Zentralbanken. Sinkende Ölpreise entlasten, viele rechnen aber weiter mit restriktiver Geldpolitik. Liquidität bleibt kurzfristig der wichtigste Markttreiber.', bullets:['Anleiherenditen bleiben attraktiv.','Aktien reagieren wieder stärker auf Zinserwartungen.','Liquidität gewinnt gegenüber kurzfristigen Konjunkturdaten.'] },
-  boerse:       { summary:'Die wichtigste Börsengeschichte ist nicht ein neuer Rekord, sondern die kritischere Diskussion über die Bewertungen großer KI-Unternehmen. Bei Tech- und Raumfahrtwerten deutliche Rücksetzer, während KI-Investitionen auf Rekordniveau bleiben.', bullets:['Führen die enormen KI-Investitionen wirklich zu steigenden Gewinnen?','Welche Unternehmen entwickeln nachhaltige Wettbewerbsvorteile?','Wo entstehen Überbewertungen?'] },
-  tech:         { summary:'Digitalisierung und KI-Regulierung entwickeln sich zum eigenen Markttreiber: neue EU-Vorgaben zu Datenschutz und Plattformen treffen auf enorme Investitionen der großen Tech-Konzerne. Für Anleger und Verbraucher wächst die Bedeutung von Netzpolitik und Produktzyklen.', bullets:['Welche neuen Regulierungen betreffen Tech-Konzerne?','Wo entstehen neue KI-Produkte mit echtem Marktpotenzial?','Welche Datenschutz-/Sicherheitsthemen bewegen die Branche?'] },
-  sport:        { summary:'Weltsport und deutscher Sport im Überblick: Fußball (Bundesliga, Nationalmannschaft, internationale Wettbewerbe), Tennis und weitere Disziplinen. Im Fokus stehen die wichtigsten Ergebnisse, Turniere und Personalien der vergangenen Tage.', bullets:['Wie schlägt sich der deutsche Sport international?','Welche Spiele und Turniere prägen die Schlagzeilen?','Welche Transfers und Personalentscheidungen stehen an?'] },
-};
-let __entwData = null;     // gecachte Themen-Daten { ...themen }
-let __entwStand = null;    // Datums-/Quellen-Label
-let __entwOpen  = null;    // aktuell geöffneter Schlüssel (Akkordeon)
-let __entwHighlights = null; // Headlines: Array aus 6 { title, detail }-Objekten (Pos. 6 = Sport)
-let __hotOpen = null;       // aktuell geöffneter Highlight-Index (Akkordeon)
-// "Heißer Scheiß"-Beispielinhalt (Fallback, bis der tägliche Worker `highlights` befüllt)
-// Positionen 1–5 = allgemeine Boulevard-Highlights, Position 6 = immer eine Sportmeldung.
-const HOT_SEED = [
-  { title:'Streaming-Hit bricht alle Rekorde und lässt eine Aktie durch die Decke gehen.', detail:'Beispielinhalt: Einordnung, welche Produktion betroffen ist, welche Kennzahlen den Rekord belegen und wie der Markt reagiert hat.' },
-  { title:'Promi-Hochzeit des Jahres: Stars geben sich überraschend das Ja-Wort.', detail:'Beispielinhalt: Wer geheiratet hat, wann und wo, und was Beobachter dazu sagen.' },
-  { title:'Neues KI-Gadget ausverkauft, noch bevor es im Laden steht.', detail:'Beispielinhalt: Um welches Produkt es geht, wie hoch die Nachfrage war und was Hersteller/Händler dazu mitteilen.' },
-  { title:'Wetter-Kapriolen legen halb Deutschland lahm.', detail:'Beispielinhalt: Welche Regionen betroffen sind, welche Folgen es gab (Verkehr, Schulen, Strom) und wie die Wetterdienste die Lage einordnen.' },
-  { title:'Überraschungs-Comeback: Star-Künstler kündigt Welttournee an.', detail:'Beispielinhalt: Wer auftritt, welche Städte und Termine geplant sind und wie groß der Andrang auf Tickets ist.' },
-  { title:'DFB-Team dreht Spiel in der Nachspielzeit — Stadion bebt.', detail:'Beispielinhalt: Hier steht der recherchierte Kurzbeitrag — was im Spiel passiert, wann die Tore fallen und wie die ersten Reaktionen ausfallen, basierend auf mehreren seriösen Quellen.' },
-];
-
-function entwEscape(s){ return String(s==null?'':s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c])); }
-// Quell-Link für eine Headline/einen Bullet-Punkt: echte Artikel-URL, sonst Google-Suche
-// nach dem Text (Link ist dadurch nie tot, auch bei altem Seed-/Cache-Inhalt ohne url).
-function entwLink(url, fallbackText){ return url || ('https://www.google.com/search?q='+encodeURIComponent(fallbackText||'')); }
-
-async function renderEntwicklungen(){
-  const mount = document.getElementById('overviewEntwicklungen');
-  if(!mount) return;
-  // Erstaufruf: Daten laden (neueste Zeile). Bei Fehler/leer → Beispielinhalt.
-  if(__entwData === null){
-    let usedSeed = true;
-    try{
-      const rows = await sbGet('entwicklungen', 'select=stand,themen,updated_at&order=stand.desc&limit=1');
-      const row = Array.isArray(rows) ? rows[0] : null;
-      let themen = row && row.themen;
-      if(typeof themen === 'string'){ try{ themen = JSON.parse(themen); }catch(e){ themen = null; } }
-      if(themen && typeof themen === 'object' && Object.keys(themen).length){
-        __entwData = themen; usedSeed = false;
-        try{
-          const datum = new Date(row.stand).toLocaleDateString('de-DE',{day:'2-digit',month:'long',year:'numeric'});
-          const uhrzeit = row.updated_at ? ', ' + new Date(row.updated_at).toLocaleTimeString('de-DE',{hour:'2-digit',minute:'2-digit'}) + ' Uhr' : '';
-          __entwStand = 'Stand ' + datum + uhrzeit;
-        }catch(e){ __entwStand = 'Stand ' + (row.stand||''); }
-      }
-    }catch(e){ /* offline / Tabelle fehlt → Seed */ }
-    // Highlights ("Heißer Scheiß") separat & tolerant laden — die Spalte existiert evtl. noch
-    // nicht (vor dem ALTER TABLE), das darf die Themen oben NICHT auf Seed zurückwerfen.
-    try{
-      const hrows = await sbGet('entwicklungen', 'select=highlights&order=stand.desc&limit=1');
-      let hl = (Array.isArray(hrows) && hrows[0]) ? hrows[0].highlights : null;
-      if(typeof hl === 'string'){ try{ hl = JSON.parse(hl); }catch(e){ hl = null; } }
-      if(Array.isArray(hl) && hl.length){
-        __entwHighlights = hl.map(h => (typeof h === 'object' && h)
-          ? { title: String(h.title||''), detail: String(h.detail||''), url: String(h.url||''), src: String(h.src||'') }
-          : { title: String(h), detail: '', url: '', src: '' });
-      }
-    }catch(e){ /* Spalte fehlt / offline → Seed */ }
-    if(usedSeed){ __entwData = ENTW_SEED; __entwStand = 'Beispielinhalt — wird ab Phase 2 täglich automatisch aktualisiert'; }
-    if(!__entwHighlights){ __entwHighlights = HOT_SEED; }
-  }
-  const standEl = document.getElementById('entwStand');
-  if(standEl) standEl.textContent = __entwStand ? '· ' + __entwStand : '';
-  renderHot();
-  // Kacheln
-  const tiles = ENTW_THEMEN.map(t=>{
-    const active = (__entwOpen === t.key) ? ' active' : '';
-    return `<button type="button" class="entw-tile${active}" onclick="waxEntwToggle('${t.key}')" aria-expanded="${__entwOpen===t.key}">`
-      + `<span class="et-ttl">${entwEscape(t.titel)}</span>`
-      + `<span class="et-chev">▾</span></button>`;
-  }).join('');
-  mount.innerHTML = `<div class="entw-tiles">${tiles}</div><div id="entwPanelMount"></div>`;
-  renderEntwPanel();
+// Headlines-Teaser (Übersicht, Abschnitt 3): zeigt Datum/Ausgabennummer der
+// separaten Unterseite headlines.html immer aktuell — Nr. = Tag des Jahres,
+// Suffix -1 ab 6 Uhr morgens, -2 ab 18 Uhr abends (bzw. -2 vor 6 Uhr = Vortag).
+function renderHeadlinesTeaser(){
+  const dateEl = document.getElementById('headlinesTeaserDate');
+  const edEl = document.getElementById('headlinesTeaserEdition');
+  if(!dateEl || !edEl) return;
+  const now = new Date();
+  dateEl.textContent = new Intl.DateTimeFormat('de-DE',{weekday:'long',day:'2-digit',month:'long',year:'numeric'}).format(now);
+  const hour = now.getHours();
+  const ref = new Date(now);
+  let suffix;
+  if(hour < 6){ ref.setDate(ref.getDate()-1); suffix = 2; }
+  else if(hour < 18){ suffix = 1; }
+  else { suffix = 2; }
+  const startOfYear = new Date(ref.getFullYear(), 0, 0);
+  const dayOfYear = Math.floor((ref - startOfYear) / 86400000);
+  edEl.textContent = 'Ausgabe Nr. ' + dayOfYear + '-' + suffix;
 }
-
-function renderHot(){
-  const hot = document.getElementById('overviewHighlights');
-  if(!hot) return;
-  const items = (Array.isArray(__entwHighlights) ? __entwHighlights : []).slice(0,6);
-  if(!items.length){ hot.innerHTML = ''; return; }
-  const list = items.map((h,i)=>{
-    const active = (__hotOpen === i) ? ' active' : '';
-    const titleClean = entwEscape((h.title||'').replace(/!+\s*$/,''));
-    return `<li class="hot-item"><button type="button" class="hot-item-btn${active}" onclick="waxHotToggle(${i})" aria-expanded="${__hotOpen===i}">${titleClean}</button></li>`;
-  }).join('');
-  hot.innerHTML = `<ul class="hot-list">${list}</ul><div id="hotPanelMount"></div>`;
-  renderHotPanel();
-}
-function renderHotPanel(){
-  const pm = document.getElementById('hotPanelMount');
-  if(!pm) return;
-  if(__hotOpen === null){ pm.innerHTML = ''; return; }
-  const items = Array.isArray(__entwHighlights) ? __entwHighlights : [];
-  const h = items[__hotOpen] || {};
-  const href = entwLink(h.url, h.title);
-  pm.innerHTML = `<div class="entw-panel"><h4>${entwEscape((h.title||'').replace(/!+\s*$/,''))}</h4>`
-    + (h.detail ? `<div class="ep-sum">${entwEscape(h.detail)}</div>` : `<div class="ep-sum">Noch kein Detailtext hinterlegt.</div>`)
-    + `<a class="ep-src" href="${entwEscape(href)}" target="_blank" rel="noopener noreferrer">Quelle${h.src?': '+entwEscape(h.src):''} →</a>`
-    + `</div>`;
-}
-window.waxHotToggle = function(i){
-  __hotOpen = (__hotOpen === i) ? null : i;
-  renderHot();
-};
-
-// === CNBC News (Übersicht, eigene Kategorie unter den Newsflash-Kacheln) =====
-// Top-10-US-Marktheadlines des Tages. Wird 2×/Tag automatisch durch den Worker
-// "wax-cnbc" (CNBC-RSS + Claude-Auswahl, kein Pro-/Investing-Club-Inhalt) in die
-// Supabase-Tabelle "cnbc_news" geschrieben. Solange der Worker noch nicht läuft
-// bzw. keine Zeile vorhanden ist, zeigt das Frontend den eingebetteten
-// Beispielinhalt CNBC_SEED (redaktionell von Hand kuratiert am 03.07.2026).
-const CNBC_SEED = {
-  stand: '03. Juli 2026',
-  items: [
-    { title:'U.S. job creation cools in June with payrolls growth of just 57,000; unemployment rate at 4.2%', url:'https://www.cnbc.com/2026/07/02/jobs-report-june-2026-.html' },
-    { title:'Tesla stock sinks 7% despite strong deliveries report, posting worst day in nearly a year', url:'https://www.cnbc.com/2026/07/02/tesla-tsla-q2-2026-vehicle-delivery-production.html' },
-    { title:'Trump bought Apple, Nvidia and other tech giants before tariff reversal fueled rebound', url:'https://www.cnbc.com/2026/07/02/trump-aapl-nvda-tariffs-disclosures.html' },
-    { title:'Nvidia offers start-up customers chance to swap compute power for revenue share', url:'https://www.cnbc.com/2026/07/02/nvidia-plans-to-offer-start-up-customers-access-to-revenue-sharing-deals.html' },
-    { title:'Microsoft commits $2.5 billion and 6,000 employees to new AI implementation unit', url:'https://www.cnbc.com/2026/07/02/microsoft-commits-2point5-billion-6000-employees-ai-implementation-unit.html' },
-    { title:'Rivian raises 2026 delivery outlook while Lucid misses Wall Street expectations for second quarter', url:'https://www.cnbc.com/2026/07/02/rivian-lucid-q2-deliveries-demand.html' },
-    { title:'Ford Q2 sales drop 10.3% due to F-Series supplier issue, falling EV demand', url:'https://www.cnbc.com/2026/07/02/ford-q2-sales.html' },
-    { title:'Meta’s push into cloud computing means Wall Street has to prepare for lower margins', url:'https://www.cnbc.com/2026/07/02/metas-push-into-cloud-excites-wall-street-despite-lower-margins.html' },
-    { title:'Stock market gains minted nearly 1 million new millionaires in 2025, new UBS report says', url:'https://www.cnbc.com/2026/07/02/stock-market-gains-new-millionaires-ubs.html' },
-    { title:'Trump Accounts get a boost from employer contributions — Goldman Sachs and Morgan Stanley are the latest to offer matching programs', url:'https://www.cnbc.com/2026/07/02/trump-accounts-boosted-by-growing-list-of-employer-matches.html' },
-  ]
-};
-let __cnbcData = null;  // gecachte { stand, items:[{title,url}] } aus Supabase, oder CNBC_SEED
-async function renderCnbcNews(){
-  const mount = document.getElementById('overviewCnbc');
-  if(!mount) return;
-  if(__cnbcData === null){
-    let usedSeed = true;
-    try{
-      const rows = await sbGet('cnbc_news', 'select=stand,items,updated_at&order=stand.desc&limit=1');
-      const row = Array.isArray(rows) ? rows[0] : null;
-      let items = row && row.items;
-      if(typeof items === 'string'){ try{ items = JSON.parse(items); }catch(e){ items = null; } }
-      if(Array.isArray(items) && items.length){
-        let standLabel;
-        try{
-          const datum = new Date(row.stand).toLocaleDateString('en-US',{day:'2-digit',month:'long',year:'numeric'});
-          const uhrzeit = row.updated_at ? ', ' + new Date(row.updated_at).toLocaleTimeString('de-DE',{hour:'2-digit',minute:'2-digit'}) + ' Uhr' : '';
-          standLabel = datum + uhrzeit;
-        }catch(e){ standLabel = String(row.stand||''); }
-        __cnbcData = { stand: standLabel, items };
-        usedSeed = false;
-      }
-    }catch(e){ /* offline / Tabelle fehlt → Seed */ }
-    if(usedSeed){ __cnbcData = { stand: 'Beispielinhalt vom ' + CNBC_SEED.stand + ' — wird automatisch aktualisiert, sobald der Worker läuft', items: CNBC_SEED.items }; }
-  }
-  const standEl = document.getElementById('cnbcStand');
-  if(standEl) standEl.textContent = '· Stand ' + __cnbcData.stand;
-  const list = __cnbcData.items.map((h,i)=>{
-    return `<li class="cnbc-item"><span class="cnbc-rank">${i+1}.</span><a class="cnbc-link" href="${entwEscape(h.url)}" target="_blank" rel="noopener noreferrer">${entwEscape(h.title)}</a><span class="cnbc-ext">↗</span></li>`;
-  }).join('');
-  mount.innerHTML = `<ul class="cnbc-list">${list}</ul>`;
-}
-
-// ── Entdecken-Streifen: Zitate (mein-lieber-sohn.de) + Live-Player (hitjourney.com) ──
-// Subtiler Cross-Promo-Streifen fuer zwei Eigenprojekte des Nutzers. Zitate und Song
-// werden einmal pro Seitenaufruf zufaellig gezogen (kein Re-Randomize bei internen
-// Re-Renders, siehe __discoverRendered-Guard).
-let __discoverRendered = false;
-let __discoverAudio = null;
-let __discoverSong = null;
-const HJ_SB_URL = 'https://hioaqcwqzeqcvvikollq.supabase.co';
-const HJ_SB_ANON = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imhpb2FxY3dxemVxY3Z2aWtvbGxxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzIzNTQ3MTgsImV4cCI6MjA4NzkzMDcxOH0.IvZ7YZwrhjNg8SwwO9rnXoiDwOVncY8iVcucmipmuFI';
-const DECK_TONEARM_START_DEG = -9.5;
-const DECK_TONEARM_END_DEG = 29.0;
-const DECK_TONEARM_DATA_URI = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAeAAAAHgCAYAAAB91L6VAAAAAXNSR0IArs4c6QAAAERlWElmTU0AKgAAAAgAAYdpAAQAAAABAAAAGgAAAAAAA6ABAAMAAAABAAEAAKACAAQAAAABAAAB4KADAAQAAAABAAAB4AAAAACGV0FwAABAAElEQVR4Ae3dCXwc1Z3g8ZZakq3Lkm+DD4wPbHxgQEAAB2KuDLCxczCeMCEZwoQlk+ySCZmEZTLJfjyZYQbmw0ACyxCWQBIDGz7EYLA5jHFiDNgYn/i+bck6rcuSbJ3drdr/v1pPKrW61d2yjj5+lbS6uup11XvfEv7rvXr1nuvRRx+9x8WCAAIIIIAAAoMmQOwdNGpOhAACCCCAAAIIIIAAAggggAACCCCAAAIIIIAAAggggAACCCCAAAIIIIAAAggggAACCCCAAAIIIIAAAggggAACCCCAAAIIIIAAAggggAACCCCAAAIIIIAAAggggAACCCCAAAIIIIAAAggggAACCCCAAAIIIIAAAggggAACCCCAAAIIIIAAAggggAACCCCAAAIIIIAAAggggAACCCCAAAIIIIAAAggggAACCCCAAAIIIIAAAggggAACCCCAAAIIIIAAAggggAACCCCAAAIIIIAAAggggAACCCCAAAIIIIAAAggggAACCCCAAAIIIIAAAggggAACCCCAAAIIIIAAAggggAACCCCAAAIIIIAAAggggAACCCCAAAIIIIAAAggggAACCCCAAAIIIIAAAggggAACCCCAAAIIIIAAAggggAACCCCAAAIIIIAAAggggAACCCCAAAIIIIAAAggggAACCCCAAAIIIIAAAggggAACCCCAAAIIIIAAAggggAACCCCAAAIIIIAAAggggAACCCCAAAIIIIAAAggggAACCCCAAAIIIIAAAggggAACCCCAAAIIIIAAAggggAACCCCAAAIIIIAAAggggAACCCCAAAIIIIAAAggggAACCCCAAAIIIIAAAggggAACCCCAAAIIIIAAAggggAACCCCAAAIIIIAAAggggAACCCCAAAIIIIAAAggggAACCCCAAAIIIIAAAggggAACCCCAAAIIIIAAAggggAACCCCAAAIIIIAAAggggAACCCCAAAIIIIAAAggggAACCCCAAAIIIIAAAggggAACCCCAAAIIIIAAAggggAACCCCA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EEAAAQQQQAABBBBAAAEEEEAAAQQQQAABBBBAAAEEEEAAAQQQQAABBBBAAAEEEEAAAQQQQAABBBBAAAEEEEAAAQQQQAABBBBAAAEEEEAAAQQQQAABBBBAAAEEEEAAAQQQQAABBBBAAAEEEEAAAQQQQAABBBBAAAEEEEAAAQQQQAABBBBAAAEEEEAAAQQQQAABBBBAAAEEEEAAAQQQQAABBBBAAAEEEEAAAQQQQAABBBBAAAEEEEAAAQQQQAABBBBAAAEEEEAAAQQQQAABBBBAAAEEEEAAAQQQQAABBBBAAAEEEEAAAQQQQAABBBBAAAEEEEAAAQQQQAABBBBAAAEEEEAAAQQQQAABBBBAAAEEEEAAAQQQQAABBBBAAAEEEEAAAQQQQAABBBBAAAEEEEAAAQQQQAABBBBAAAEEEEAAAQQQQAABBBBAAAEEEEAAAQQQQAABBBBAAAEEEEAAAQQQQAABBBBAAAEEEEAAAQQQQAABBBBAAAEEEEAAAQQQQAABBBBAAAEEEEAAAQQQQAABBBBAAAEEEEAAAQQQQAABBBBAAAEEEEAAAQQQQAABBBBAAAEEEEAAAQQQQAABBBBAAAEEEEAAAQQQQAABBBBAAAEEEEAAAQQQQAABBBBAAAEEEEAAAQQQQAABBBBAAAEEEEAAAQQQQAABBBBAAAEEEEAAAQQQQAABBBBAAAEEEEAAAQQQQAABBBBAAAEEEEAAAQQQQAABBBBAAAEEEEAAAQQQQAABBBBAAAEEEEAAAQQQQAABBBBAAAEEEEAAAQQQQAABBBBAAAEEEEAAAQQQQAABBBBAAAEEEEAAAQQQQAABBBBAAAEEEEAAAQQQQAABBBBAAAEEEEAAAQQQQAABBBBAAAEEEEAAAQQQQAABBBBAAAEEEEAAAQQQQAABBBBAAAEEEEAAAQQQQAABBBBAAAEEEEAAAQQQQAABBBBAAAEEEEAAAQQQQAABBBBAAAEEEEAAAQQQQAABBBBAAAEEEEAAAQQQQAABBBBAAAEEEEAAAQQQQAABBBBAAAEEEEAAAQQQQAABBBBAAAEEEEAAAQQQQAABBBBAAAEEEEAAAQQQQAABBBBAAAEEEEAAAQQQQAABBBBAAAEEEEAAAQQQQAABBBBAAAEEEEAAAQQQQAABBBBAAAEEEEAAAQQQQAABBBBAAAEEEEAAAQQQQAABBBBAAAEEEEAAAQQGXeDRRx+9Z9BPygkRQAABBBBIYgGNvf8fegXy1o5tbKYAAAAASUVORK5CYII=';
-
-function renderDiscoverStrip(){
-  if(__discoverRendered) return;
-  __discoverRendered = true;
-  renderDiscoverQuotes();
-  renderDiscoverDeck();
-}
-async function renderDiscoverQuotes(){
-  try{
-    const res = await fetch('https://mein-lieber-sohn.de/data/quotes.json');
-    if(!res.ok) return;
-    const quotes = await res.json();
-    if(!Array.isArray(quotes) || quotes.length < 2) return;
-    // Nur angepinnte Zitate (classes enthaelt "pin-…") und nicht zu lang, sonst sprengen
-    // sie die kleine Kartenhoehe. Variante (cream/gold/dark/sage) UND "pin-wide" (groesser/fetter,
-    // ca. jedes 3. Zitat im Original) kommen 1:1 aus "classes".
-    const pinned = quotes
-      .map(q => {
-        const m = /pin-(cream|gold|dark|sage)/.exec(q.classes || '');
-        if(!m) return null;
-        const wide = /pin-wide/.test(q.classes || '');
-        return { q, variant: 'pin-' + m[1], wide };
-      })
-      .filter(x => x && x.q.de && x.q.de.length <= 140);
-    const pool = pinned.length > 1 ? pinned : quotes.map(q => ({ q, variant: 'pin-cream', wide:false }));
-    const idx1 = Math.floor(Math.random() * pool.length);
-    let idx2 = Math.floor(Math.random() * pool.length);
-    while(idx2 === idx1 && pool.length > 1) idx2 = Math.floor(Math.random() * pool.length);
-    fillDiscoverQuote(1, pool[idx1].q, pool[idx1].variant, pool[idx1].wide);
-    fillDiscoverQuote(2, pool[idx2].q, pool[idx2].variant, pool[idx2].wide);
-  }catch(e){ /* Netzwerk/CORS — Karten bleiben einfach ausgeblendet */ }
-}
-function fillDiscoverQuote(n, q, variant, wide){
-  const el = document.getElementById('discoverQuote'+n);
-  const textEl = document.getElementById('discoverQuote'+n+'Text');
-  const authorEl = document.getElementById('discoverQuote'+n+'Author');
-  if(!el || !textEl || !authorEl || !q) return;
-  textEl.textContent = q.de || '';
-  authorEl.textContent = q.author_de || '';
-  el.className = 'discover-quote ' + (variant || 'pin-cream') + (wide ? ' pin-wide' : '');
-  el.style.display = '';
-}
-let __discoverSongs = [];
-let __discoverSongIdx = -1;
-let __discoverArmReturning = false;
-async function renderDiscoverDeck(){
-  try{
-    const headers = { apikey: HJ_SB_ANON, Authorization: 'Bearer ' + HJ_SB_ANON };
-    // Playlist "Songwriters Picks" (Album "Top 50") in Track-Reihenfolge laden, damit der
-    // Player deterministisch mit Track 1 startet. Der Zufalls-Button springt danach innerhalb
-    // dieser Playlist herum.
-    const tracksRes = await fetch(HJ_SB_URL + '/rest/v1/playlist_tracks?select=song_slug,position&playlist_slug=eq.songwriters-picks&order=position.asc', { headers });
-    if(!tracksRes.ok) return;
-    const tracks = await tracksRes.json();
-    if(!Array.isArray(tracks) || !tracks.length) return;
-    const orderedSlugs = tracks.map(t => t.song_slug);
-    const slugList = orderedSlugs.map(s=>'"'+s+'"').join(',');
-    const url = HJ_SB_URL + '/rest/v1/songs?select=slug,title,artist,mp3_url,cover_url,lyrics_url&slug=in.(' + slugList + ')';
-    const res = await fetch(url, { headers });
-    if(!res.ok) return;
-    const songsRaw = await res.json();
-    if(!Array.isArray(songsRaw) || !songsRaw.length) return;
-    const bySlug = {};
-    songsRaw.forEach(s => bySlug[s.slug] = s);
-    const songs = orderedSlugs.map(slug => bySlug[slug]).filter(Boolean);
-    if(!songs.length) return;
-    __discoverSongs = songs;
-    __discoverSongIdx = Math.floor(Math.random() * songs.length); // Zufallswiedergabe von Anfang an
-    const deck = document.getElementById('discoverDeck');
-    const tile = document.getElementById('discoverDeckTile');
-    if(!deck || !tile) return;
-    discoverShowSong(__discoverSongs[__discoverSongIdx]);
-    tile.style.display = '';
-
-    document.getElementById('discoverDeckCoverWrap').addEventListener('click', function(e){
-      e.preventDefault(); e.stopPropagation();
-      discoverTogglePlay();
-    });
-    document.getElementById('discoverDeckSignatureBtn').addEventListener('click', function(e){
-      e.preventDefault(); e.stopPropagation();
-      openDiscoverViewer();
-    });
-    document.getElementById('discoverDeckDiceBtn').addEventListener('click', function(e){
-      e.preventDefault(); e.stopPropagation();
-      discoverPlayRandom();
-    });
-    deck.addEventListener('click', function(){
-      window.open('https://hitjourney.com', '_blank', 'noopener');
-    });
-  }catch(e){ /* Netzwerk — Deck bleibt einfach ausgeblendet */ }
-}
-function discoverShowSong(song){
-  __discoverSong = song;
-  const cover = document.getElementById('discoverDeckCover');
-  const tonearm = document.getElementById('discoverDeckTonearm');
-  const title = document.getElementById('discoverDeckTitle');
-  const artist = document.getElementById('discoverDeckArtist');
-  if(cover) cover.src = song.cover_url || '';
-  if(tonearm) tonearm.src = DECK_TONEARM_DATA_URI;
-  if(title) title.textContent = song.title || '—';
-  if(artist) artist.textContent = song.artist || '';
-  discoverSetArmRot(DECK_TONEARM_START_DEG);
-}
-function discoverSetArmRot(deg){
-  const deck = document.getElementById('discoverDeck');
-  const tonearm = document.getElementById('discoverDeckTonearm');
-  if(deck) deck.style.setProperty('--arm-rot', deg + 'deg');
-  if(tonearm) tonearm.style.transform = 'rotate(' + deg + 'deg)';
-}
-function discoverEnsureAudio(){
-  if(__discoverAudio) return __discoverAudio;
-  __discoverAudio = new Audio();
-  __discoverAudio.addEventListener('timeupdate', discoverOnTimeUpdate);
-  __discoverAudio.addEventListener('ended', discoverOnEnded);
-  return __discoverAudio;
-}
-function discoverTogglePlay(){
-  if(!__discoverSong) return;
-  const deck = document.getElementById('discoverDeck');
-  const audio = discoverEnsureAudio();
-  if(!audio.src){ audio.src = __discoverSong.mp3_url; }
-  if(audio.paused){
-    audio.play().catch(()=>{});
-    if(deck) deck.classList.add('is-playing');
-  } else {
-    // Pausieren friert Cover und Tonarm exakt an der aktuellen Position ein — kein Reset.
-    audio.pause();
-    if(deck) deck.classList.remove('is-playing');
-  }
-}
-function discoverPlayRandom(){
-  if(!__discoverSongs.length) return;
-  if(__discoverSongs.length > 1){
-    let n;
-    do { n = Math.floor(Math.random() * __discoverSongs.length); } while(n === __discoverSongIdx);
-    __discoverSongIdx = n;
-  }
-  const song = __discoverSongs[__discoverSongIdx];
-  const deck = document.getElementById('discoverDeck');
-  __discoverArmReturning = false;
-  if(deck) deck.classList.remove('arm-returning');
-  discoverShowSong(song);
-  const audio = discoverEnsureAudio();
-  audio.src = song.mp3_url;
-  audio.currentTime = 0;
-  audio.play().catch(()=>{});
-  if(deck) deck.classList.add('is-playing');
-}
-function discoverOnTimeUpdate(){
-  const a = __discoverAudio;
-  if(!a || !a.duration || !isFinite(a.duration)) return;
-  const deck = document.getElementById('discoverDeck');
-  if(a.duration - a.currentTime <= 2){
-    if(!__discoverArmReturning){
-      __discoverArmReturning = true;
-      if(deck) deck.classList.add('arm-returning');
-      discoverSetArmRot(DECK_TONEARM_START_DEG);
-    }
-    return;
-  }
-  const p = Math.min(1, Math.max(0, a.currentTime / (a.duration - 2)));
-  discoverSetArmRot(DECK_TONEARM_START_DEG + (DECK_TONEARM_END_DEG - DECK_TONEARM_START_DEG) * p);
-}
-function discoverOnEnded(){
-  const deck = document.getElementById('discoverDeck');
-  if(deck) deck.classList.remove('is-playing', 'arm-returning');
-  __discoverArmReturning = false;
-  discoverSetArmRot(DECK_TONEARM_START_DEG);
-  discoverPlayRandom(); // Zufallswiedergabe laeuft nach Songende automatisch weiter
-}
-function openDiscoverViewer(){
-  if(!__discoverSong || !__discoverSong.lyrics_url) return;
-  const view = document.getElementById('discoverLyricsView');
-  const img = document.getElementById('discoverLyricsImg');
-  if(!view || !img) return;
-  img.src = __discoverSong.lyrics_url;
-  view.classList.add('open');
-}
-function closeDiscoverViewer(){
-  const view = document.getElementById('discoverLyricsView');
-  if(view) view.classList.remove('open');
-}
-
-function renderEntwPanel(){
-  const pm = document.getElementById('entwPanelMount');
-  if(!pm) return;
-  if(!__entwOpen){ pm.innerHTML = ''; return; }
-  const meta = ENTW_THEMEN.find(t=>t.key===__entwOpen);
-  const d = (__entwData && __entwData[__entwOpen]) || {};
-  const bullets = Array.isArray(d.bullets) ? d.bullets : [];
-  const bulletHtml = bullets.map(b=>{
-    // Rückwärtskompatibel: alte gecachte Daten liefern ggf. reine Strings statt {text,url,src}.
-    const text = (typeof b === 'object' && b) ? String(b.text||'') : String(b||'');
-    const url  = (typeof b === 'object' && b) ? String(b.url ||'') : '';
-    const src  = (typeof b === 'object' && b) ? String(b.src ||'') : '';
-    const href = entwLink(url, text);
-    return `<li><a class="ep-bullet-link" href="${entwEscape(href)}" target="_blank" rel="noopener noreferrer">${entwEscape(text)}${src?` <span class="ep-src-tag">(${entwEscape(src)})</span>`:''}</a></li>`;
-  }).join('');
-  pm.innerHTML = `<div class="entw-panel">`
-    + `<h4>${entwEscape(meta?meta.titel:'')}</h4>`
-    + (d.summary ? `<div class="ep-sum">${entwEscape(d.summary)}</div>` : '')
-    + (bullets.length ? `<div class="ep-blabel">Bedeutung für Anleger</div><ul>${bulletHtml}</ul>` : '')
-    + `</div>`;
-}
-
-window.waxEntwToggle = function(key){
-  __entwOpen = (__entwOpen === key) ? null : key;
-  // Kachel-Status + Panel ohne Neuladen aktualisieren
-  document.querySelectorAll('#overviewEntwicklungen .entw-tile').forEach((el,i)=>{
-    const k = ENTW_THEMEN[i] && ENTW_THEMEN[i].key;
-    const on = (k === __entwOpen);
-    el.classList.toggle('active', on);
-    el.setAttribute('aria-expanded', on?'true':'false');
-  });
-  renderEntwPanel();
-};
 
 function renderUebersicht() {
   applyOverviewModeLabels();
@@ -4231,9 +3817,7 @@ function renderUebersicht() {
   </div>`;
   const heroMount = document.getElementById('overviewHeroMount');
   if (heroMount) heroMount.innerHTML = hero;
-  renderEntwicklungen();
-  renderCnbcNews();
-  renderDiscoverStrip();
+  renderHeadlinesTeaser();
 
   // === Ranking-Zeilen (verschlankt, Look der Aktiven Positionen, 7 Spalten) ===
   // YTD + Heute dauerhaft sichtbar; Perf. p.a. (groß) mit Gewinn Alltime (klein) zusammengeführt.
@@ -7991,9 +7575,6 @@ body.theme-classic .chart-modal-title,
 .structure-title,
 body.theme-modern .structure-title,
 body.theme-classic .structure-title,
-.entw-tile .et-ttl,
-body.theme-modern .entw-tile .et-ttl,
-body.theme-classic .entw-tile .et-ttl,
 .rules-title,
 body.theme-modern .rules-title,
 body.theme-classic .rules-title{
@@ -8100,9 +7681,6 @@ body.theme-classic .dh-card,
 .structure-card,
 body.theme-modern .structure-card,
 body.theme-classic .structure-card,
-.entw-panel,
-body.theme-modern .entw-panel,
-body.theme-classic .entw-panel,
 .dc-head,
 body.theme-modern .dc-head,
 body.theme-classic .dc-head,
@@ -8126,9 +7704,6 @@ body.theme-classic .chart-modal{ padding:24px !important; }
 .structure-card,
 body.theme-modern .structure-card,
 body.theme-classic .structure-card{ padding:20px 20px 18px !important; }
-.entw-panel,
-body.theme-modern .entw-panel,
-body.theme-classic .entw-panel{ padding:20px 22px !important; }
 .dh-card,
 body.theme-modern .dh-card,
 body.theme-classic .dh-card{ padding:24px !important; }
@@ -8620,41 +8195,6 @@ body.theme-classic .dc-head,
 .dc-card,
 body.theme-modern .dc-card,
 body.theme-classic .dc-card{ box-shadow:0 8px 30px rgba(0,0,0,.06) !important; }
-.entw-tile:hover,
-body.theme-modern .entw-tile:hover,
-body.theme-classic .entw-tile:hover,
-.entw-tile.active,
-body.theme-modern .entw-tile.active,
-body.theme-classic .entw-tile.active{ box-shadow:inset 3px 0 0 var(--entw-blue), inset 0 3px 0 var(--entw-blue), 0 8px 24px rgba(0,0,0,.10) !important; }
-
-/* ---------- Newsbereich ---------- */
-.entw-tiles,
-body.theme-modern .entw-tiles,
-body.theme-classic .entw-tiles{ gap:12px; }
-.entw-tile,
-body.theme-modern .entw-tile,
-body.theme-classic .entw-tile{ padding:18px 34px 18px 20px; min-height:80px; }
-.entw-tile .et-ttl,
-body.theme-modern .entw-tile .et-ttl,
-body.theme-classic .entw-tile .et-ttl{ line-height:1.3; }
-.cnbc-wrap,
-body.theme-modern .cnbc-wrap,
-body.theme-classic .cnbc-wrap{ margin-bottom:28px; }
-.cnbc-item,
-body.theme-modern .cnbc-item,
-body.theme-classic .cnbc-item{ padding:8px 6px; gap:12px; }
-.cnbc-rank,
-body.theme-modern .cnbc-rank,
-body.theme-classic .cnbc-rank{ opacity:.6; }
-.cnbc-link,
-body.theme-modern .cnbc-link,
-body.theme-classic .cnbc-link{ line-height:1.6; }
-.cnbc-ext,
-body.theme-modern .cnbc-ext,
-body.theme-classic .cnbc-ext{ letter-spacing:.02em; }
-.hot-item-btn,
-body.theme-modern .hot-item-btn,
-body.theme-classic .hot-item-btn{ padding:8px 6px 8px 20px; line-height:1.6; }
 
 
 /* ============================================================
@@ -8744,14 +8284,6 @@ body.theme-classic .kk-toggle:focus-visible,
 body.theme-modern .btn-outline:focus-visible,
 body.theme-classic .btn-outline:focus-visible{ outline:2px solid var(--wax-accent); outline-offset:2px; }
 
-/* ---------- News: weichere Uebergaenge ---------- */
-.cnbc-item,
-body.theme-modern .cnbc-item,
-body.theme-classic .cnbc-item,
-.hot-item-btn,
-body.theme-modern .hot-item-btn,
-body.theme-classic .hot-item-btn{ transition:background .18s ease; }
-
 /* ---------- Modal: Close-Button besser integriert ---------- */
 .chart-modal-close,
 body.theme-modern .chart-modal-close,
@@ -8772,20 +8304,6 @@ body.theme-classic .chart-modal-close:hover{ background:var(--wax-card-soft); co
 .hd-logo img,
 body.theme-modern .hd-logo img,
 body.theme-classic .hd-logo img{ height:56px; }
-
-/* ---------- Folio.today-Kachel: Navy wie Header, Logo nicht verzerrt ---------- */
-.today-tile,
-body.theme-modern .today-tile,
-body.theme-classic .today-tile{ background:var(--wax-dark); border-color:var(--wax-dark); }
-.today-tile:hover,
-body.theme-modern .today-tile:hover,
-body.theme-classic .today-tile:hover{ background:var(--wax-dark-2); border-color:var(--wax-dark-2); }
-.today-tile,
-body.theme-modern .today-tile,
-body.theme-classic .today-tile{ padding:10px 16px !important; }
-.today-tile img,
-body.theme-modern .today-tile img,
-body.theme-classic .today-tile img{ height:auto; max-height:48px; width:auto; max-width:100%; object-fit:contain; }
 
 /* ---------- Einzeldepot Mini-KPI-Kacheln: Kontrast-Fix ---------- */
 .dc-mini-kpi.depot .dc-mini-label,
@@ -8812,23 +8330,6 @@ body.theme-classic .dc-kpi-line .dc-pct{ color:var(--wax-muted) !important; }
 .dc-kpi-line.total span,
 body.theme-modern .dc-kpi-line.total span,
 body.theme-classic .dc-kpi-line.total span{ color:var(--wax-muted-2) !important; }
-
-/* ---------- CNBC News: identischer Stil wie Newsflash-Headlines ---------- */
-.cnbc-rank,
-body.theme-modern .cnbc-rank,
-body.theme-classic .cnbc-rank,
-.cnbc-ext,
-body.theme-modern .cnbc-ext,
-body.theme-classic .cnbc-ext{ display:none; }
-.cnbc-item,
-body.theme-modern .cnbc-item,
-body.theme-classic .cnbc-item{ padding:8px 6px 8px 20px; }
-.cnbc-item::before,
-body.theme-modern .cnbc-item::before,
-body.theme-classic .cnbc-item::before{ content:''; position:absolute; left:2px; top:15px; width:7px; height:7px; border-radius:50%; background:var(--entw-blue); }
-.cnbc-item:hover .cnbc-link,
-body.theme-modern .cnbc-item:hover .cnbc-link,
-body.theme-classic .cnbc-item:hover .cnbc-link{ text-decoration:none; color:var(--wax-text); }
 
 
 /* ---------- dc-mini-kpi: Hauptzahl dunkel, Delta/Prozent farbig wie Positionszeilen ---------- */
@@ -8873,9 +8374,6 @@ body.theme-classic .dh-card,
 .structure-card,
 body.theme-modern .structure-card,
 body.theme-classic .structure-card,
-.entw-panel,
-body.theme-modern .entw-panel,
-body.theme-classic .entw-panel,
 .dc-head,
 body.theme-modern .dc-head,
 body.theme-classic .dc-head,
@@ -8929,17 +8427,6 @@ body.theme-classic .dhc-ylab,
 body.theme-modern .dhc-xlab,
 body.theme-classic .dhc-xlab{ opacity:.85; }
 
-/* ---------- News: weniger "Kachel", mehr Informationsoberflaeche ---------- */
-.entw-tile,
-body.theme-modern .entw-tile,
-body.theme-classic .entw-tile{ padding:14px 30px 14px 16px; min-height:64px; }
-.entw-tiles,
-body.theme-modern .entw-tiles,
-body.theme-classic .entw-tiles{ gap:10px; }
-.entw-panel .ep-sum,
-body.theme-modern .entw-panel .ep-sum,
-body.theme-classic .entw-panel .ep-sum{ font-weight:400; }
-
 /* ---------- Einheitlicher vertikaler Rhythmus zwischen Sektionen ---------- */
 .kpi-grid,
 body.theme-modern .kpi-grid,
@@ -8952,16 +8439,7 @@ body.theme-modern .tw,
 body.theme-classic .tw,
 .dc-summary-kpis,
 body.theme-modern .dc-summary-kpis,
-body.theme-classic .dc-summary-kpis,
-.entw-wrap,
-body.theme-modern .entw-wrap,
-body.theme-classic .entw-wrap,
-.cnbc-wrap,
-body.theme-modern .cnbc-wrap,
-body.theme-classic .cnbc-wrap,
-.today-wrap,
-body.theme-modern .today-wrap,
-body.theme-classic .today-wrap{ margin-bottom:28px !important; }
+body.theme-classic .dc-summary-kpis{ margin-bottom:28px !important; }
 
 
 /* ---------- Dark Mode: Kontrast-Fix (dunkler Text auf dunkler Karte war unlesbar) ---------- */
@@ -8971,205 +8449,6 @@ body.theme-modern .btn-outline{ color:var(--wax-text-2) !important; }
 body.theme-modern .mode-toggle,
 body.theme-modern .icon-btn{ color:var(--wax-accent) !important; border-color:var(--wax-accent) !important; }
 
-/* ---------- Dark Mode: Folio.today-Kachel als eigene Flaeche erkennbar ---------- */
-body.theme-modern .today-tile{ background:var(--wax-card) !important; border-color:var(--wax-border) !important; }
-body.theme-modern .today-tile:hover{ background:var(--wax-card-soft) !important; }
-
-
-/* ============================================================
-   Entdecken-Streifen: Zitate (mein-lieber-sohn.de) + Live-Player
-   (hitjourney.com). Zitat-Karten in WAX-eigener Kartensprache,
-   Deck bewusst im hitjourney-Look (schwarz/rot), themeunabhaengig.
-   ============================================================ */
-.discover-grid{
-  display:grid;
-  grid-template-columns:1.3fr 1fr;
-  gap:24px;
-  margin-bottom:28px;
-  align-items:center;
-}
-@media(max-width:860px){ .discover-grid{ grid-template-columns:1fr; gap:18px; } }
-
-/* Zitat-Karten im 1:1-Look von mein-lieber-sohn.de: angepinnte Notizzettel statt WAX-Karte.
-   Beide zusammen in einer Spalte rechts, damit sie nicht neben dem Deck verlorengehen. */
-.discover-quotes-col{
-  display:flex;
-  flex-direction:column;
-  gap:60px;
-  justify-content:flex-start;
-  align-self:flex-start;
-  padding-top:2%;
-}
-.discover-quotes-link{
-  display:block;
-  text-align:center;
-  font-family:var(--font-display);
-  font-style:italic;
-  font-size:13px;
-  letter-spacing:.03em;
-  color:var(--wax-muted);
-  text-decoration:none;
-  opacity:.8;
-  transition:opacity .2s ease;
-}
-.discover-quotes-link:hover{ opacity:1; }
-.discover-quote{
-  position:relative;
-  display:block;
-  border-radius:3px;
-  padding:22px 24px 20px;
-  text-decoration:none;
-  color:inherit;
-  cursor:pointer;
-  transition:transform .3s ease, box-shadow .3s ease;
-}
-.discover-quote::before{
-  content:"";position:absolute;top:0;left:50%;transform:translate(-50%,-50%);
-  width:12px;height:12px;border-radius:50%;
-  background:#85ACC9;opacity:.75;
-  box-shadow:0 2px 6px rgba(0,0,0,.4);
-  z-index:2;
-}
-.discover-quote:hover{ transform:translateY(-4px); box-shadow:0 20px 48px rgba(0,0,0,.28); }
-.discover-quote-text{ margin:0; font-family:'Montserrat',var(--font-display),sans-serif; letter-spacing:-.005em; }
-.discover-quote-author{
-  display:block;margin-top:12px;
-  font-family:'Montserrat',-apple-system,'Helvetica Neue',Arial,sans-serif;
-  font-size:13px;letter-spacing:.16em;font-weight:700;
-  color:#2B5575;
-}
-.discover-quote-author::before{ content:"— "; opacity:.5; }
-.discover-quote.pin-cream{ background:#fdf8f0; box-shadow:4px 5px 18px rgba(0,0,0,.22); transform:rotate(-1.2deg); }
-.discover-quote.pin-cream .discover-quote-text{ color:#02111E; font-size:19px; line-height:1.5; font-weight:400; }
-.discover-quote.pin-gold{ background:linear-gradient(135deg,#85ACC9,#5884A4); box-shadow:4px 5px 18px rgba(0,0,0,.3); transform:rotate(-.5deg); }
-.discover-quote.pin-gold .discover-quote-text{ font-family:'Garet','Montserrat',sans-serif; color:#1a1208; font-size:20px; line-height:1.45; font-weight:700; }
-.discover-quote.pin-gold::before{ background:#fff; opacity:.5; }
-.discover-quote.pin-dark{ background:linear-gradient(135deg,#02111E,#072337); border:1px solid rgba(133,172,201,.24); box-shadow:4px 5px 18px rgba(0,0,0,.4); transform:rotate(.8deg); }
-.discover-quote.pin-dark .discover-quote-text{ color:#f5e8cc; font-size:19px; line-height:1.5; font-weight:500; }
-.discover-quote.pin-dark::before{ background:rgba(255,255,255,.4); }
-.discover-quote.pin-sage{ background:linear-gradient(135deg,#dbe9f4,#bdd5e8); box-shadow:4px 5px 18px rgba(0,0,0,.22); transform:rotate(1.4deg); }
-.discover-quote.pin-sage .discover-quote-text{ color:#2a3424; font-size:18px; line-height:1.55; font-weight:400; }
-/* pin-wide: ca. jedes 3. Zitat im Original — unabhaengig von der Farbe groesser/fetter fuer Abwechslung */
-.discover-quote.pin-wide .discover-quote-text{ font-size:23px !important; font-weight:700 !important; letter-spacing:-.01em; line-height:1.35 !important; }
-@media(max-width:480px){
-  .discover-quote{ padding:16px 15px 14px; }
-  .discover-quote-text{ font-size:14px !important; line-height:1.45 !important; }
-  .discover-quote.pin-wide .discover-quote-text{ font-size:17px !important; line-height:1.3 !important; }
-  .discover-quote-author{ font-size:10px; margin-top:8px; }
-}
-
-/* Deck-Kachel — leichtes Querformat: Plattenspieler links, hitjourney-Branding rechts daneben.
-   Original-Hintergrundfarbe der hitjourney-Kopfzeile (rgba(6,20,32,1)), damit Rot/Weiss
-   auf dem Deck besser stehen als auf reinem Schwarz. */
-.discover-deck-tile{
-  display:flex;
-  align-items:center;
-  gap:6%;
-  aspect-ratio:3/2;
-  background:#06141F;
-  border:2px solid #83ABD0;
-  border-radius:18px;
-  overflow:hidden;
-  padding:0 5% 0 0;
-  box-shadow:0 4px 16px rgba(0,0,0,.15);
-}
-.discover-deck{
-  position:relative;
-  height:84%;
-  aspect-ratio:1/1;
-  flex-shrink:0;
-  margin-left:5%;
-  cursor:pointer;
-}
-.discover-deck .deck-cover-wrap{
-  position:absolute;left:7.6%;top:8.4%;width:74.8%;aspect-ratio:1;
-  border-radius:50%;overflow:hidden;z-index:2;background:#000;cursor:pointer;
-}
-.discover-deck .deck-cover-inner{
-  width:100%;height:100%;position:relative;
-  animation:discoverCoverSpin 3.7s linear infinite;
-  animation-play-state:paused;
-}
-.discover-deck.is-playing .deck-cover-inner{ animation-play-state:running; }
-@keyframes discoverCoverSpin{ from{transform:rotate(0deg)} to{transform:rotate(360deg)} }
-.discover-deck .deck-cover-img{
-  width:100%;height:100%;object-fit:cover;border-radius:50%;display:block;
-  transform:scale(1.22);
-  filter:brightness(1.10) contrast(1.14) saturate(1.12);
-}
-.discover-deck .deck-tonearm{
-  position:absolute;inset:0;width:100%;height:100%;object-fit:contain;z-index:4;
-  pointer-events:none;transform-origin:79.6% 24.1%;
-  transform:rotate(var(--arm-rot,-9.5deg));transition:transform .28s linear;
-}
-.discover-deck:not(.is-playing) .deck-tonearm{ transition:transform .45s ease; }
-.discover-deck.arm-returning .deck-tonearm{ transition:transform 1.4s ease !important; }
-.discover-deck .deck-center-pin{
-  position:absolute;left:45%;top:45.8%;width:3.2%;aspect-ratio:1;
-  border-radius:50%;background:#f3f3f3;transform:translate(-50%,-50%);z-index:6;
-}
-.discover-deck .deck-red-btn{
-  position:absolute;right:9.8%;bottom:8%;width:8.4%;aspect-ratio:1;
-  border:0;border-radius:50%;background:#AC0A1B;z-index:8;cursor:pointer;
-  box-shadow:0 0 0 1px rgba(255,255,255,.08),0 2px 8px rgba(0,0,0,.35);
-}
-.discover-deck .deck-red-btn:active{ transform:scale(.92); }
-.discover-deck .deck-info{ position:absolute;left:4%;bottom:3.5%;right:26%;z-index:7; }
-.discover-deck .deck-title{
-  font-size:14px;font-weight:800;color:#f3f8fc;white-space:nowrap;
-  overflow:hidden;text-overflow:ellipsis;text-shadow:0 1px 6px #000;
-}
-.discover-deck .deck-artist{
-  font-size:11px;color:#9dbddb;white-space:nowrap;overflow:hidden;
-  text-overflow:ellipsis;text-shadow:0 1px 5px #000;margin-top:2px;
-}
-/* Logo sitzt nicht zentriert, sondern im unteren Drittel: 2/3 Luft darueber, 1/3 darunter.
-   Random-Button sitzt zentriert im oberen Freiraum, knapp unterhalb des Tonarm-Kopfes. */
-.discover-deck-brand{
-  position:relative;
-  flex:1;
-  align-self:stretch;
-  display:flex;
-  flex-direction:column;
-  align-items:center;
-  min-width:0;
-  text-decoration:none;
-}
-.discover-deck-brand-gap{ flex:2; }
-.discover-deck-brand-gap ~ .discover-deck-brand-gap{ flex:1; }
-.discover-deck-logo-h{ width:98%; height:auto; opacity:.85; object-fit:contain; }
-.discover-deck-dice{
-  position:absolute;top:calc(26% + 57px);left:50%;transform:translate(-50%,-50%);z-index:9;
-  width:29%;aspect-ratio:1;
-  border:0;border-radius:50%;background:transparent;padding:0;cursor:pointer;opacity:.85;
-}
-.discover-deck-dice img{ width:100%;height:100%;object-fit:contain;display:block; }
-.discover-deck-dice:active{ transform:translate(-50%,-50%) scale(.9); }
-@media(max-width:480px){
-  .discover-deck-tile{ aspect-ratio:16/11; }
-  .discover-deck-logo-h{ width:84%; }
-  .discover-deck-dice{ width:34%; }
-}
-
-/* Lyrics-Viewer: vollflaechig, ohne Rahmen/Effekt — wie bei hitjourney.com. Klick schliesst,
-   der Song laeuft unbeeinflusst weiter. */
-.discover-lyrics-view{
-  display:none;
-  position:fixed;inset:0;z-index:400;
-  align-items:center;justify-content:center;
-  padding:18px;
-  background:rgba(6,20,32,.92);
-  backdrop-filter:blur(12px);
-  -webkit-backdrop-filter:blur(12px);
-  cursor:pointer;
-}
-.discover-lyrics-view.open{ display:flex; }
-.discover-lyrics-img{
-  max-width:96vw;max-height:96vh;
-  width:auto;height:auto;
-  object-fit:contain;
-  display:block;
-}
 
 /* iOS-Sticky-Flicker-Fix: Header/Nav/Statusleiste sind drei unabhängige
    position:sticky-Elemente uebereinander. Safari haelt sie beim schnellen
@@ -9227,6 +8506,143 @@ body.theme-classic .statusbar{
   window.addEventListener('load', alignStatusbar);
   window.addEventListener('resize', alignStatusbar);
   window.addEventListener('orientationchange', alignStatusbar);
+})();
+</script>
+
+<!-- Anspieltipp-Player (1:1 aus headlines.html) — Wiedergabe wird über localStorage geteilt,
+     damit ein auf Home oder in den Headlines gestarteter Song beim Wechseln zwischen beiden
+     Seiten einfach weiterläuft, statt neu zu starten. -->
+<script>
+(function(){
+  const HJ_SB_URL = 'https://hioaqcwqzeqcvvikollq.supabase.co';
+  const HJ_SB_ANON = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imhpb2FxY3dxemVxY3Z2aWtvbGxxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzIzNTQ3MTgsImV4cCI6MjA4NzkzMDcxOH0.IvZ7YZwrhjNg8SwwO9rnXoiDwOVncY8iVcucmipmuFI';
+  const HJ_STATE_KEY = 'folioHitjourneyState';
+  let songs = [], idx = -1, audio = null, loaded = false;
+
+  function showSong(song){
+    const t = document.getElementById('anspielTitle');
+    const a = document.getElementById('anspielArtist');
+    if(t) t.textContent = song.title || '—';
+    if(a) a.textContent = song.artist || '';
+  }
+  function setPlayIcon(playing){
+    const btn = document.getElementById('anspielPlayBtn');
+    if(btn) btn.classList.toggle('is-playing', playing);
+  }
+  function saveState(){
+    if(idx < 0 || !songs.length) return;
+    try{
+      localStorage.setItem(HJ_STATE_KEY, JSON.stringify({
+        slug: songs[idx].slug,
+        currentTime: audio ? audio.currentTime : 0,
+        paused: audio ? audio.paused : true,
+        ts: Date.now()
+      }));
+    }catch(e){}
+  }
+  let __lastSave = 0;
+  function saveStateThrottled(){
+    const now = Date.now();
+    if(now - __lastSave > 3000){ __lastSave = now; saveState(); }
+  }
+  function ensureAudio(){
+    if(audio) return audio;
+    audio = new Audio();
+    audio.addEventListener('play', () => { setPlayIcon(true); saveState(); });
+    audio.addEventListener('pause', () => { setPlayIcon(false); saveState(); });
+    audio.addEventListener('timeupdate', saveStateThrottled);
+    // Nach Songende laeuft die Playlist automatisch in Zufallswiedergabe weiter.
+    audio.addEventListener('ended', () => playRandom());
+    return audio;
+  }
+  function playSong(song){
+    showSong(song);
+    const au = ensureAudio();
+    au.src = song.mp3_url; au.currentTime = 0;
+    loaded = true;
+    au.play().catch(()=>{});
+    saveState();
+  }
+  function togglePlayPause(){
+    if(!songs.length) return;
+    if(!loaded){ playSong(songs[idx]); return; }
+    const au = ensureAudio();
+    if(au.paused){ au.play().catch(()=>{}); } else { au.pause(); }
+  }
+  function playRandom(){
+    if(!songs.length) return;
+    if(songs.length > 1){
+      let n; do{ n = Math.floor(Math.random()*songs.length); }while(n===idx);
+      idx = n;
+    } else { idx = 0; }
+    playSong(songs[idx]);
+  }
+  window.addEventListener('pagehide', saveState);
+  window.addEventListener('beforeunload', saveState);
+
+  (async function init(){
+    try{
+      const headers = { apikey: HJ_SB_ANON, Authorization: 'Bearer ' + HJ_SB_ANON };
+      const tracksRes = await fetch(HJ_SB_URL + '/rest/v1/playlist_tracks?select=song_slug,position&playlist_slug=eq.songwriters-picks&order=position.asc', { headers });
+      if(!tracksRes.ok) return;
+      const tracks = await tracksRes.json();
+      if(!Array.isArray(tracks) || !tracks.length) return;
+      const orderedSlugs = tracks.map(t => t.song_slug);
+      const slugList = orderedSlugs.map(s=>'"'+s+'"').join(',');
+      const url = HJ_SB_URL + '/rest/v1/songs?select=slug,title,artist,mp3_url&slug=in.(' + slugList + ')';
+      const res = await fetch(url, { headers });
+      if(!res.ok) return;
+      const raw = await res.json();
+      if(!Array.isArray(raw) || !raw.length) return;
+      const bySlug = {};
+      raw.forEach(s => bySlug[s.slug] = s);
+      songs = orderedSlugs.map(slug => bySlug[slug]).filter(Boolean);
+      if(!songs.length) return;
+
+      // Laufende Wiedergabe von der anderen Folio.wax-Seite (Home/Headlines) übernehmen,
+      // statt neu von vorn/zufällig zu starten.
+      let resumed = false;
+      try{
+        const raw2 = localStorage.getItem(HJ_STATE_KEY);
+        if(raw2){
+          const st = JSON.parse(raw2);
+          if(st && st.slug && Date.now() - (st.ts||0) < 6*3600*1000){
+            const foundIdx = songs.findIndex(s => s.slug === st.slug);
+            if(foundIdx !== -1){
+              idx = foundIdx;
+              showSong(songs[idx]);
+              const au = ensureAudio();
+              const resumeTime = st.currentTime || 0;
+              const wasPlaying = !st.paused;
+              au.src = songs[idx].mp3_url;
+              loaded = true;
+              au.addEventListener('loadedmetadata', function onMeta(){
+                au.currentTime = resumeTime;
+                au.removeEventListener('loadedmetadata', onMeta);
+                if(wasPlaying) au.play().catch(()=>{});
+              });
+              resumed = true;
+            }
+          }
+        }
+      }catch(e){}
+      if(!resumed){
+        idx = Math.floor(Math.random() * songs.length);
+        showSong(songs[idx]);
+      }
+
+      const playBtn = document.getElementById('anspielPlayBtn');
+      if(playBtn) playBtn.addEventListener('click', function(e){
+        e.preventDefault(); e.stopPropagation();
+        togglePlayPause();
+      });
+      const randomBtn = document.getElementById('anspielRandomBtn');
+      if(randomBtn) randomBtn.addEventListener('click', function(e){
+        e.preventDefault(); e.stopPropagation();
+        playRandom();
+      });
+    }catch(e){ /* Netzwerk — Titel bleibt leer */ }
+  })();
 })();
 </script>
 
