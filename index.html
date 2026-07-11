@@ -191,6 +191,24 @@ td:nth-child(2) { text-align: left; }
 .chart-range-toggle{display:flex;gap:6px;margin:12px 0 4px}
 .chart-range-btn{flex:1;border:1px solid var(--wax-border);background:var(--wax-panel);color:var(--wax-muted);font-size:12px;font-weight:700;letter-spacing:.02em;padding:6px 0;border-radius:999px;cursor:pointer;transition:all .15s}
 .chart-range-btn.active{background:var(--wax-accent);border-color:var(--wax-accent);color:#fff}
+/* Rückgänge-Tab: kuratierte Crash-/Bärenmarkt-Tabelle im Chart-Popup */
+.ct-section{margin-top:16px}
+.ct-section:first-child{margin-top:4px}
+.ct-section-title{font-size:12px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--wax-muted-2);margin-bottom:6px}
+.ct-table-wrap{overflow-x:auto}
+.ct-table{width:100%;border-collapse:collapse;font-size:12px}
+.ct-table th,.ct-table td{text-align:left}
+.ct-table th{white-space:nowrap}
+.ct-table td{padding:8px 10px;border-bottom:1px solid var(--wax-line);vertical-align:top;color:var(--wax-text);white-space:normal}
+.ct-table tr:last-child td{border-bottom:none}
+.ct-period{font-weight:700;white-space:nowrap}
+.ct-pct{font-weight:700;color:var(--brand-orange);white-space:nowrap;font-variant-numeric:tabular-nums}
+.ct-desc{color:var(--wax-muted)}
+.ct-footer{display:flex;justify-content:space-between;gap:10px;margin-top:14px;padding-top:10px;border-top:1px solid var(--wax-border);font-size:11px;color:var(--wax-muted-2)}
+/* kleiner Rückgänge-Schnellzugriff oben rechts auf jeder Index-Kachel */
+.bk-item{position:relative}
+.bk-crash-btn{position:absolute;top:10px;right:10px;width:24px;height:24px;border-radius:50%;border:1px solid var(--wax-border);background:var(--wax-card);color:var(--wax-muted);font-size:13px;line-height:1;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all .15s;padding:0}
+.bk-crash-btn:hover{border-color:var(--brand-orange);color:var(--brand-orange)}
 @media (max-width: 480px){.chart-modal{padding:16px}.chart-modal-price{font-size:22px}}
 .info-box { background: var(--wax-panel); border: 1px solid var(--wax-border); padding: 12px; border-radius: 3px; margin-bottom: 14px; font-size: 11px; color: #555; line-height: 1.6; }
 .statusbar { background: var(--wax-status); border-bottom: 1px solid #222; padding: 5px 24px; display: flex; align-items: center; gap: 8px; font-size: 10px; color: var(--wax-muted); position: sticky; top: calc(102px + env(safe-area-inset-top,0px)); z-index: 98; }
@@ -1506,6 +1524,7 @@ body.theme-classic .dc-mini-kpi.deviation .dc-kpi-line.total strong{color:#16232
       <button type="button" class="chart-range-btn" data-range="1y" onclick="selectChartRange('1y')">1 Jahr</button>
       <button type="button" class="chart-range-btn" data-range="10y" onclick="selectChartRange('10y')">10 Jahre</button>
       <button type="button" class="chart-range-btn" data-range="max" onclick="selectChartRange('max')">Max</button>
+      <button type="button" class="chart-range-btn" data-range="crashes" onclick="selectChartRange('crashes')">History</button>
     </div>
     <div id="chartModalMount"></div>
   </div>
@@ -2573,32 +2592,11 @@ function priceEURat(wkn, iso){
 
 // ===== 12-Monats-Kursverlauf-Popup — ein Fenster für Depot/Verkauft (identisch zu Folio.invest) =====
 let __chartModalWkn = null;
-function buildChartSvg(points, markerIdx, xTicks, crashes){
+function buildChartSvg(points, markerIdx, xTicks){
   const w = 600, h = 220, padX = 6;
   const padBottom = (xTicks && xTicks.length) ? 24 : 12;
   const stepX = points.length > 1 ? (w - padX*2) / (points.length - 1) : 0;
-  // Krisen-Labels in Zeilen ("Lanes") stapeln, wenn sie zeitlich zu eng beieinander liegen, um
-  // Textüberlappung zu vermeiden (grobe Breitenschätzung reicht, da nur wenige Ereignisse pro Chart).
-  let crashLayout = [];
-  let crashLanes = 0;
-  if(crashes && crashes.length){
-    const withX = crashes.map(c => {
-      const tx = padX + c.troughIdx*stepX;
-      const label = c.label + ' ' + Math.round(c.pct*100) + '%';
-      const halfW = label.length * 2.9 + 4;
-      return { ...c, tx, label, left: tx-halfW, right: tx+halfW };
-    }).sort((a,b) => a.tx - b.tx);
-    const laneRight = [];
-    withX.forEach(it => {
-      let lane = 0;
-      while(laneRight[lane] !== undefined && it.left < laneRight[lane]){ lane++; }
-      it.lane = lane;
-      laneRight[lane] = it.right;
-    });
-    crashLayout = withX;
-    crashLanes = laneRight.length;
-  }
-  const padTop = crashLanes ? (24 + crashLanes*11) : 12;
+  const padTop = 12;
   const closes = points.map(p => p.close);
   const min = Math.min(...closes), max = Math.max(...closes);
   const span = (max - min) || 1;
@@ -2624,24 +2622,12 @@ function buildChartSvg(points, markerIdx, xTicks, crashes){
     const anchor = tx < w*0.06 ? 'start' : (tx > w*0.94 ? 'end' : 'middle');
     return '<text x="'+tx.toFixed(1)+'" y="'+(h-6).toFixed(1)+'" text-anchor="'+anchor+'" font-size="10.5" fill="var(--wax-muted)">'+t.label+'</text>';
   }).join('');
-  // Große Drawdowns (Max-Ansicht): gestrichelte Markierungslinie am Tiefpunkt + Name/Prozent oben im
-  // Chart, damit die Beschriftung nicht mit der X-Achse oder den Hoch/Tief/Aktuell-Markern kollidiert.
-  // Eng beieinander liegende Ereignisse werden über crashLayout/lane vertikal gestapelt (siehe oben).
-  const crashMarks = crashLayout.map(c => {
-    const ty = xy(c.troughIdx)[1];
-    const anchor = c.tx < w*0.14 ? 'start' : (c.tx > w*0.86 ? 'end' : 'middle');
-    const textY = padTop - 6 - c.lane*11;
-    return '<line x1="'+c.tx.toFixed(1)+'" y1="'+padTop.toFixed(1)+'" x2="'+c.tx.toFixed(1)+'" y2="'+(h-padBottom).toFixed(1)+'" stroke="var(--brand-orange)" stroke-width="1" stroke-dasharray="3,3" opacity="0.5"/>'
-      + '<circle cx="'+c.tx.toFixed(1)+'" cy="'+ty.toFixed(1)+'" r="3.5" fill="var(--brand-orange)"/>'
-      + '<text x="'+c.tx.toFixed(1)+'" y="'+textY.toFixed(1)+'" text-anchor="'+anchor+'" font-size="9.5" font-weight="700" fill="var(--brand-orange)">'+c.label+'</text>';
-  }).join('');
   return '<svg viewBox="0 0 '+w+' '+h+'" preserveAspectRatio="none" style="width:100%;height:220px;display:block">'
     + '<defs><linearGradient id="priceChartAreaGrad" x1="0" y1="0" x2="0" y2="1">'
     + '<stop offset="0%" stop-color="'+stroke+'" stop-opacity="0.16"/>'
     + '<stop offset="100%" stop-color="'+stroke+'" stop-opacity="0"/>'
     + '</linearGradient></defs>'
     + '<polygon points="'+areaPoints+'" fill="url(#priceChartAreaGrad)" stroke="none"/>'
-    + crashMarks
     + '<polyline points="'+coords+'" fill="none" stroke="'+stroke+'" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round"/>'
     + dots
     + ticks
@@ -2728,60 +2714,110 @@ function buildIndexPoints(raw){
     .sort((a,b) => String(a.date).localeCompare(String(b.date)))
     .map(p => ({ date: p.date, close: p.close }));
 }
-// Bekannte historische Schwächephasen zur Beschriftung großer Drawdowns in der Max-Ansicht. Grobe
-// Zeitfenster (Monatsgranularität) genügen — die Zuordnung erfolgt über die größte zeitliche
-// Überlappung mit dem tatsächlich erkannten Peak-Tief-Zeitraum, kein exaktes Datum nötig. Ereignisse,
-// die keinen eigenen Peak/Tief-Zyklus bilden (z.B. 11. September 2001 — lag mitten in der andauernden
-// Dotcom-Baisse ohne zwischenzeitliche Erholung), erscheinen bewusst nicht separat, sondern gehen in
-// der überlappenden längeren Krise auf.
-const CRISIS_WINDOWS = [
-  { start:'2000-03-01', end:'2002-10-01', label:'Dotcom-Crash' },
-  { start:'2007-10-01', end:'2009-03-01', label:'Lehman/Finanzkrise' },
-  { start:'2011-05-01', end:'2011-10-01', label:'Euro-Schuldenkrise' },
-  { start:'2020-02-01', end:'2020-04-01', label:'Corona-Crash' },
-  { start:'2022-01-01', end:'2022-10-01', label:'Zinsschock 2022' },
-  { start:'2017-12-01', end:'2018-12-01', label:'Krypto-Winter 2018' },
-  { start:'2021-11-01', end:'2022-11-01', label:'Krypto-Winter 2022' },
-];
-function dateOverlapMs(aStart, aEnd, bStart, bEnd){
-  const s = Math.max(new Date(aStart).getTime(), new Date(bStart).getTime());
-  const e = Math.min(new Date(aEnd).getTime(), new Date(bEnd).getTime());
-  return Math.max(0, e - s);
+// Dünnt sehr dichte Reihen (10J wöchentlich, Max monatlich über Jahrzehnte) auf eine gleichmäßige
+// Punktzahl aus, damit die Linie bei jeder Zeitspanne gleich fein/elegant wirkt statt bei hoher
+// Punktdichte durch überlappende Zacken "fett" auszusehen. Globales Tief/Hoch bleibt garantiert
+// erhalten, damit die "echtes Hoch/Tief"-Marker weiterhin exakt stimmen.
+function downsamplePoints(points, maxPoints){
+  if(!points || points.length <= maxPoints) return points;
+  let minIdx = 0, maxIdx = 0;
+  points.forEach((p,i) => { if(p.close < points[minIdx].close) minIdx = i; if(p.close > points[maxIdx].close) maxIdx = i; });
+  const keep = new Set([0, points.length-1, minIdx, maxIdx]);
+  const step = (points.length - 1) / (maxPoints - 1);
+  for(let i=0;i<maxPoints;i++){ keep.add(Math.round(i*step)); }
+  return Array.from(keep).sort((a,b)=>a-b).map(i => points[i]);
 }
-function labelForCrash(peakDate, troughDate){
-  let best = null, bestOverlap = 0;
-  CRISIS_WINDOWS.forEach(w => {
-    const ov = dateOverlapMs(peakDate, troughDate, w.start, w.end);
-    if(ov > bestOverlap){ bestOverlap = ov; best = w; }
-  });
-  return best ? best.label : ('Kursrückgang '+new Date(troughDate).getFullYear());
+// Kuratierte Übersicht der größten historischen Kursrückgänge je Index — separat abrufbar über den
+// "Rückgänge"-Reiter im Chart-Popup (statt wie zuvor als Annotation direkt im Max-Chart). Feste
+// Referenzdaten (keine Live-Berechnung aus der Kurshistorie), da die vom Worker gelieferte Historie je
+// nach Ticker unterschiedlich weit zurückreicht und nicht mit den bekannten Crash-Kennzahlen übereinstimmt.
+// "crashes" = kurze, sehr scharfe Einbrüche; "bear" = länger andauernde Bärenmärkte.
+const CRASH_TABLES = {
+  '^GSPC': {
+    since: 1928,
+    datenbasis: 'S&P 500 Kursindex seit 1928',
+    crashes: [
+      { period:'1929–1932', pct:-86.0, trigger:'Spekulationsblase', desc:'Börsencrash & Weltwirtschaftskrise' },
+      { period:'1987', pct:-34.1, trigger:'Marktpanik', desc:'Black Monday & Programmhandel' },
+      { period:'2020', pct:-33.9, trigger:'Pandemie', desc:'COVID-19 & weltweite Lockdowns' },
+    ],
+    bear: [
+      { period:'1937–1938', pct:-54.5, trigger:'Geldpolitik', desc:'Straffung der Geld- und Fiskalpolitik' },
+      { period:'1968–1970', pct:-36.1, trigger:'Inflation', desc:'Vietnamkrieg & Konjunkturabschwächung' },
+      { period:'1973–1974', pct:-48.2, trigger:'Ölkrise', desc:'OPEC-Embargo & Stagflation' },
+      { period:'1980–1982', pct:-27.1, trigger:'Zinsschock', desc:'Volcker bekämpft Inflation' },
+      { period:'1990', pct:-20.3, trigger:'Golfkrieg', desc:'Ölpreisschock & Rezessionsängste' },
+      { period:'2000–2002', pct:-49.1, trigger:'Dotcom-Blase', desc:'Platzen der Tech-Blase' },
+      { period:'2007–2009', pct:-56.8, trigger:'Finanzkrise', desc:'Immobilienblase & Lehman-Pleite' },
+      { period:'2022', pct:-25.4, trigger:'Inflation, Zinserhöhungen & Ukrainekrieg', desc:'Inflationsschock, Energiekrise & Ende der Nullzinsphase' },
+    ],
+  },
+  '^GDAXI': {
+    since: 1987,
+    datenbasis: 'DAX Performanceindex seit 1987',
+    crashes: [
+      { period:'1987', pct:-33.0, trigger:'Marktpanik', desc:'Black Monday & weltweiter Programmhandel-Crash' },
+      { period:'2020', pct:-40.1, trigger:'Pandemie', desc:'COVID-19 & weltweite Lockdowns' },
+    ],
+    bear: [
+      { period:'1998', pct:-36.0, trigger:'Schwellenländerkrise', desc:'Russland-Zahlungsausfall & LTCM-Kollaps' },
+      { period:'2000–2003', pct:-73.0, trigger:'Dotcom-Blase', desc:'Platzen der Tech-/Neuer-Markt-Blase' },
+      { period:'2007–2009', pct:-56.0, trigger:'Finanzkrise', desc:'Immobilienblase & Lehman-Pleite' },
+      { period:'2011', pct:-33.0, trigger:'Euro-Schuldenkrise', desc:'Angst vor Staatspleiten in der Eurozone' },
+      { period:'2022', pct:-27.0, trigger:'Zinsschock', desc:'Inflation, Zinswende & Ukrainekrieg' },
+    ],
+  },
+  '^IXIC': {
+    since: 1971,
+    datenbasis: 'Nasdaq Composite seit 1971',
+    crashes: [
+      { period:'1987', pct:-35.9, trigger:'Marktpanik', desc:'Black Monday & weltweiter Programmhandel-Crash' },
+      { period:'2020', pct:-32.6, trigger:'Pandemie', desc:'COVID-19 & weltweite Lockdowns' },
+    ],
+    bear: [
+      { period:'1973–1974', pct:-59.9, trigger:'Ölkrise', desc:'OPEC-Embargo & Stagflation' },
+      { period:'2000–2002', pct:-77.9, trigger:'Dotcom-Blase', desc:'Platzen der Tech-Blase' },
+      { period:'2007–2009', pct:-55.8, trigger:'Finanzkrise', desc:'Immobilienblase & Lehman-Pleite' },
+      { period:'2022', pct:-37.8, trigger:'Zinsschock', desc:'Inflation, Zinserhöhungen & Ausverkauf bei Wachstumswerten' },
+    ],
+  },
+  '^DJI': {
+    since: 1928,
+    datenbasis: 'Dow Jones Industrial Average seit 1928',
+    crashes: [
+      { period:'1929–1932', pct:-89.2, trigger:'Spekulationsblase', desc:'Börsencrash & Weltwirtschaftskrise' },
+      { period:'1987', pct:-36.1, trigger:'Marktpanik', desc:'Black Monday & Programmhandel' },
+      { period:'2020', pct:-37.1, trigger:'Pandemie', desc:'COVID-19 & weltweite Lockdowns' },
+    ],
+    bear: [
+      { period:'1937–1938', pct:-49.1, trigger:'Geldpolitik', desc:'Straffung der Geld- und Fiskalpolitik' },
+      { period:'1968–1970', pct:-35.9, trigger:'Inflation', desc:'Vietnamkrieg & Konjunkturabschwächung' },
+      { period:'1973–1974', pct:-45.1, trigger:'Ölkrise', desc:'OPEC-Embargo & Stagflation' },
+      { period:'1980–1982', pct:-24.1, trigger:'Zinsschock', desc:'Volcker bekämpft Inflation' },
+      { period:'1990', pct:-21.2, trigger:'Golfkrieg', desc:'Ölpreisschock & Rezessionsängste' },
+      { period:'2000–2002', pct:-37.8, trigger:'Dotcom-Blase', desc:'Platzen der Tech-Blase' },
+      { period:'2007–2009', pct:-53.8, trigger:'Finanzkrise', desc:'Immobilienblase & Lehman-Pleite' },
+      { period:'2022', pct:-21.9, trigger:'Inflation, Zinserhöhungen & Ukrainekrieg', desc:'Inflationsschock, Energiekrise & Ende der Nullzinsphase' },
+    ],
+  },
+};
+function fmtCrashPct(pct){ return '−' + Math.abs(pct).toFixed(1).replace('.',',') + ' %'; }
+function crashTableSection(title, rows){
+  if(!rows || !rows.length) return '';
+  const body = rows.map(r => '<tr><td class="ct-period">'+r.period+'</td><td class="ct-pct">'+fmtCrashPct(r.pct)+'</td><td>'+r.trigger+'</td><td class="ct-desc">'+r.desc+'</td></tr>').join('');
+  return '<div class="ct-section"><div class="ct-section-title">'+title+'</div>'
+    + '<div class="ct-table-wrap"><table class="ct-table"><thead><tr>'
+    + '<th>Zeitraum</th><th>Max. Rückgang</th><th>Auslöser</th><th>Kurzbeschreibung</th>'
+    + '</tr></thead><tbody>' + body + '</tbody></table></div></div>';
 }
-// Erkennt jeden Zeitraum, in dem der Kurs vom letzten Zwischenhoch aus um mindestens thresholdPct
-// eingebrochen ist (Standard-"Maximum Drawdown"-Episoden, kein fester Kalenderraster) — endet, sobald
-// der Kurs wieder über das alte Zwischenhoch steigt (echte Erholung), nicht nur bei einer Teilerholung.
-function detectCrashes(points, thresholdPct){
-  const crashes = [];
-  if(!points || points.length < 3) return crashes;
-  let peakIdx = 0, troughIdx = 0, inDrawdown = false;
-  for(let i=1;i<points.length;i++){
-    if(points[i].close > points[peakIdx].close){
-      if(inDrawdown){
-        const peak = points[peakIdx], trough = points[troughIdx];
-        crashes.push({ peakIdx, troughIdx, pct:(trough.close-peak.close)/peak.close, label: labelForCrash(peak.date, trough.date) });
-        inDrawdown = false;
-      }
-      peakIdx = i; troughIdx = i;
-    } else {
-      if(points[i].close < points[troughIdx].close) troughIdx = i;
-      const dd = (points[i].close - points[peakIdx].close) / points[peakIdx].close;
-      if(dd <= -thresholdPct) inDrawdown = true;
-    }
-  }
-  if(inDrawdown){
-    const peak = points[peakIdx], trough = points[troughIdx];
-    crashes.push({ peakIdx, troughIdx, pct:(trough.close-peak.close)/peak.close, label: labelForCrash(peak.date, trough.date) });
-  }
-  return crashes;
+function renderCrashesTab(ticker){
+  const mount = document.getElementById('chartModalMount');
+  const data = CRASH_TABLES[ticker];
+  if(!mount) return;
+  if(!data){ mount.innerHTML = '<div class="chart-modal-empty">Keine Rückgangs-Daten verfügbar.</div>'; return; }
+  mount.innerHTML = crashTableSection('Crash', data.crashes)
+    + crashTableSection('Bärenmarkt', data.bear)
+    + '<div class="ct-footer"><span>Datenbasis: '+data.datenbasis+'</span><span>Stand: '+fdate(new Date().toISOString().slice(0,10))+'</span></div>';
 }
 const MONAT_KURZ = ['Jan','Feb','Mär','Apr','Mai','Jun','Jul','Aug','Sep','Okt','Nov','Dez'];
 // 1-Jahres-Ansicht (tägliche Daten): ein Tick am ersten Datenpunkt jedes Kalendermonats.
@@ -2815,6 +2851,7 @@ function renderIndexChartModal(name, points, unit, dec, periodTag){
     return;
   }
   const tag = periodTag || '12M';
+  points = downsamplePoints(points, 260);
   const fmtPoint = v => bkFmtLevel(v, unit, dec);
   const lastIdx = points.length - 1;
   // Echtes Hoch/Tief im gewählten Zeitraum markieren (nicht Start/Mitte/Ende) — der Tiefst-/Höchstwert
@@ -2828,14 +2865,11 @@ function renderIndexChartModal(name, points, unit, dec, periodTag){
   const orderedIdx = Object.keys(labelsByIdx).map(Number).sort((a,b)=>a-b);
   const marker = (i) => '<div class="chart-modal-marker"><div class="chart-modal-marker-label">'+labelsByIdx[i]+'</div><div class="chart-modal-marker-price">'+fmtPoint(points[i].close)+'</div><div class="chart-modal-marker-date">'+fdate(points[i].date)+'</div></div>';
   const xTicks = tag === '12M' ? monthTicksForPoints(points) : yearTicksForPoints(points, 9);
-  // Krisen-Beschriftung (Dotcom, Lehman, Corona…) nur in der Max-Ansicht — bei 1J/10J ist der
-  // Zeitraum meist zu kurz für einen vollen Peak-zu-Tief-Zyklus mit Erholung darüber hinaus.
-  const crashes = tag === 'Max' ? detectCrashes(points, 0.30) : null;
   mount.innerHTML = '<div class="chart-modal-price-row">'
     + '<span class="chart-modal-price">' + fmtPoint(points[lastIdx].close) + '</span>'
     + '<span class="chart-modal-change ' + cl(chgPct) + '">' + fp(chgPct) + '</span>'
     + '</div>'
-    + '<div class="chart-modal-svg-wrap">' + buildChartSvg(points, orderedIdx, xTicks, crashes) + '</div>'
+    + '<div class="chart-modal-svg-wrap">' + buildChartSvg(points, orderedIdx, xTicks) + '</div>'
     + '<div class="chart-modal-markers">' + orderedIdx.map(marker).join('') + '</div>';
 }
 function setChartRangeButtonsActive(range){
@@ -2843,8 +2877,23 @@ function setChartRangeButtonsActive(range){
     btn.classList.toggle('active', btn.getAttribute('data-range') === range);
   });
 }
+function updateCrashBtnVisibility(ticker){
+  const btn = document.querySelector('#chartRangeToggle [data-range="crashes"]');
+  if(btn) btn.style.display = CRASH_TABLES[ticker] ? '' : 'none';
+}
 async function selectChartRange(range){
-  if(!__chartModalIndexMeta || !RANGE_KEYS.has(range)) return;
+  if(!__chartModalIndexMeta) return;
+  if(range === 'crashes'){
+    const { ticker } = __chartModalIndexMeta;
+    __chartModalRange = 'crashes';
+    setChartRangeButtonsActive('crashes');
+    const subEl = document.getElementById('chartModalSub');
+    const data = CRASH_TABLES[ticker];
+    if(subEl) subEl.textContent = 'History' + (data ? ' seit ' + data.since : '');
+    renderCrashesTab(ticker);
+    return;
+  }
+  if(!RANGE_KEYS.has(range)) return;
   const { ticker, name, unit, dec } = __chartModalIndexMeta;
   __chartModalRange = range;
   setChartRangeButtonsActive(range);
@@ -2871,6 +2920,7 @@ async function openIndexChart(ticker, name, unit, dec){
   __chartModalIndexMeta = { ticker, name, unit, dec };
   __chartModalRange = '1y';
   if(rangeToggle) rangeToggle.style.display = 'flex';
+  updateCrashBtnVisibility(ticker);
   setChartRangeButtonsActive('1y');
   backdrop.classList.add('open'); backdrop.style.display = 'flex';
   mount.innerHTML = '<div class="chart-modal-empty">Lade Kursverlauf…</div>';
@@ -2893,9 +2943,35 @@ async function openIndexChart(ticker, name, unit, dec){
     .map(p => ({ date: p.date, close: p.close }));
   renderIndexChartModal(name, points, unit, Number(dec)||0, RANGE_MARKER_TAG['1y']);
 }
+// Direkter Einstieg über den kleinen Rückgänge-Button auf der Übersichtskachel: öffnet das Popup
+// sofort auf dem "Rückgänge"-Reiter, ohne erst auf den 12-Monats-Kursverlauf zu warten. Die
+// 1J/10J/Max-Historie wird im Hintergrund vorgeladen, damit ein Umschalten danach verzögerungsfrei bleibt.
+function openIndexCrashes(ticker, name, unit, dec){
+  const backdrop = document.getElementById('chartModalBackdrop');
+  const mount = document.getElementById('chartModalMount');
+  const rangeToggle = document.getElementById('chartRangeToggle');
+  if(!backdrop || !mount || !ticker) return;
+  __chartModalWkn = null; __chartModalTicker = ticker;
+  __chartModalIndexMeta = { ticker, name, unit, dec: Number(dec)||0 };
+  if(rangeToggle) rangeToggle.style.display = 'flex';
+  updateCrashBtnVisibility(ticker);
+  backdrop.classList.add('open'); backdrop.style.display = 'flex';
+  const titleEl = document.getElementById('chartModalTitle');
+  if(titleEl) titleEl.textContent = name || ticker;
+  selectChartRange('crashes');
+  if(!Array.isArray(bkHistCache[ticker]) || !bkHistCache[ticker].length){
+    cfFetchHistory(ticker).then(raw => {
+      bkHistCache[ticker] = raw;
+      bkHistCacheByRange[ticker] = bkHistCacheByRange[ticker] || {};
+      bkHistCacheByRange[ticker]['1y'] = raw;
+    }).catch(()=>{});
+  }
+}
 document.addEventListener('click', function(e){
   const wknEl = e.target.closest('[data-chart-wkn]');
   if(wknEl){ openPriceChart(wknEl.getAttribute('data-chart-wkn'), wknEl.getAttribute('data-chart-name') || ''); return; }
+  const crashBtnEl = e.target.closest('[data-crash-btn]');
+  if(crashBtnEl){ openIndexCrashes(crashBtnEl.getAttribute('data-chart-ticker'), crashBtnEl.getAttribute('data-chart-name') || '', crashBtnEl.getAttribute('data-chart-unit') || '', crashBtnEl.getAttribute('data-chart-dec')); return; }
   const idxEl = e.target.closest('[data-chart-ticker]');
   if(idxEl){ openIndexChart(idxEl.getAttribute('data-chart-ticker'), idxEl.getAttribute('data-chart-name') || '', idxEl.getAttribute('data-chart-unit') || '', idxEl.getAttribute('data-chart-dec')); }
 });
@@ -3192,7 +3268,9 @@ function bkChgHTML(idToday, idYtd, extra){
 }
 function bkTileHTML(cfg){
   const id = bkIdBase(cfg.t);
+  const crashBtn = CRASH_TABLES[cfg.t] ? `<button type="button" class="bk-crash-btn" data-crash-btn data-chart-ticker="${cfg.t}" data-chart-name="${cfg.l}" data-chart-unit="${cfg.unit}" data-chart-dec="${cfg.dec}" title="History">⟳</button>` : '';
   return `<div class="bk-item" data-chart-ticker="${cfg.t}" data-chart-name="${cfg.l}" data-chart-unit="${cfg.unit}" data-chart-dec="${cfg.dec}">
+  ${crashBtn}
   <div class="bk-l">${cfg.l}</div>
   <div class="bk-hero"><span class="bk-price" id="bkPrice${id}">·</span>${bkChgHTML('bkToday'+id,'bkYtd'+id)}</div>
   <div class="bk-sub"><span id="bkHi${id}">Hoch ·</span><span id="bkLo${id}">Tief ·</span></div>
@@ -3869,7 +3947,7 @@ function toggleTheme() {
 }
 
 function goHome() {
-  // Startansicht: Übersicht · Dark Mode · YTD · Standardsortierung · oben
+  // Startansicht: Übersicht · Original Mode · YTD · Standardsortierung · oben
   overviewMode = 'ytd';
   depotMode = 'ytd';
   activeMitglied = 0;
@@ -3877,7 +3955,7 @@ function goHome() {
   investmentDetailsSortRules = [];
   investmentsView = 'main';
 
-  applyTheme('modern');
+  applyTheme('classic');
   showTab('uebersicht');
   renderUebersicht();
 
