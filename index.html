@@ -8851,6 +8851,21 @@ body.theme-classic .statusbar{
   const HJ_STATE_KEY = 'folioHitjourneyState';
   let songs = [], idx = -1, audio = null, loaded = false;
 
+  // Erkennt, ob die App (auf diesem oder einem anderen Tab/derselben Seite) in den letzten
+  // Sekunden noch aktiv lief — z.B. weil man gerade von Home zu Headlines gewechselt hat.
+  // Nur dann wird die zuletzt gehoerte Position fortgesetzt; nach echtem Schliessen und
+  // spaeterem Neuoeffnen der App (Heartbeat laengst verstummt) startet stattdessen unten
+  // ein neuer Zufallssong.
+  const HJ_HEARTBEAT_KEY = 'folioHitjourneyHeartbeat';
+  let __hjWasRecentlyActive = false;
+  try{
+    const lastBeat = Number(localStorage.getItem(HJ_HEARTBEAT_KEY) || 0);
+    __hjWasRecentlyActive = (Date.now() - lastBeat) < 8000;
+  }catch(e){}
+  function hjBeat(){ try{ localStorage.setItem(HJ_HEARTBEAT_KEY, String(Date.now())); }catch(e){} }
+  hjBeat();
+  setInterval(hjBeat, 4000);
+
   function showSong(song){
     const t = document.getElementById('anspielTitle');
     const a = document.getElementById('anspielArtist');
@@ -8947,32 +8962,39 @@ body.theme-classic .statusbar{
       // Laufende Wiedergabe von der anderen Folio.wax-Seite (Home/Headlines) übernehmen,
       // statt neu von vorn/zufällig zu starten.
       let resumed = false;
+      let st = null;
       try{
         const raw2 = localStorage.getItem(HJ_STATE_KEY);
-        if(raw2){
-          const st = JSON.parse(raw2);
-          if(st && st.slug && Date.now() - (st.ts||0) < 6*3600*1000){
-            const foundIdx = songs.findIndex(s => s.slug === st.slug);
-            if(foundIdx !== -1){
-              idx = foundIdx;
-              showSong(songs[idx]);
-              const au = ensureAudio();
-              const resumeTime = st.currentTime || 0;
-              const wasPlaying = !st.paused;
-              au.src = songs[idx].mp3_url;
-              loaded = true;
-              au.addEventListener('loadedmetadata', function onMeta(){
-                au.currentTime = resumeTime;
-                au.removeEventListener('loadedmetadata', onMeta);
-                if(wasPlaying) tryResumePlay(au);
-              });
-              resumed = true;
-            }
+        if(raw2) st = JSON.parse(raw2);
+        if(st && st.slug && __hjWasRecentlyActive){
+          const foundIdx = songs.findIndex(s => s.slug === st.slug);
+          if(foundIdx !== -1){
+            idx = foundIdx;
+            showSong(songs[idx]);
+            const au = ensureAudio();
+            const resumeTime = st.currentTime || 0;
+            const wasPlaying = !st.paused;
+            au.src = songs[idx].mp3_url;
+            loaded = true;
+            au.addEventListener('loadedmetadata', function onMeta(){
+              au.currentTime = resumeTime;
+              au.removeEventListener('loadedmetadata', onMeta);
+              if(wasPlaying) tryResumePlay(au);
+            });
+            resumed = true;
           }
         }
       }catch(e){}
       if(!resumed){
-        idx = Math.floor(Math.random() * songs.length);
+        // Echter Neustart der App (kein Tab/keine Seite lief in den letzten Sekunden) —
+        // frischer Zufallssong statt der zuletzt gehoerten Position; wiederholt nach
+        // Moeglichkeit nicht direkt denselben Titel wie beim letzten Mal.
+        let n = Math.floor(Math.random() * songs.length);
+        if(songs.length > 1 && st && st.slug){
+          const prevIdx = songs.findIndex(s => s.slug === st.slug);
+          if(prevIdx === n) n = (n + 1) % songs.length;
+        }
+        idx = n;
         showSong(songs[idx]);
       }
 
