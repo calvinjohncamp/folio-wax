@@ -2477,16 +2477,20 @@ function parseWorkerQuotePayload(j) {
 async function cfFetchQuote(ticker) {
   try {
     const bust = Math.floor(Date.now() / 60000);
-    const urls = [
+    // Deduplizieren: bei reinen Alphanumerik-Tickern (der Normalfall) aendert encodeURIComponent()
+    // nichts an der URL — ohne Dedup wuerde derselbe fehlschlagende Request bis zu 2x mit vollem
+    // Timeout wiederholt, was auf langsameren/verlustreicheren Verbindungen (z.B. iPad) die
+    // Ladezeit pro Titel unnoetig auf bis zu 40s statt max. ~14s aufblaehen kann.
+    const urls = [...new Set([
       `${CF_WORKER}/?ticker=${encodeURIComponent(ticker)}&_=${bust}`,
       `${CF_WORKER}/?ticker=${encodeURIComponent(ticker)}&range=10d&_=${bust}`,
       `${CF_WORKER}/?ticker=${ticker}&_=${bust}`,
       `${CF_WORKER}/?ticker=${ticker}&range=10d&_=${bust}`
-    ];
+    ])];
 
     for (const url of urls) {
       try {
-        const r = await fetch(url, { signal: AbortSignal.timeout(10000) });
+        const r = await fetch(url, { signal: AbortSignal.timeout(7000) });
         if (!r.ok) continue;
         const j = await r.json();
         const parsed = parseWorkerQuotePayload(j);
@@ -8883,6 +8887,19 @@ body.theme-classic .statusbar{
     audio.addEventListener('ended', () => playRandom());
     return audio;
   }
+  // iOS/Safari blockiert programmatisches play() nach einer Seitennavigation (kein
+  // synchroner User-Gesture-Kontext mehr) — au.play() liefert dann eine rejected Promise.
+  // Fallback: beim naechsten Tap/Klick/Tastendruck irgendwo auf der Seite automatisch
+  // fortsetzen, statt dass der Nutzer gezielt den Play-Button treffen muss.
+  function tryResumePlay(au){
+    const p = au.play();
+    if(p && p.catch){
+      p.catch(() => {
+        const resume = () => { au.play().catch(()=>{}); };
+        ['touchend','click','keydown'].forEach(ev => document.addEventListener(ev, resume, { once:true, passive:true }));
+      });
+    }
+  }
   function playSong(song){
     showSong(song);
     const au = ensureAudio();
@@ -8947,7 +8964,7 @@ body.theme-classic .statusbar{
               au.addEventListener('loadedmetadata', function onMeta(){
                 au.currentTime = resumeTime;
                 au.removeEventListener('loadedmetadata', onMeta);
-                if(wasPlaying) au.play().catch(()=>{});
+                if(wasPlaying) tryResumePlay(au);
               });
               resumed = true;
             }
