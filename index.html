@@ -163,8 +163,11 @@ td:nth-child(2) { text-align: left; }
 .form-input:focus { outline: none; border-color: var(--wax-accent); }
 .form-row-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
 .modal-footer { display: flex; gap: 10px; justify-content: flex-end; margin-top: 20px; }
-/* 12-Monats-Kursverlauf-Popup (Klick auf eine Depot-/Verkaufszeile) */
+/* 12-Monats-Kursverlauf-Popup (Klick auf eine Depot-/Verkaufszeile bzw. einen Index) */
 [data-chart-wkn]{cursor:pointer}
+[data-chart-ticker]{cursor:pointer}
+.bk-item[data-chart-ticker]{transition:border-color .15s}
+.bk-item[data-chart-ticker]:hover{border-color:var(--wax-accent)}
 .chart-modal-backdrop{position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:600;display:none;align-items:center;justify-content:center;padding:20px}
 .chart-modal-backdrop.open{display:flex}
 .chart-modal{background:var(--wax-card);border:1px solid var(--wax-border);border-radius:18px;box-shadow:0 18px 60px rgba(0,0,0,.28);padding:20px;max-width:640px;width:100%;max-height:calc(100vh - 40px);overflow:auto;color:var(--wax-text)}
@@ -181,9 +184,13 @@ td:nth-child(2) { text-align: left; }
 .chart-modal-marker:first-child{align-items:flex-start;text-align:left}
 .chart-modal-marker:nth-child(2){align-items:center;text-align:center}
 .chart-modal-marker:last-child{align-items:flex-end;text-align:right}
+.chart-modal-marker-label{font-size:10px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--wax-muted-2)}
 .chart-modal-marker-price{font-size:14px;font-weight:700;color:var(--wax-text)}
 .chart-modal-marker-date{font-size:11px;color:var(--wax-muted)}
 .chart-modal-empty{color:var(--wax-muted);font-size:13px;text-align:center;padding:40px 0}
+.chart-range-toggle{display:flex;gap:6px;margin:12px 0 4px}
+.chart-range-btn{flex:1;border:1px solid var(--wax-border);background:var(--wax-panel);color:var(--wax-muted);font-size:12px;font-weight:700;letter-spacing:.02em;padding:6px 0;border-radius:999px;cursor:pointer;transition:all .15s}
+.chart-range-btn.active{background:var(--wax-accent);border-color:var(--wax-accent);color:#fff}
 @media (max-width: 480px){.chart-modal{padding:16px}.chart-modal-price{font-size:22px}}
 .info-box { background: var(--wax-panel); border: 1px solid var(--wax-border); padding: 12px; border-radius: 3px; margin-bottom: 14px; font-size: 11px; color: #555; line-height: 1.6; }
 .statusbar { background: var(--wax-status); border-bottom: 1px solid #222; padding: 5px 24px; display: flex; align-items: center; gap: 8px; font-size: 10px; color: var(--wax-muted); position: sticky; top: calc(102px + env(safe-area-inset-top,0px)); z-index: 98; }
@@ -1495,6 +1502,11 @@ body.theme-classic .dc-mini-kpi.deviation .dc-kpi-line.total strong{color:#16232
       </div>
       <button class="chart-modal-close" type="button" onclick="closePriceChart()">&times;</button>
     </div>
+    <div class="chart-range-toggle" id="chartRangeToggle" style="display:none">
+      <button type="button" class="chart-range-btn" data-range="1y" onclick="selectChartRange('1y')">1 Jahr</button>
+      <button type="button" class="chart-range-btn" data-range="10y" onclick="selectChartRange('10y')">10 Jahre</button>
+      <button type="button" class="chart-range-btn" data-range="max" onclick="selectChartRange('max')">Max</button>
+    </div>
     <div id="chartModalMount"></div>
   </div>
 </div>
@@ -2523,11 +2535,15 @@ function parseWorkerHistoryPayload(j){
   const prices = Array.isArray(j.prices) ? j.prices : [];
   return prices.map(p=>({date:p&&p.date, close:Number(p&&p.close)})).filter(p=>p.date && Number.isFinite(p.close));
 }
-async function cfFetchHistory(ticker){
+async function cfFetchHistory(ticker, range){
   const bust = Math.floor(Date.now()/3600000);
+  // interval wird serverseitig vom Worker anhand von range festgelegt (RANGE_MAP dort) — Client
+  // schickt kein interval mehr mit, das war die Ursache für die Quartals-statt-Wochendaten-Falle
+  // bei range=max (Yahoo ignoriert dort das interval, siehe Worker-Kommentar).
+  const extra = range ? `&range=${encodeURIComponent(range)}` : '';
   const urls = [
-    `${CF_HISTORY_WORKER}/?ticker=${encodeURIComponent(ticker)}&_=${bust}`,
-    `${CF_HISTORY_WORKER}/?ticker=${ticker}&_=${bust}`
+    `${CF_HISTORY_WORKER}/?ticker=${encodeURIComponent(ticker)}&_=${bust}${extra}`,
+    `${CF_HISTORY_WORKER}/?ticker=${ticker}&_=${bust}${extra}`
   ];
   for(const url of urls){
     try{
@@ -2557,24 +2573,67 @@ function priceEURat(wkn, iso){
 
 // ===== 12-Monats-Kursverlauf-Popup — ein Fenster für Depot/Verkauft (identisch zu Folio.invest) =====
 let __chartModalWkn = null;
-function buildChartSvg(points, markerIdx){
-  const w = 600, h = 220, padX = 6, padY = 12;
+function buildChartSvg(points, markerIdx, xTicks, crashes){
+  const w = 600, h = 220, padX = 6;
+  const padBottom = (xTicks && xTicks.length) ? 24 : 12;
+  const stepX = points.length > 1 ? (w - padX*2) / (points.length - 1) : 0;
+  // Krisen-Labels in Zeilen ("Lanes") stapeln, wenn sie zeitlich zu eng beieinander liegen, um
+  // Textüberlappung zu vermeiden (grobe Breitenschätzung reicht, da nur wenige Ereignisse pro Chart).
+  let crashLayout = [];
+  let crashLanes = 0;
+  if(crashes && crashes.length){
+    const withX = crashes.map(c => {
+      const tx = padX + c.troughIdx*stepX;
+      const label = c.label + ' ' + Math.round(c.pct*100) + '%';
+      const halfW = label.length * 2.9 + 4;
+      return { ...c, tx, label, left: tx-halfW, right: tx+halfW };
+    }).sort((a,b) => a.tx - b.tx);
+    const laneRight = [];
+    withX.forEach(it => {
+      let lane = 0;
+      while(laneRight[lane] !== undefined && it.left < laneRight[lane]){ lane++; }
+      it.lane = lane;
+      laneRight[lane] = it.right;
+    });
+    crashLayout = withX;
+    crashLanes = laneRight.length;
+  }
+  const padTop = crashLanes ? (24 + crashLanes*11) : 12;
   const closes = points.map(p => p.close);
   const min = Math.min(...closes), max = Math.max(...closes);
   const span = (max - min) || 1;
-  const stepX = points.length > 1 ? (w - padX*2) / (points.length - 1) : 0;
+  const plotH = h - padTop - padBottom;
   const xy = (i) => {
     const x = padX + i*stepX;
-    const y = padY + (h - padY*2) * (1 - (points[i].close - min)/span);
+    const y = padTop + plotH * (1 - (points[i].close - min)/span);
     return [x, y];
   };
   const coords = points.map((p,i) => xy(i).map(n=>n.toFixed(1)).join(',')).join(' ');
   const up = points[points.length-1].close >= points[0].close;
   const stroke = up ? 'var(--success)' : 'var(--brand-orange)';
-  const areaPoints = (padX).toFixed(1)+','+(h-padY).toFixed(1)+' '+coords+' '+(padX+(points.length-1)*stepX).toFixed(1)+','+(h-padY).toFixed(1);
+  const areaBaseY = h - padBottom;
+  const areaPoints = (padX).toFixed(1)+','+areaBaseY.toFixed(1)+' '+coords+' '+(padX+(points.length-1)*stepX).toFixed(1)+','+areaBaseY.toFixed(1);
   const dots = (markerIdx||[]).map(i => {
     const [x,y] = xy(i);
     return '<circle cx="'+x.toFixed(1)+'" cy="'+y.toFixed(1)+'" r="4.5" fill="var(--wax-card)" stroke="'+stroke+'" stroke-width="2.5"/>';
+  }).join('');
+  // X-Achsen-Beschriftung (Monate bei der 1-Jahres-Ansicht, Jahre bei 10J/Max) — Ränder werden an den
+  // Text-Anker angepasst, damit die äußersten Labels nicht über den sichtbaren Chart-Bereich hinausragen.
+  const ticks = (xTicks||[]).map(t => {
+    const [tx] = xy(t.idx);
+    const anchor = tx < w*0.06 ? 'start' : (tx > w*0.94 ? 'end' : 'middle');
+    return '<text x="'+tx.toFixed(1)+'" y="'+(h-6).toFixed(1)+'" text-anchor="'+anchor+'" font-size="10.5" fill="var(--wax-muted)">'+t.label+'</text>';
+  }).join('');
+  // Große Drawdowns (Max-Ansicht): gestrichelte Markierungslinie am Tiefpunkt + Name/Prozent oben im
+  // Chart, damit die Beschriftung nicht mit der X-Achse oder den Hoch/Tief/Aktuell-Markern kollidiert.
+  // Eng beieinander liegende Ereignisse werden über crashLayout/lane vertikal gestapelt (siehe oben).
+  const crashMarks = crashLayout.map(c => {
+    const ty = xy(c.troughIdx)[1];
+    const anchor = c.tx < w*0.14 ? 'start' : (c.tx > w*0.86 ? 'end' : 'middle');
+    const textY = padTop - 6 - c.lane*11;
+    return '<line x1="'+c.tx.toFixed(1)+'" y1="'+padTop.toFixed(1)+'" x2="'+c.tx.toFixed(1)+'" y2="'+(h-padBottom).toFixed(1)+'" stroke="var(--brand-orange)" stroke-width="1" stroke-dasharray="3,3" opacity="0.5"/>'
+      + '<circle cx="'+c.tx.toFixed(1)+'" cy="'+ty.toFixed(1)+'" r="3.5" fill="var(--brand-orange)"/>'
+      + '<text x="'+c.tx.toFixed(1)+'" y="'+textY.toFixed(1)+'" text-anchor="'+anchor+'" font-size="9.5" font-weight="700" fill="var(--brand-orange)">'+c.label+'</text>';
   }).join('');
   return '<svg viewBox="0 0 '+w+' '+h+'" preserveAspectRatio="none" style="width:100%;height:220px;display:block">'
     + '<defs><linearGradient id="priceChartAreaGrad" x1="0" y1="0" x2="0" y2="1">'
@@ -2582,8 +2641,10 @@ function buildChartSvg(points, markerIdx){
     + '<stop offset="100%" stop-color="'+stroke+'" stop-opacity="0"/>'
     + '</linearGradient></defs>'
     + '<polygon points="'+areaPoints+'" fill="url(#priceChartAreaGrad)" stroke="none"/>'
+    + crashMarks
     + '<polyline points="'+coords+'" fill="none" stroke="'+stroke+'" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round"/>'
     + dots
+    + ticks
     + '</svg>';
 }
 // Findet den Punkt, dessen Datum am nächsten an "monthsAgoFrom" liegt (Kalendermonate, nicht Index) —
@@ -2625,7 +2686,9 @@ async function openPriceChart(wkn, name){
   const backdrop = document.getElementById('chartModalBackdrop');
   const mount = document.getElementById('chartModalMount');
   if(!backdrop || !mount || !wkn) return;
-  __chartModalWkn = wkn;
+  __chartModalWkn = wkn; __chartModalTicker = null; __chartModalIndexMeta = null;
+  const rangeToggle = document.getElementById('chartRangeToggle');
+  if(rangeToggle) rangeToggle.style.display = 'none';
   backdrop.classList.add('open'); backdrop.style.display = 'flex';
   mount.innerHTML = '<div class="chart-modal-empty">Lade Kursverlauf…</div>';
   const titleEl = document.getElementById('chartModalTitle');
@@ -2642,14 +2705,199 @@ async function openPriceChart(wkn, name){
   renderChartModal(wkn, name, points);
 }
 function closePriceChart(){
-  __chartModalWkn = null;
+  __chartModalWkn = null; __chartModalTicker = null; __chartModalIndexMeta = null;
   const backdrop = document.getElementById('chartModalBackdrop');
   if(backdrop){ backdrop.classList.remove('open'); backdrop.style.display = 'none'; }
 }
+// Kursverlauf-Popup für Benchmark-Indizes (DAX, S&P 500 usw.) — gleiche Optik wie das Aktien-Popup,
+// aber ohne WKN/EUR-Umrechnung: die Kacheln in bkTileHTML liefern Ticker+Einheit direkt.
+// Zusätzlich umschaltbar zwischen 1 Jahr/10 Jahre/Max (Worker jk-invest unterstützt seit 2026-07-11
+// range=1y|10y|max + interval=1d|1wk|1mo; ohne Parameter unverändert 1y/1d wie zuvor).
+let __chartModalTicker = null;
+let __chartModalIndexMeta = null; // {ticker,name,unit,dec} des aktuell offenen Index-Charts, für den Range-Umschalter
+let __chartModalRange = '1y';
+const bkHistCacheByRange = {}; // ticker -> { '1y'|'10y'|'max': [{date,close}] }
+// Welches Yahoo-Interval pro Range verwendet wird, entscheidet seit 2026-07-11 ausschließlich der
+// Worker (RANGE_MAP dort) — hier nur noch die gültigen Range-Schlüssel für die Validierung.
+const RANGE_KEYS = new Set(['1y','10y','max']);
+const RANGE_SUBLABEL = { '1y':'Kursverlauf 12 Monate', '10y':'Kursverlauf 10 Jahre', 'max':'Kursverlauf gesamte Historie' };
+const RANGE_MARKER_TAG = { '1y':'12M', '10y':'10J', 'max':'Max' };
+function buildIndexPoints(raw){
+  return (raw||[])
+    .filter(p => p && p.date && Number.isFinite(p.close))
+    .sort((a,b) => String(a.date).localeCompare(String(b.date)))
+    .map(p => ({ date: p.date, close: p.close }));
+}
+// Bekannte historische Schwächephasen zur Beschriftung großer Drawdowns in der Max-Ansicht. Grobe
+// Zeitfenster (Monatsgranularität) genügen — die Zuordnung erfolgt über die größte zeitliche
+// Überlappung mit dem tatsächlich erkannten Peak-Tief-Zeitraum, kein exaktes Datum nötig. Ereignisse,
+// die keinen eigenen Peak/Tief-Zyklus bilden (z.B. 11. September 2001 — lag mitten in der andauernden
+// Dotcom-Baisse ohne zwischenzeitliche Erholung), erscheinen bewusst nicht separat, sondern gehen in
+// der überlappenden längeren Krise auf.
+const CRISIS_WINDOWS = [
+  { start:'2000-03-01', end:'2002-10-01', label:'Dotcom-Crash' },
+  { start:'2007-10-01', end:'2009-03-01', label:'Lehman/Finanzkrise' },
+  { start:'2011-05-01', end:'2011-10-01', label:'Euro-Schuldenkrise' },
+  { start:'2020-02-01', end:'2020-04-01', label:'Corona-Crash' },
+  { start:'2022-01-01', end:'2022-10-01', label:'Zinsschock 2022' },
+  { start:'2017-12-01', end:'2018-12-01', label:'Krypto-Winter 2018' },
+  { start:'2021-11-01', end:'2022-11-01', label:'Krypto-Winter 2022' },
+];
+function dateOverlapMs(aStart, aEnd, bStart, bEnd){
+  const s = Math.max(new Date(aStart).getTime(), new Date(bStart).getTime());
+  const e = Math.min(new Date(aEnd).getTime(), new Date(bEnd).getTime());
+  return Math.max(0, e - s);
+}
+function labelForCrash(peakDate, troughDate){
+  let best = null, bestOverlap = 0;
+  CRISIS_WINDOWS.forEach(w => {
+    const ov = dateOverlapMs(peakDate, troughDate, w.start, w.end);
+    if(ov > bestOverlap){ bestOverlap = ov; best = w; }
+  });
+  return best ? best.label : ('Kursrückgang '+new Date(troughDate).getFullYear());
+}
+// Erkennt jeden Zeitraum, in dem der Kurs vom letzten Zwischenhoch aus um mindestens thresholdPct
+// eingebrochen ist (Standard-"Maximum Drawdown"-Episoden, kein fester Kalenderraster) — endet, sobald
+// der Kurs wieder über das alte Zwischenhoch steigt (echte Erholung), nicht nur bei einer Teilerholung.
+function detectCrashes(points, thresholdPct){
+  const crashes = [];
+  if(!points || points.length < 3) return crashes;
+  let peakIdx = 0, troughIdx = 0, inDrawdown = false;
+  for(let i=1;i<points.length;i++){
+    if(points[i].close > points[peakIdx].close){
+      if(inDrawdown){
+        const peak = points[peakIdx], trough = points[troughIdx];
+        crashes.push({ peakIdx, troughIdx, pct:(trough.close-peak.close)/peak.close, label: labelForCrash(peak.date, trough.date) });
+        inDrawdown = false;
+      }
+      peakIdx = i; troughIdx = i;
+    } else {
+      if(points[i].close < points[troughIdx].close) troughIdx = i;
+      const dd = (points[i].close - points[peakIdx].close) / points[peakIdx].close;
+      if(dd <= -thresholdPct) inDrawdown = true;
+    }
+  }
+  if(inDrawdown){
+    const peak = points[peakIdx], trough = points[troughIdx];
+    crashes.push({ peakIdx, troughIdx, pct:(trough.close-peak.close)/peak.close, label: labelForCrash(peak.date, trough.date) });
+  }
+  return crashes;
+}
+const MONAT_KURZ = ['Jan','Feb','Mär','Apr','Mai','Jun','Jul','Aug','Sep','Okt','Nov','Dez'];
+// 1-Jahres-Ansicht (tägliche Daten): ein Tick am ersten Datenpunkt jedes Kalendermonats.
+function monthTicksForPoints(points){
+  const ticks = []; let lastKey = null;
+  points.forEach((p,i) => {
+    const d = new Date(p.date);
+    const key = d.getFullYear()+'-'+d.getMonth();
+    if(key !== lastKey){ ticks.push({idx:i, label: MONAT_KURZ[d.getMonth()]}); lastKey = key; }
+  });
+  return ticks;
+}
+// 10-Jahres-/Max-Ansicht (wöchentliche/monatliche Daten): ein Tick pro Jahr, bei sehr langen
+// Zeiträumen ausgedünnt (max. ~maxTicks Beschriftungen), damit sich Jahreszahlen nicht überlappen.
+function yearTicksForPoints(points, maxTicks){
+  const years = []; let lastYear = null;
+  points.forEach((p,i) => {
+    const y = new Date(p.date).getFullYear();
+    if(y !== lastYear){ years.push({idx:i, year:y}); lastYear = y; }
+  });
+  const step = Math.max(1, Math.ceil(years.length / (maxTicks||9)));
+  return years.filter((_,i) => i % step === 0).map(t => ({idx:t.idx, label:String(t.year)}));
+}
+function renderIndexChartModal(name, points, unit, dec, periodTag){
+  const mount = document.getElementById('chartModalMount');
+  const titleEl = document.getElementById('chartModalTitle');
+  if(titleEl) titleEl.textContent = name || '–';
+  if(!mount) return;
+  if(points.length < 2){
+    mount.innerHTML = '<div class="chart-modal-empty">Kein Kursverlauf verfügbar.</div>';
+    return;
+  }
+  const tag = periodTag || '12M';
+  const fmtPoint = v => bkFmtLevel(v, unit, dec);
+  const lastIdx = points.length - 1;
+  // Echtes Hoch/Tief im gewählten Zeitraum markieren (nicht Start/Mitte/Ende) — der Tiefst-/Höchstwert
+  // liegt so gut wie nie exakt am Rand des Zeitraums, siehe Datencheck vom 2026-07-11.
+  let minIdx = 0, maxIdx = 0;
+  points.forEach((p,i) => { if(p.close < points[minIdx].close) minIdx = i; if(p.close > points[maxIdx].close) maxIdx = i; });
+  const chgPct = points[0].close ? (points[lastIdx].close-points[0].close)/points[0].close : 0;
+  const labelsByIdx = {};
+  const addLabel = (i, label) => { labelsByIdx[i] = labelsByIdx[i] ? labelsByIdx[i]+' · '+label : label; };
+  addLabel(minIdx, 'Tief '+tag); addLabel(maxIdx, 'Hoch '+tag); addLabel(lastIdx, 'Aktuell');
+  const orderedIdx = Object.keys(labelsByIdx).map(Number).sort((a,b)=>a-b);
+  const marker = (i) => '<div class="chart-modal-marker"><div class="chart-modal-marker-label">'+labelsByIdx[i]+'</div><div class="chart-modal-marker-price">'+fmtPoint(points[i].close)+'</div><div class="chart-modal-marker-date">'+fdate(points[i].date)+'</div></div>';
+  const xTicks = tag === '12M' ? monthTicksForPoints(points) : yearTicksForPoints(points, 9);
+  // Krisen-Beschriftung (Dotcom, Lehman, Corona…) nur in der Max-Ansicht — bei 1J/10J ist der
+  // Zeitraum meist zu kurz für einen vollen Peak-zu-Tief-Zyklus mit Erholung darüber hinaus.
+  const crashes = tag === 'Max' ? detectCrashes(points, 0.30) : null;
+  mount.innerHTML = '<div class="chart-modal-price-row">'
+    + '<span class="chart-modal-price">' + fmtPoint(points[lastIdx].close) + '</span>'
+    + '<span class="chart-modal-change ' + cl(chgPct) + '">' + fp(chgPct) + '</span>'
+    + '</div>'
+    + '<div class="chart-modal-svg-wrap">' + buildChartSvg(points, orderedIdx, xTicks, crashes) + '</div>'
+    + '<div class="chart-modal-markers">' + orderedIdx.map(marker).join('') + '</div>';
+}
+function setChartRangeButtonsActive(range){
+  document.querySelectorAll('#chartRangeToggle .chart-range-btn').forEach(btn => {
+    btn.classList.toggle('active', btn.getAttribute('data-range') === range);
+  });
+}
+async function selectChartRange(range){
+  if(!__chartModalIndexMeta || !RANGE_KEYS.has(range)) return;
+  const { ticker, name, unit, dec } = __chartModalIndexMeta;
+  __chartModalRange = range;
+  setChartRangeButtonsActive(range);
+  const subEl = document.getElementById('chartModalSub');
+  if(subEl) subEl.textContent = RANGE_SUBLABEL[range];
+  const mount = document.getElementById('chartModalMount');
+  let raw = (bkHistCacheByRange[ticker]||{})[range];
+  if(!Array.isArray(raw)){
+    if(mount) mount.innerHTML = '<div class="chart-modal-empty">Lade Kursverlauf…</div>';
+    try{ raw = await cfFetchHistory(ticker, range); }catch(e){ raw = []; }
+    bkHistCacheByRange[ticker] = bkHistCacheByRange[ticker] || {};
+    bkHistCacheByRange[ticker][range] = raw;
+  }
+  // Popup inzwischen geschlossen, anderer Index geöffnet, oder währenddessen erneut umgeschaltet
+  if(__chartModalTicker !== ticker || __chartModalRange !== range) return;
+  renderIndexChartModal(name, buildIndexPoints(raw), unit, dec, RANGE_MARKER_TAG[range]);
+}
+async function openIndexChart(ticker, name, unit, dec){
+  const backdrop = document.getElementById('chartModalBackdrop');
+  const mount = document.getElementById('chartModalMount');
+  const rangeToggle = document.getElementById('chartRangeToggle');
+  if(!backdrop || !mount || !ticker) return;
+  __chartModalWkn = null; __chartModalTicker = ticker;
+  __chartModalIndexMeta = { ticker, name, unit, dec };
+  __chartModalRange = '1y';
+  if(rangeToggle) rangeToggle.style.display = 'flex';
+  setChartRangeButtonsActive('1y');
+  backdrop.classList.add('open'); backdrop.style.display = 'flex';
+  mount.innerHTML = '<div class="chart-modal-empty">Lade Kursverlauf…</div>';
+  const titleEl = document.getElementById('chartModalTitle');
+  const subEl = document.getElementById('chartModalSub');
+  if(titleEl) titleEl.textContent = name || ticker;
+  if(subEl) subEl.textContent = RANGE_SUBLABEL['1y'];
+  // Wiederverwenden, was loadBenchmarks() beim Seitenaufruf für Hoch/Tief/YTD ohnehin schon geladen hat —
+  // kein zweiter Netzwerk-Roundtrip pro Klick (macht das Öffnen praktisch verzögerungsfrei).
+  let raw = bkHistCache[ticker];
+  if(!Array.isArray(raw) || !raw.length){
+    try{ raw = await cfFetchHistory(ticker); }catch(e){ raw = []; }
+  }
+  bkHistCacheByRange[ticker] = bkHistCacheByRange[ticker] || {};
+  bkHistCacheByRange[ticker]['1y'] = raw;
+  if(__chartModalTicker !== ticker) return; // Popup wurde inzwischen geschlossen / ein anderer Index geöffnet
+  const points = (raw||[])
+    .filter(p => p && p.date && Number.isFinite(p.close))
+    .sort((a,b) => String(a.date).localeCompare(String(b.date)))
+    .map(p => ({ date: p.date, close: p.close }));
+  renderIndexChartModal(name, points, unit, Number(dec)||0, RANGE_MARKER_TAG['1y']);
+}
 document.addEventListener('click', function(e){
-  const el = e.target.closest('[data-chart-wkn]');
-  if(!el) return;
-  openPriceChart(el.getAttribute('data-chart-wkn'), el.getAttribute('data-chart-name') || '');
+  const wknEl = e.target.closest('[data-chart-wkn]');
+  if(wknEl){ openPriceChart(wknEl.getAttribute('data-chart-wkn'), wknEl.getAttribute('data-chart-name') || ''); return; }
+  const idxEl = e.target.closest('[data-chart-ticker]');
+  if(idxEl){ openIndexChart(idxEl.getAttribute('data-chart-ticker'), idxEl.getAttribute('data-chart-name') || '', idxEl.getAttribute('data-chart-unit') || '', idxEl.getAttribute('data-chart-dec')); }
 });
 document.addEventListener('keydown', function(e){ if(e.key === 'Escape'){ closePriceChart(); } });
 // Echte historische Depotwerte 2026 je Mitglied (aus den gepflegten Excel-Dateien, Stand bis 19.05.).
@@ -2933,6 +3181,7 @@ const BK_TICKERS = [
 ];
 const BK_AVG_OF = ['^GSPC','^IXIC','^DJI','^GDAXI','^HSI']; // "Durchschnitt Benchmarks" = Mittel dieser 5
 let bkData = {}; // Ticker -> {price, today, ytd, high, low}
+let bkHistCache = {}; // Ticker -> [{date, close}] — 12-Monats-Historie, einmal pro Seitenaufruf geladen (siehe loadBenchmarks)
 function bkIdBase(t){ return t.replace(/[^A-Za-z0-9]/g,''); }
 function bkFmtLevel(v, unit, dec){ return (v==null||isNaN(v)) ? '—' : v.toLocaleString('de-DE',{minimumFractionDigits:dec,maximumFractionDigits:dec})+' '+unit; }
 function bkChgHTML(idToday, idYtd, extra){
@@ -2943,7 +3192,7 @@ function bkChgHTML(idToday, idYtd, extra){
 }
 function bkTileHTML(cfg){
   const id = bkIdBase(cfg.t);
-  return `<div class="bk-item">
+  return `<div class="bk-item" data-chart-ticker="${cfg.t}" data-chart-name="${cfg.l}" data-chart-unit="${cfg.unit}" data-chart-dec="${cfg.dec}">
   <div class="bk-l">${cfg.l}</div>
   <div class="bk-hero"><span class="bk-price" id="bkPrice${id}">·</span>${bkChgHTML('bkToday'+id,'bkYtd'+id)}</div>
   <div class="bk-sub"><span id="bkHi${id}">Hoch ·</span><span id="bkLo${id}">Tief ·</span></div>
@@ -2985,6 +3234,7 @@ async function loadBenchmarks() {
       price = quote.price; prev = quote.prev || null;
       if (prev) today = (price - prev) / prev;
     }
+    bkHistCache[t] = Array.isArray(hist) ? hist : [];
     if (Array.isArray(hist) && hist.length) {
       const closes = hist.map(p=>p.close).filter(Number.isFinite);
       if (closes.length) { high = Math.max(...closes); low = Math.min(...closes); }
