@@ -8910,8 +8910,20 @@ body.theme-classic .statusbar{
     const p = au.play();
     if(p && p.catch){
       p.catch(() => {
-        const resume = () => { au.play().catch(()=>{}); };
-        ['touchend','click','keydown'].forEach(ev => document.addEventListener(ev, resume, { once:true, passive:true }));
+        let done = false;
+        const events = ['touchend','click','keydown'];
+        // Wenn der naechste Tap gezielt der Play-/Zufalls-Button ist, soll togglePlayPause()
+        // ihn allein steuern (sonst Race: dieser Fallback startet die Wiedergabe, und der
+        // Button-eigene Klick-Handler pausiert sie im selben Zug wieder, weil au.paused
+        // durch den Fallback bereits synchron auf false gesprungen ist).
+        const resume = (e) => {
+          if(done || !au.paused) return;
+          if(e && e.target && e.target.closest && e.target.closest('#anspielPlayBtn,#anspielRandomBtn')) return;
+          done = true;
+          events.forEach(ev => document.removeEventListener(ev, resume));
+          au.play().catch(()=>{});
+        };
+        events.forEach(ev => document.addEventListener(ev, resume, { passive:true }));
       });
     }
   }
@@ -8977,7 +8989,12 @@ body.theme-classic .statusbar{
             au.src = songs[idx].mp3_url;
             loaded = true;
             au.addEventListener('loadedmetadata', function onMeta(){
-              au.currentTime = resumeTime;
+              // Falls die gespeicherte Position zu nah am Songende liegt, wuerde das
+              // Anspringen dieser Stelle sofort ein 'ended' ausloesen und ungewollt zu
+              // einem zufaelligen naechsten Song weiterspringen, statt den angezeigten
+              // Song abzuspielen — in dem Fall lieber von vorn beginnen.
+              const dur = au.duration;
+              au.currentTime = (isFinite(dur) && dur > 0 && resumeTime >= dur - 1.5) ? 0 : resumeTime;
               au.removeEventListener('loadedmetadata', onMeta);
               if(wasPlaying) tryResumePlay(au);
             });
