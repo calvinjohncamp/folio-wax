@@ -485,8 +485,6 @@
       </a>
     </section>
 
-    <p class="wx-endnote" style="max-width:760px;margin:22px auto 0;font-size:12px;line-height:1.6;color:var(--ink-soft);text-align:center;"><strong style="color:var(--ink);">Änderungen in dieser Runde:</strong> Der Leitartikel wechselt von der geplatzten Waffenruhe zur Frage, ob Washington und Teheran trotz neuer Angriffe doch noch verhandeln. Der zweite Leitartikel und die Sport-Rubrik drehen sich erstmals um den Klopp-Poker beim DFB, die Finanzen-Box zeigt die Erholung von DAX und Wall Street samt SK-Hynix-Debüt. Politik, Wirtschaft, Tech, Wissen, Leben &amp; Kultur und Talk of Town sind komplett neu bestückt — von der Heizungsgesetz-Novelle über Chinas Absatzeinbruch bei VW, BMW und Mercedes bis zu frischen Wimbledon- und Tour-de-France-Neuigkeiten.</p>
-
     <p class="wx-footer">WAX<span class="dot">&#8226;</span>Aktienclub seit 2000</p>
 
   </div>
@@ -498,6 +496,21 @@
   const HJ_SB_ANON = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imhpb2FxY3dxemVxY3Z2aWtvbGxxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzIzNTQ3MTgsImV4cCI6MjA4NzkzMDcxOH0.IvZ7YZwrhjNg8SwwO9rnXoiDwOVncY8iVcucmipmuFI';
   const HJ_STATE_KEY = 'folioHitjourneyState';
   let songs = [], idx = -1, audio = null, loaded = false;
+
+  // Erkennt, ob die App (auf diesem oder einem anderen Tab/derselben Seite) in den letzten
+  // Sekunden noch aktiv lief — z.B. weil man gerade von Home zu Headlines gewechselt hat.
+  // Nur dann wird die zuletzt gehoerte Position fortgesetzt; nach echtem Schliessen und
+  // spaeterem Neuoeffnen der App (Heartbeat laengst verstummt) startet stattdessen unten
+  // ein neuer Zufallssong.
+  const HJ_HEARTBEAT_KEY = 'folioHitjourneyHeartbeat';
+  let __hjWasRecentlyActive = false;
+  try{
+    const lastBeat = Number(localStorage.getItem(HJ_HEARTBEAT_KEY) || 0);
+    __hjWasRecentlyActive = (Date.now() - lastBeat) < 8000;
+  }catch(e){}
+  function hjBeat(){ try{ localStorage.setItem(HJ_HEARTBEAT_KEY, String(Date.now())); }catch(e){} }
+  hjBeat();
+  setInterval(hjBeat, 4000);
 
   function showSong(song){
     const t = document.getElementById('anspielTitle');
@@ -534,6 +547,31 @@
     // Nach Songende laeuft die Playlist automatisch in Zufallswiedergabe weiter.
     audio.addEventListener('ended', () => playRandom());
     return audio;
+  }
+  // iOS/Safari blockiert programmatisches play() nach einer Seitennavigation (kein
+  // synchroner User-Gesture-Kontext mehr) — au.play() liefert dann eine rejected Promise.
+  // Fallback: beim naechsten Tap/Klick/Tastendruck irgendwo auf der Seite automatisch
+  // fortsetzen, statt dass der Nutzer gezielt den Play-Button treffen muss.
+  function tryResumePlay(au){
+    const p = au.play();
+    if(p && p.catch){
+      p.catch(() => {
+        let done = false;
+        const events = ['touchend','click','keydown'];
+        // Wenn der naechste Tap gezielt der Play-/Zufalls-Button ist, soll togglePlayPause()
+        // ihn allein steuern (sonst Race: dieser Fallback startet die Wiedergabe, und der
+        // Button-eigene Klick-Handler pausiert sie im selben Zug wieder, weil au.paused
+        // durch den Fallback bereits synchron auf false gesprungen ist).
+        const resume = (e) => {
+          if(done || !au.paused) return;
+          if(e && e.target && e.target.closest && e.target.closest('#anspielPlayBtn,#anspielRandomBtn')) return;
+          done = true;
+          events.forEach(ev => document.removeEventListener(ev, resume));
+          au.play().catch(()=>{});
+        };
+        events.forEach(ev => document.addEventListener(ev, resume, { passive:true }));
+      });
+    }
   }
   function playSong(song){
     showSong(song);
@@ -582,32 +620,44 @@
       // Laufende Wiedergabe von der anderen Folio.wax-Seite (Home/Headlines) übernehmen,
       // statt neu von vorn/zufällig zu starten.
       let resumed = false;
+      let st = null;
       try{
         const raw2 = localStorage.getItem(HJ_STATE_KEY);
-        if(raw2){
-          const st = JSON.parse(raw2);
-          if(st && st.slug && Date.now() - (st.ts||0) < 6*3600*1000){
-            const foundIdx = songs.findIndex(s => s.slug === st.slug);
-            if(foundIdx !== -1){
-              idx = foundIdx;
-              showSong(songs[idx]);
-              const au = ensureAudio();
-              const resumeTime = st.currentTime || 0;
-              const wasPlaying = !st.paused;
-              au.src = songs[idx].mp3_url;
-              loaded = true;
-              au.addEventListener('loadedmetadata', function onMeta(){
-                au.currentTime = resumeTime;
-                au.removeEventListener('loadedmetadata', onMeta);
-                if(wasPlaying) au.play().catch(()=>{});
-              });
-              resumed = true;
-            }
+        if(raw2) st = JSON.parse(raw2);
+        if(st && st.slug && __hjWasRecentlyActive){
+          const foundIdx = songs.findIndex(s => s.slug === st.slug);
+          if(foundIdx !== -1){
+            idx = foundIdx;
+            showSong(songs[idx]);
+            const au = ensureAudio();
+            const resumeTime = st.currentTime || 0;
+            const wasPlaying = !st.paused;
+            au.src = songs[idx].mp3_url;
+            loaded = true;
+            au.addEventListener('loadedmetadata', function onMeta(){
+              // Falls die gespeicherte Position zu nah am Songende liegt, wuerde das
+              // Anspringen dieser Stelle sofort ein 'ended' ausloesen und ungewollt zu
+              // einem zufaelligen naechsten Song weiterspringen, statt den angezeigten
+              // Song abzuspielen — in dem Fall lieber von vorn beginnen.
+              const dur = au.duration;
+              au.currentTime = (isFinite(dur) && dur > 0 && resumeTime >= dur - 1.5) ? 0 : resumeTime;
+              au.removeEventListener('loadedmetadata', onMeta);
+              if(wasPlaying) tryResumePlay(au);
+            });
+            resumed = true;
           }
         }
       }catch(e){}
       if(!resumed){
-        idx = Math.floor(Math.random() * songs.length);
+        // Echter Neustart der App (kein Tab/keine Seite lief in den letzten Sekunden) —
+        // frischer Zufallssong statt der zuletzt gehoerten Position; wiederholt nach
+        // Moeglichkeit nicht direkt denselben Titel wie beim letzten Mal.
+        let n = Math.floor(Math.random() * songs.length);
+        if(songs.length > 1 && st && st.slug){
+          const prevIdx = songs.findIndex(s => s.slug === st.slug);
+          if(prevIdx === n) n = (n + 1) % songs.length;
+        }
+        idx = n;
         showSong(songs[idx]);
       }
 
