@@ -8846,8 +8846,8 @@ body.theme-classic .statusbar{
      Seiten einfach weiterläuft, statt neu zu starten. -->
 <script>
 (function(){
-  const HJ_SB_URL = 'https://hioaqcwqzeqcvvikollq.supabase.co';
-  const HJ_SB_ANON = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imhpb2FxY3dxemVxY3Z2aWtvbGxxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzIzNTQ3MTgsImV4cCI6MjA4NzkzMDcxOH0.IvZ7YZwrhjNg8SwwO9rnXoiDwOVncY8iVcucmipmuFI';
+  const HJ_SB_URL = 'https://ywfpzdniicfrhnrvfqfe.supabase.co';
+  const HJ_SB_ANON = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inl3ZnB6ZG5paWNmcmhucnZmcWZlIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzU0Mjc4ODcsImV4cCI6MjA5MTAwMzg4N30.St-f48-kfbmlN_QlAKtv-JbbLQYu5IaPmiPO7pyYQ9A';
   const HJ_STATE_KEY = 'folioHitjourneyState';
   let songs = [], idx = -1, audio = null, loaded = false;
 
@@ -8955,40 +8955,21 @@ body.theme-classic .statusbar{
   (async function init(){
     try{
       const headers = { apikey: HJ_SB_ANON, Authorization: 'Bearer ' + HJ_SB_ANON };
-      // Primaerquelle: kuratierte Playlist. Falls diese Abfrage wegen RLS, einer
-      // umbenannten/geleerten Playlist oder eines kurzzeitigen API-Fehlers ausfaellt,
-      // laden wir als Rueckfall direkt alle abspielbaren Songs. So bleibt der Player
-      // nicht auf beiden Folio.wax-Seiten gleichzeitig komplett leer.
-      let orderedSlugs = [];
-      try{
-        const tracksRes = await fetch(HJ_SB_URL + '/rest/v1/playlist_tracks?select=song_slug,position&playlist_slug=eq.songwriters-picks&order=position.asc', { headers });
-        if(tracksRes.ok){
-          const tracks = await tracksRes.json();
-          if(Array.isArray(tracks)) orderedSlugs = tracks.map(t => t.song_slug).filter(Boolean);
-        }
-      }catch(e){}
-
-      let raw = [];
-      if(orderedSlugs.length){
-        const slugList = orderedSlugs.map(s=>'"'+String(s).replace(/"/g,'')+'"').join(',');
-        const url = HJ_SB_URL + '/rest/v1/songs?select=slug,title,artist,mp3_url&slug=in.(' + slugList + ')';
-        const res = await fetch(url, { headers });
-        if(res.ok) raw = await res.json();
-      }
-
-      // Rueckfall: Die Songs-Tabelle selbst ist die stabilere Datenquelle. Absichtlich
-      // ohne optionale Spalten/Filter, damit Schema-Aenderungen den Player nicht brechen.
-      if(!Array.isArray(raw) || !raw.length){
-        const fallbackRes = await fetch(HJ_SB_URL + '/rest/v1/songs?select=slug,title,artist,mp3_url&limit=100', { headers });
-        if(!fallbackRes.ok) throw new Error('Songs konnten nicht geladen werden (' + fallbackRes.status + ')');
-        raw = await fallbackRes.json();
-        orderedSlugs = Array.isArray(raw) ? raw.map(s => s.slug).filter(Boolean) : [];
-      }
-
+      const tracksRes = await fetch(HJ_SB_URL + '/rest/v1/playlist_tracks?select=song_slug,position&playlist_slug=eq.songwriters-picks&order=position.asc', { headers });
+      if(!tracksRes.ok) return;
+      const tracks = await tracksRes.json();
+      if(!Array.isArray(tracks) || !tracks.length) return;
+      const orderedSlugs = tracks.map(t => t.song_slug);
+      const slugList = orderedSlugs.map(s=>'"'+s+'"').join(',');
+      const url = HJ_SB_URL + '/rest/v1/songs?select=slug,title,artist,mp3_url&slug=in.(' + slugList + ')';
+      const res = await fetch(url, { headers });
+      if(!res.ok) return;
+      const raw = await res.json();
+      if(!Array.isArray(raw) || !raw.length) return;
       const bySlug = {};
-      (Array.isArray(raw) ? raw : []).forEach(s => { if(s && s.slug && s.mp3_url) bySlug[s.slug] = s; });
+      raw.forEach(s => bySlug[s.slug] = s);
       songs = orderedSlugs.map(slug => bySlug[slug]).filter(Boolean);
-      if(!songs.length) throw new Error('Keine abspielbaren Songs gefunden');
+      if(!songs.length) return;
 
       // Laufende Wiedergabe von der anderen Folio.wax-Seite (Home/Headlines) übernehmen,
       // statt neu von vorn/zufällig zu starten.
@@ -9044,13 +9025,7 @@ body.theme-classic .statusbar{
         e.preventDefault(); e.stopPropagation();
         playRandom();
       });
-    }catch(e){
-      console.error('Songwriter\'s Picks konnte nicht geladen werden:', e);
-      const t = document.getElementById('anspielTitle');
-      const a = document.getElementById('anspielArtist');
-      if(t) t.textContent = 'Song derzeit nicht verfügbar';
-      if(a) a.textContent = 'Bitte später erneut laden';
-    }
+    }catch(e){ /* Netzwerk — Titel bleibt leer */ }
   })();
 })();
 </script>
