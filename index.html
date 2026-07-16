@@ -984,7 +984,12 @@ body.theme-classic .neg, body.theme-classic .kpi-v.neg, body.theme-classic .benc
 .wx-anspiel-txt{flex:0 0 150px;width:150px;min-width:0;font-size:12.5px;line-height:1.4;color:#CBD3E0}
 .wx-anspiel-txt b{display:block;color:#fff;font-family:Georgia,"Iowan Old Style","Times New Roman",Times,serif;font-size:15px;margin-bottom:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .wx-anspiel-txt span{display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-/* Würfel (Random) + roter Signature-Button — jetzt eigenständig in der Zeile, nicht mehr auf dem Deck */
+/* Würfel (Random) + roter Signature-Button — jetzt eigenständig in der Zeile, nicht mehr auf dem Deck.
+   Der Wrapper .wx-anspiel-ctrls ist auf dem Desktop per display:contents komplett transparent: die
+   beiden Buttons bleiben dort direkte Flex-Kinder von .wx-anspiel, das Desktop-Layout ist also
+   unverändert. Nur in der Touch-Media-Query weiter unten wird der Wrapper zur echten Spalte
+   (Würfel oben, roter Button darunter zentriert). */
+.wx-anspiel-ctrls{display:contents}
 .wx-random-btn{width:28px;height:28px;flex:none;border:0;padding:0;cursor:pointer;background:transparent;overflow:visible;align-self:flex-end;margin-bottom:-13px}
 .wx-random-btn img{width:100%;height:100%;display:block}
 .wx-random-btn:active{transform:scale(.92)}
@@ -1013,6 +1018,32 @@ body.theme-classic .neg, body.theme-classic .kpi-v.neg, body.theme-classic .benc
 .wx-deck-viewer.active{display:flex}
 .wx-deck-viewer img{max-width:min(88vw,72vh);max-height:82vh;width:auto;height:auto;object-fit:contain;border-radius:12px;box-shadow:0 24px 80px rgba(0,0,0,.7);background:#050505}
 .wx-deck-viewer-label{position:absolute;left:0;right:0;top:24px;text-align:center;font-size:11px;font-weight:700;letter-spacing:.18em;text-transform:uppercase;color:rgba(159,216,234,.75);pointer-events:none}
+
+/* ---- Player auf Touch-Geräten (iPad + iPhone, Hoch- und Querformat) ----------------------
+   2026-07-16: Der Plattenspieler bleibt dem Desktop vorbehalten. Auf dem iPad war die Box nur
+   ein Drittel der Grid-Breite breit, das Deck (height:100% + aspect-ratio) kollabierte dabei zu
+   einem Strich, und Würfel/roter Button ragten per margin-bottom:-13px aus der Box heraus, die
+   auf overflow:hidden steht — sie wurden also angeschnitten und waren kaum treffbar.
+   Stattdessen hier der schlichte Player aus Folio.invest: Box als Spalte (Kopfzeile, Zeile mit
+   Play-Button + Titel, hitjourney-Link), Deck ausgeblendet. Abweichend von Folio.invest sitzen
+   Würfel (Größe unverändert wie im WAX-Desktop, 28px) und darunter zentriert der etwas kleinere
+   rote Lyrics-Button rechts in einer festen Spalte — feste Größen und flex:none halten sie
+   unabhängig von Titellänge und Orientierung immer auf derselben Höhe am rechten Rand.
+   Abgegrenzt per Touch-Erkennung statt per Breite: eine reine max-width-Regel würde sonst auch
+   Desktop-Fenster und Laptops unter ~1400px treffen und ihnen das Deck wegnehmen. Die Klasse
+   .wx-player-simple setzt das kurze Skript direkt unter diesem Stylesheet (iPadOS Safari läuft
+   per Default im "Desktop-Website"-Modus, deshalb dort zusätzlich navigator.maxTouchPoints). */
+.wx-player-simple .wx-box--dark{flex-direction:column}
+.wx-player-simple .wx-box-left{flex:1 1 auto}
+.wx-player-simple .wx-box--dark .wx-box-head{padding:8px 14px 8px 16px}
+.wx-player-simple .wx-anspiel{gap:0;padding:16px 0 16px 16px}
+.wx-player-simple .wx-play-btn{margin-right:16px}
+.wx-player-simple .wx-anspiel-txt{flex:1 1 auto;width:auto}
+.wx-player-simple .wx-deck-col{display:none}
+.wx-player-simple .wx-anspiel-link{padding:0 16px 20px}
+.wx-player-simple .wx-anspiel-ctrls{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:7px;flex:none;margin:0 16px 0 12px}
+.wx-player-simple .wx-random-btn{align-self:auto;margin-bottom:0}
+.wx-player-simple .wx-deck-red-btn{width:20px;height:20px;align-self:auto;margin-bottom:0}
 .overview-depot-link:focus-visible{outline:2px solid var(--wax-accent);outline-offset:3px}
 .dc-grid{display:grid;grid-template-columns:2.2fr 0.95fr 1.2fr 1fr 1.25fr;gap:0;align-items:stretch}
 .dc-grid.dc-grid4{grid-template-columns:2.4fr 1.3fr 1.1fr 1.35fr}
@@ -1162,6 +1193,28 @@ body.theme-classic .dc-mini-kpi.deviation .dc-kpi-line.total strong{color:#16232
 .dhc-ylab,.dhc-xlab{fill:var(--wax-muted);font-size:10px;font-family:inherit}
 .dh-chart-empty{color:var(--wax-muted);font-size:13px;text-align:center}
 </style>
+<script>
+/* Songwriter's-Picks-Player: entscheidet zwischen Plattenspieler (Desktop) und schlichtem
+   Player (iPad/iPhone, beide Orientierungen — siehe .wx-player-simple im Stylesheet oben).
+   Läuft bewusst im <head> vor dem ersten Rendern, damit auf dem iPad nicht kurz das Deck
+   aufblitzt. hover/pointer decken normale Touch-Browser ab; maxTouchPoints ist der Fallback
+   für iPadOS Safari im "Desktop-Website"-Modus (Default auf dem iPad), der sich in den
+   Media Queries wie ein Desktop ausgeben kann. Die Breitenprüfung fängt zusätzlich sehr
+   schmale Desktop-Fenster ab, in denen das Deck ebenfalls keinen Platz hätte. */
+(function(){
+  function sync(){
+    var mq = window.matchMedia || null;
+    var touch = (mq && (matchMedia('(hover:none)').matches || matchMedia('(pointer:coarse)').matches))
+             || navigator.maxTouchPoints > 0
+             || 'ontouchstart' in window;
+    var narrow = window.innerWidth <= 820;
+    document.documentElement.classList.toggle('wx-player-simple', !!(touch || narrow));
+  }
+  sync();
+  window.addEventListener('resize', sync);
+  window.addEventListener('orientationchange', sync);
+})();
+</script>
 </head>
 <body spellcheck="false" class="theme-modern">
 <script>
@@ -1266,10 +1319,12 @@ body.theme-classic .dc-mini-kpi.deviation .dc-kpi-line.total strong{color:#16232
             </svg>
           </button>
           <div class="wx-anspiel-txt"><b id="anspielTitle">—</b><span id="anspielArtist"></span></div>
-          <button class="wx-random-btn" id="anspielRandomBtn" type="button" aria-label="Zufälligen Song abspielen" title="Zufälligen Song abspielen">
-            <img src="Random.png" alt="" draggable="false">
-          </button>
-          <button class="wx-deck-red-btn" id="anspielDeckSignatureBtn" type="button" aria-label="Cover und Lyrics anzeigen" title="Cover und Lyrics"></button>
+          <div class="wx-anspiel-ctrls">
+            <button class="wx-random-btn" id="anspielRandomBtn" type="button" aria-label="Zufälligen Song abspielen" title="Zufälligen Song abspielen">
+              <img src="Random.png" alt="" draggable="false">
+            </button>
+            <button class="wx-deck-red-btn" id="anspielDeckSignatureBtn" type="button" aria-label="Cover und Lyrics anzeigen" title="Cover und Lyrics"></button>
+          </div>
         </div>
         <a class="wx-anspiel-link" href="https://hitjourney.com" target="_blank" rel="noopener">hitjourney.com</a>
       </div>
