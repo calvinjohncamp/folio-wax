@@ -90,25 +90,46 @@
   .wx-tickrow .t-dek{font-size:11px;color:var(--ink-soft);line-height:1.4;}
   a.wx-tickrow:hover .t-head{color:var(--flag);}
 
-  /* ---- Anspieltipp: zurueck zur schlanken Box (dunkles Navy, orangener Button, Querformat) ---- */
-  .wx-box--dark{border-color:var(--box-navy);background:var(--box-navy);color:var(--box-navy-ink);}
-  .wx-box--dark .wx-box-head{background:var(--box-navy);color:var(--box-navy-ink);padding-left:16px;}
-  .wx-anspiel{display:flex;align-items:center;padding:16px 0 16px 16px;}
+  /* ---- Anspieltipp: schlanke Box (dunkles Navy, orangener Button, Querformat) ----
+     2026-07-16: Button-Look von der Home übernommen — Würfel 49px oben rechts, darunter der rote
+     Lyrics-Button 30px, zueinander zentriert. Der Plattenspieler der Home bleibt bewusst DRAUSSEN
+     (Nutzer-Entscheidung): der Newsletter behält seinen ruhigen Zeitungscharakter, hier steht auf
+     allen Geräten derselbe schlanke Player.
+     Beide Buttons sind absolut in .wx-box--dark verankert, weil sie Zeilen überspannen: der Würfel
+     reicht hoch bis neben die Kopfzeile, der rote Button runter bis neben "hitjourney.com".
+     Anker (am gerenderten Newsletter gemessen, Bezugspunkte wie auf der Home):
+       Würfel  top:13.93px   -> Mitte mittig zwischen Baseline der Kopfzeile und Oberkante der
+                                Songtitel-Grossbuchstaben (Cap-Höhe der Schrift, songunabhängig)
+       Rot     bottom:22.5px -> Unterkante = Baseline von "hitjourney.com"
+     Die Werte sind mit der Home identisch, weil vertikale Paddings (8/8, 16/16, 0/20), Schrift-
+     größen und Schriftfamilien in beiden Dateien übereinstimmen (--font-display ist dieselbe
+     Georgia-Kette; --font-sans fällt mangels geladenem Satoshi auf -apple-system zurück).
+     min-height ersetzt die Höhe, die vorher der 60px-Würfel im Fluss erzeugt hat — ohne sie
+     schrumpft die Box, sobald die Buttons absolut sind. */
+  .wx-box--dark{border-color:var(--box-navy);background:var(--box-navy);color:var(--box-navy-ink);position:relative;}
+  .wx-box--dark .wx-box-head{background:var(--box-navy);color:var(--box-navy-ink);padding-left:16px;padding-right:77px;}
+  .wx-anspiel{display:flex;align-items:center;padding:16px 77px 16px 16px;min-height:87px;}
   .wx-play-btn{width:40px;height:40px;margin-right:16px;border-radius:50%;background:var(--flag);border:0;flex:none;display:flex;align-items:center;justify-content:center;cursor:pointer;padding:0;}
   .wx-play-btn:active{transform:scale(.92);}
   .wx-play-btn svg{width:20px;height:20px;color:var(--box-navy);}
   .wx-play-btn .icon-pause{display:none;}
   .wx-play-btn.is-playing .icon-play{display:none;}
   .wx-play-btn.is-playing .icon-pause{display:block;}
-  .wx-anspiel-txt{flex:0 1 auto;min-width:0;max-width:190px;font-size:12.5px;line-height:1.4;color:#CBD3E0;}
+  .wx-anspiel-txt{flex:1 1 auto;min-width:0;font-size:12.5px;line-height:1.4;color:#CBD3E0;}
   .wx-anspiel-txt b{display:block;color:#fff;font-family:var(--font-display);font-size:15px;margin-bottom:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
   .wx-anspiel-txt span{display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
-  .wx-anspiel-spacer{flex:1 1 0;}
-  .wx-random-btn{width:60px;height:60px;border-radius:50%;flex:none;border:0;padding:0;cursor:pointer;background:transparent;display:block;overflow:hidden;}
+  .wx-random-btn{position:absolute;right:16px;top:13.93px;width:49px;height:49px;border:0;padding:0;cursor:pointer;background:transparent;overflow:visible;}
   .wx-random-btn img{width:100%;height:100%;display:block;}
   .wx-random-btn:active{transform:scale(.92);}
-  .wx-anspiel-link{display:block;padding:0 16px 20px;font-family:var(--font-sans);font-size:11px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:#9FD8EA;}
+  .wx-deck-red-btn{position:absolute;right:25.5px;bottom:22.5px;width:30px;height:30px;border:0;border-radius:50%;background:#C90019;cursor:pointer;box-shadow:0 0 0 1px rgba(255,255,255,.1),0 2px 6px rgba(0,0,0,.4);padding:0;}
+  .wx-deck-red-btn:active{transform:scale(.92);}
+  .wx-anspiel-link{display:block;padding:0 77px 20px 16px;font-family:var(--font-sans);font-size:11px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:#9FD8EA;}
   .wx-anspiel-link:hover{text-decoration:underline;}
+  /* Cover/Lyrics-Betrachter, öffnet sich per rotem Button — 1:1 die Funktion aus der Home */
+  .wx-deck-viewer{position:fixed;inset:0;z-index:400;display:none;align-items:center;justify-content:center;padding:24px;background:rgba(6,20,32,.92);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);cursor:pointer;}
+  .wx-deck-viewer.active{display:flex;}
+  .wx-deck-viewer img{max-width:min(88vw,72vh);max-height:82vh;width:auto;height:auto;object-fit:contain;border-radius:12px;box-shadow:0 24px 80px rgba(0,0,0,.7);background:#050505;}
+  .wx-deck-viewer-label{position:absolute;left:0;right:0;top:24px;text-align:center;font-size:11px;font-weight:700;letter-spacing:.18em;text-transform:uppercase;color:rgba(159,216,234,.75);pointer-events:none;}
 
   /* ================= RUBRIK-KOPF ================= */
   .wx-rubric{
@@ -237,13 +258,12 @@
               </svg>
             </button>
             <div class="wx-anspiel-txt"><b id="anspielTitle">—</b><span id="anspielArtist"></span></div>
-            <span class="wx-anspiel-spacer" aria-hidden="true"></span>
-            <button class="wx-random-btn" id="anspielRandomBtn" type="button" aria-label="Zufälligen Song abspielen" title="Zufälligen Song abspielen">
-              <img src="Random%20Play%20Button.png" alt="" draggable="false">
-            </button>
-            <span class="wx-anspiel-spacer" aria-hidden="true"></span>
           </div>
           <a class="wx-anspiel-link" href="https://hitjourney.com" target="_blank" rel="noopener">hitjourney.com</a>
+          <button class="wx-random-btn" id="anspielRandomBtn" type="button" aria-label="Zufälligen Song abspielen" title="Zufälligen Song abspielen">
+            <img src="Random.png" alt="" draggable="false">
+          </button>
+          <button class="wx-deck-red-btn" id="anspielDeckSignatureBtn" type="button" aria-label="Cover und Lyrics anzeigen" title="Cover und Lyrics"></button>
         </div>
 
         <blockquote class="wx-aside-quote" id="asideQuote" style="display:none">
@@ -307,6 +327,11 @@
     <p class="wx-footer">WAX<span class="dot">&#8226;</span>Aktienclub seit 2000</p>
 
   </div>
+</div>
+
+<div class="wx-deck-viewer" id="wxDeckViewer" aria-hidden="true">
+  <div class="wx-deck-viewer-label" id="wxDeckViewerLabel">Cover</div>
+  <img alt="" id="wxDeckViewerImg" src=""/>
 </div>
 
 <script>
@@ -453,7 +478,9 @@
   hjBeat();
   setInterval(hjBeat, 4000);
 
+  let currentSong = null;
   function showSong(song){
+    currentSong = song;
     const t = document.getElementById('anspielTitle');
     const a = document.getElementById('anspielArtist');
     if(t) t.textContent = song.title || '—';
@@ -548,7 +575,7 @@
       if(!Array.isArray(tracks) || !tracks.length) return;
       const orderedSlugs = tracks.map(t => t.song_slug);
       const slugList = orderedSlugs.map(s=>'"'+s+'"').join(',');
-      const url = HJ_SB_URL + '/rest/v1/songs?select=slug,title,artist,mp3_url&slug=in.(' + slugList + ')';
+      const url = HJ_SB_URL + '/rest/v1/songs?select=slug,title,artist,mp3_url,cover_url,lyrics_url&slug=in.(' + slugList + ')';
       const res = await fetch(url, { headers });
       if(!res.ok) return;
       const raw = await res.json();
@@ -611,6 +638,45 @@
       if(randomBtn) randomBtn.addEventListener('click', function(e){
         e.preventDefault(); e.stopPropagation();
         playRandom();
+      });
+
+      // Roter Button: 1. Klick zeigt Cover, 2. Klick Lyrics, danach schliesst ein weiterer
+      // Klick (auf den Button oder irgendwo im Viewer) — 1:1 die Funktion aus der Home.
+      let deckViewerPhase = 0;
+      const deckViewer = document.getElementById('wxDeckViewer');
+      const deckViewerImg = document.getElementById('wxDeckViewerImg');
+      const deckViewerLabel = document.getElementById('wxDeckViewerLabel');
+      function closeDeckViewer(){
+        deckViewerPhase = 0;
+        if(deckViewer){ deckViewer.classList.remove('active'); deckViewer.setAttribute('aria-hidden','true'); }
+        if(deckViewerImg) deckViewerImg.removeAttribute('src');
+      }
+      function advanceDeckViewer(){
+        if(!currentSong) return;
+        if(deckViewerPhase === 0 && currentSong.cover_url){
+          deckViewerPhase = 1;
+          deckViewerImg.src = currentSong.cover_url;
+          deckViewerLabel.textContent = 'Cover';
+          deckViewer.classList.add('active');
+          deckViewer.setAttribute('aria-hidden','false');
+        } else if(deckViewerPhase <= 1 && currentSong.lyrics_url){
+          deckViewerPhase = 2;
+          deckViewerImg.src = currentSong.lyrics_url;
+          deckViewerLabel.textContent = 'Lyrics';
+          deckViewer.classList.add('active');
+          deckViewer.setAttribute('aria-hidden','false');
+        } else {
+          closeDeckViewer();
+        }
+      }
+      const deckSignatureBtn = document.getElementById('anspielDeckSignatureBtn');
+      if(deckSignatureBtn) deckSignatureBtn.addEventListener('click', function(e){
+        e.preventDefault(); e.stopPropagation();
+        advanceDeckViewer();
+      });
+      if(deckViewer) deckViewer.addEventListener('click', function(e){
+        e.preventDefault(); e.stopPropagation();
+        advanceDeckViewer();
       });
     }catch(e){ /* Netzwerk — Titel bleibt leer */ }
   })();
