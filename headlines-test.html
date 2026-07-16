@@ -166,7 +166,12 @@
   .wx-pullquote p{font-family:var(--font-display);font-style:italic;font-size:26px;line-height:1.46;color:var(--ink);margin:0 0 12px;text-wrap:balance;}
   .wx-pullquote .src{font-size:12px;letter-spacing:.14em;text-transform:uppercase;color:var(--ink-faint);}
 
-  .wx-aside-quote{flex:1 1 auto;display:flex;flex-direction:column;justify-content:center;margin:-26px 0 0;text-align:center;padding:0 6px;}
+  /* 2026-07-16: margin-top war -26px und hob damit den 26px-Abstand der Player-Box exakt auf
+     (Abstand 0). Weil .mark mit font-size:56px + line-height:.4 arbeitet, ragt die Glyphe des
+     Anfuehrungszeichens 19,3px ueber ihre Zeilenbox hinaus — sie stand dadurch 16,8px IM Player.
+     +14px ergibt gemessene 23,2px Luft zwischen Player-Unterkante und Glyphen-Oberkante und
+     bleibt damit nah am 26px-Rhythmus der uebrigen Boxen. */
+  .wx-aside-quote{flex:1 1 auto;display:flex;flex-direction:column;justify-content:center;margin:14px 0 0;text-align:center;padding:0 6px;}
   .wx-aside-quote a{display:block;color:inherit;}
   .wx-aside-quote a:hover p{color:var(--flag);}
   .wx-aside-quote .mark{font-family:var(--font-display);font-size:56px;color:var(--flag);line-height:.4;display:block;margin-bottom:10px;}
