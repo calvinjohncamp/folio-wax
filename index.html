@@ -984,12 +984,7 @@ body.theme-classic .neg, body.theme-classic .kpi-v.neg, body.theme-classic .benc
 .wx-anspiel-txt{flex:0 0 150px;width:150px;min-width:0;font-size:12.5px;line-height:1.4;color:#CBD3E0}
 .wx-anspiel-txt b{display:block;color:#fff;font-family:Georgia,"Iowan Old Style","Times New Roman",Times,serif;font-size:15px;margin-bottom:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .wx-anspiel-txt span{display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-/* Würfel (Random) + roter Signature-Button — jetzt eigenständig in der Zeile, nicht mehr auf dem Deck.
-   Der Wrapper .wx-anspiel-ctrls ist auf dem Desktop per display:contents komplett transparent: die
-   beiden Buttons bleiben dort direkte Flex-Kinder von .wx-anspiel, das Desktop-Layout ist also
-   unverändert. Nur in der Touch-Media-Query weiter unten wird der Wrapper zur echten Spalte
-   (Würfel oben, roter Button darunter zentriert). */
-.wx-anspiel-ctrls{display:contents}
+/* Würfel (Random) + roter Signature-Button — jetzt eigenständig in der Zeile, nicht mehr auf dem Deck */
 .wx-random-btn{width:28px;height:28px;flex:none;border:0;padding:0;cursor:pointer;background:transparent;overflow:visible;align-self:flex-end;margin-bottom:-13px}
 .wx-random-btn img{width:100%;height:100%;display:block}
 .wx-random-btn:active{transform:scale(.92)}
@@ -1025,25 +1020,44 @@ body.theme-classic .neg, body.theme-classic .kpi-v.neg, body.theme-classic .benc
    einem Strich, und Würfel/roter Button ragten per margin-bottom:-13px aus der Box heraus, die
    auf overflow:hidden steht — sie wurden also angeschnitten und waren kaum treffbar.
    Stattdessen hier der schlichte Player aus Folio.invest: Box als Spalte (Kopfzeile, Zeile mit
-   Play-Button + Titel, hitjourney-Link), Deck ausgeblendet. Abweichend von Folio.invest sitzen
-   Würfel (Größe unverändert wie im WAX-Desktop, 28px) und darunter zentriert der etwas kleinere
-   rote Lyrics-Button rechts in einer festen Spalte — feste Größen und flex:none halten sie
-   unabhängig von Titellänge und Orientierung immer auf derselben Höhe am rechten Rand.
+   Play-Button + Titel, hitjourney-Link), Deck ausgeblendet.
    Abgegrenzt per Touch-Erkennung statt per Breite: eine reine max-width-Regel würde sonst auch
    Desktop-Fenster und Laptops unter ~1400px treffen und ihnen das Deck wegnehmen. Die Klasse
    .wx-player-simple setzt das kurze Skript direkt unter diesem Stylesheet (iPadOS Safari läuft
-   per Default im "Desktop-Website"-Modus, deshalb dort zusätzlich navigator.maxTouchPoints). */
+   per Default im "Desktop-Website"-Modus, deshalb dort zusätzlich navigator.maxTouchPoints).
+
+   2026-07-16 Feintuning nach Test auf echtem Gerät: Würfel 49px (+75%), roter Button 30px (+50%).
+   Beide sind aus dem Flex-Fluss genommen und absolut in .wx-box-left verankert, weil sie jetzt
+   ZEILEN ÜBERSPANNEN: der Würfel reicht hoch bis neben die Kopfzeile, der rote Button runter bis
+   neben "hitjourney.com" — im Fluss wäre das nicht darstellbar. Die festen px-Werte stammen aus
+   am Gerät gemessenen Bezugspunkten (Baselines per 0x0-Inline-Block, Cap-Höhe per Canvas-Metrik)
+   und sind auf iPhone wie iPad identisch, weil .wx-box-left immer 149,5px hoch ist:
+     Würfel  top:13.93px  -> Mitte 38,43px = exakt mittig zwischen Baseline der Kopfzeile (19px)
+                             und Oberkante der Songtitel-Grossbuchstaben (57,86px). Bezug ist
+                             bewusst die Cap-Höhe der SCHRIFT (Canvas-Metrik von "H"), nicht die
+                             des konkreten Titels — sonst hinge die Sollposition davon ab, ob der
+                             gerade laufende Song Ober-/Unterlängen im Titel hat.
+     Rot     bottom:22.5px -> Unterkante = Baseline von "hitjourney.com" (127px von oben)
+   Der Würfel ist oben (an der Kopfzeile) verankert, der rote Button unten (am Link) — beide also
+   an dem Element, auf das sie sich ausrichten sollen. Rechts sind sie zueinander zentriert
+   (16px Rand + (49-30)/2 = 25,5px). Das padding-right von 77px (16 + 49 Würfel + 12 Luft) hält
+   Kopfzeile, Songtitel und Link aus der Button-Spalte heraus, da diese keinen Fluss-Platz mehr
+   belegt. */
 .wx-player-simple .wx-box--dark{flex-direction:column}
-.wx-player-simple .wx-box-left{flex:1 1 auto}
-.wx-player-simple .wx-box--dark .wx-box-head{padding:8px 14px 8px 16px}
-.wx-player-simple .wx-anspiel{gap:0;padding:16px 0 16px 16px}
+.wx-player-simple .wx-box-left{flex:1 1 auto;position:relative}
+.wx-player-simple .wx-box--dark .wx-box-head{padding:8px 77px 8px 16px}
+/* min-height hält die Zeile auf der Höhe, die vorher die Button-Spalte im Fluss erzeugt hat
+   (Box bleibt damit unverändert 152,5px hoch). Ohne sie schrumpft die Box auf 135px, sobald die
+   Buttons absolut positioniert sind — und zwar NUR auf dem iPhone: auf dem iPad zieht der
+   Grid-Stretch die Box wieder auf Teaser-Höhe. Der Songtitel läge dann auf beiden Geräten
+   unterschiedlich hoch und die festen Anker-Werte unten könnten nicht für beide stimmen. */
+.wx-player-simple .wx-anspiel{gap:0;padding:16px 77px 16px 16px;min-height:87px}
 .wx-player-simple .wx-play-btn{margin-right:16px}
 .wx-player-simple .wx-anspiel-txt{flex:1 1 auto;width:auto}
 .wx-player-simple .wx-deck-col{display:none}
-.wx-player-simple .wx-anspiel-link{padding:0 16px 20px}
-.wx-player-simple .wx-anspiel-ctrls{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:7px;flex:none;margin:0 16px 0 12px}
-.wx-player-simple .wx-random-btn{align-self:auto;margin-bottom:0}
-.wx-player-simple .wx-deck-red-btn{width:20px;height:20px;align-self:auto;margin-bottom:0}
+.wx-player-simple .wx-anspiel-link{padding:0 77px 20px 16px}
+.wx-player-simple .wx-random-btn{position:absolute;right:16px;top:13.93px;width:49px;height:49px;margin:0;align-self:auto}
+.wx-player-simple .wx-deck-red-btn{position:absolute;right:25.5px;bottom:22.5px;width:30px;height:30px;margin:0;align-self:auto}
 .overview-depot-link:focus-visible{outline:2px solid var(--wax-accent);outline-offset:3px}
 .dc-grid{display:grid;grid-template-columns:2.2fr 0.95fr 1.2fr 1fr 1.25fr;gap:0;align-items:stretch}
 .dc-grid.dc-grid4{grid-template-columns:2.4fr 1.3fr 1.1fr 1.35fr}
@@ -1294,7 +1308,7 @@ body.theme-classic .dc-mini-kpi.deviation .dc-kpi-line.total strong{color:#16232
   <div id="overviewHeroMount" style="margin-top:4px"></div>
   <div class="dc-group"><span class="sec-n">2 ·</span> Ranking — aktuell &amp; Alltime</div>
   <div id="overviewRankMount" class="dc-wrap"></div>
-  <div class="dc-group" style="padding-top:0"><span class="sec-n">3 ·</span> Headlines</div>
+  <div class="dc-group"><span class="sec-n">3 ·</span> Headlines</div>
   <div class="headlines-row">
     <a class="headlines-teaser" href="headlines.html" title="Zu Folio.wax Headlines">
       <div class="headlines-teaser-name">FOLIO<span class="dot">·</span>WAX</div>
@@ -1319,12 +1333,10 @@ body.theme-classic .dc-mini-kpi.deviation .dc-kpi-line.total strong{color:#16232
             </svg>
           </button>
           <div class="wx-anspiel-txt"><b id="anspielTitle">—</b><span id="anspielArtist"></span></div>
-          <div class="wx-anspiel-ctrls">
-            <button class="wx-random-btn" id="anspielRandomBtn" type="button" aria-label="Zufälligen Song abspielen" title="Zufälligen Song abspielen">
-              <img src="Random.png" alt="" draggable="false">
-            </button>
-            <button class="wx-deck-red-btn" id="anspielDeckSignatureBtn" type="button" aria-label="Cover und Lyrics anzeigen" title="Cover und Lyrics"></button>
-          </div>
+          <button class="wx-random-btn" id="anspielRandomBtn" type="button" aria-label="Zufälligen Song abspielen" title="Zufälligen Song abspielen">
+            <img src="Random.png" alt="" draggable="false">
+          </button>
+          <button class="wx-deck-red-btn" id="anspielDeckSignatureBtn" type="button" aria-label="Cover und Lyrics anzeigen" title="Cover und Lyrics"></button>
         </div>
         <a class="wx-anspiel-link" href="https://hitjourney.com" target="_blank" rel="noopener">hitjourney.com</a>
       </div>
