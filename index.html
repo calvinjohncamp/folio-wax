@@ -548,7 +548,7 @@ body:not(.theme-original) .badge.b-new:hover {
 // Cache-Bereinigung ohne aggressive Storage-Resets
 // WICHTIG: Dieser String muss bei JEDER deploy-relevanten Änderung an dieser Datei
 // von Hand hochgezählt werden – er ist die einzige Grundlage für den Update-Check unten.
-const WAX_BUILD = '1783630400000-statusbar-dynamic-align-20260709';
+const WAX_BUILD = '1784277000000-ytd-bridge-20260717';
 try {
   sessionStorage.setItem('wax_build_seen', WAX_BUILD);
 } catch(e) {}
@@ -1165,6 +1165,21 @@ body.theme-classic .dc-mini-kpi.deviation .dc-kpi-line.total strong{color:#16232
 .dh-chart-head{display:flex;justify-content:space-between;font-size:12px;color:var(--wax-muted);letter-spacing:.04em}
 .dh-chart-area{flex:1;display:flex;align-items:center;justify-content:center;color:var(--wax-muted);font-size:13px;border-top:1px dashed var(--wax-line);margin-top:12px;padding-top:12px}
 .dh-kpis{display:grid;grid-template-columns:repeat(4,1fr);gap:12px}
+/* YTD-Brücke: erklärt lückenlos den Weg vom Jahresanfang zum aktuellen Depotwert. */
+.dh-ytd-bridge{margin-top:12px;background:var(--wax-card);border:1px solid var(--wax-border);border-radius:16px;box-shadow:0 6px 16px rgba(0,0,0,.08);padding:13px 18px}
+.dh-ytd-bridge-head{display:flex;align-items:center;justify-content:space-between;gap:14px;margin-bottom:10px}
+.dh-ytd-bridge-title{font-size:10px;font-weight:800;letter-spacing:.13em;text-transform:uppercase;color:var(--wax-muted)}
+.dh-ytd-bridge-note{font-size:10.5px;color:var(--wax-muted);text-align:right}
+.dh-ytd-bridge-grid{display:grid;grid-template-columns:1fr auto 1fr auto 1fr auto 1fr;align-items:center;gap:12px}
+.dh-ytd-step{min-width:0}
+.dh-ytd-step-label{font-size:10.5px;color:var(--wax-muted);margin-bottom:4px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.dh-ytd-step-value{font-size:18px;font-weight:800;color:var(--wax-text);letter-spacing:-.015em;white-space:nowrap}
+.dh-ytd-step-value.pos{color:var(--wax-positive)!important}.dh-ytd-step-value.neg{color:var(--brand-orange)!important}
+.dh-ytd-op{font-size:19px;font-weight:500;color:var(--wax-muted-2);text-align:center}
+.dh-ytd-formula{margin-top:9px;padding-top:9px;border-top:1px solid var(--wax-line);font-size:10.5px;color:var(--wax-muted);line-height:1.35}
+.dh-ytd-formula strong{color:var(--wax-text);font-weight:700}
+@media(max-width:760px){.dh-ytd-bridge-grid{grid-template-columns:1fr 1fr;gap:10px 14px}.dh-ytd-op{display:none}.dh-ytd-step{padding:8px 0;border-top:1px solid var(--wax-line)}.dh-ytd-step:nth-child(1),.dh-ytd-step:nth-child(3){border-top:none}.dh-ytd-bridge-head{align-items:flex-start;flex-direction:column;gap:3px}.dh-ytd-bridge-note{text-align:left}}
+@media(max-width:460px){.dh-ytd-bridge-grid{grid-template-columns:1fr}.dh-ytd-step{border-top:1px solid var(--wax-line)!important}.dh-ytd-step:first-child{border-top:none!important}.dh-ytd-step-value{font-size:17px}}
 .dh-kpi{background:var(--wax-card);border:1px solid var(--wax-border);border-radius:16px;padding:16px 20px;min-height:94px;box-shadow:0 6px 16px rgba(0,0,0,.10);display:flex;align-items:center}
 .dh-kpi-rankcard{display:grid;grid-template-columns:auto 1fr auto;align-items:center;gap:12px}
 .dh-kpi-rank{display:flex;flex-direction:column;justify-content:center;gap:6px}
@@ -4742,6 +4757,10 @@ function renderDepot(id) {
   const _depotFlows = netExternalFlows(id);
   const ytdAbs = gesamtAkt-gesamtRef-_depotFlows;
   const ytd = gesamtRef>0 ? ytdAbs/gesamtRef : 0;
+  // Transparente YTD-Brücke: Jahresanfang + externe Cashflows + Marktentwicklung = aktueller Wert.
+  // Ein negativer Cashflow ist z. B. eine Freigabe/Entnahme; Käufe und Verkäufe sind nur Umschichtungen.
+  const ytdFlowLabel = _depotFlows < -0.005 ? 'Freigaben' : (_depotFlows > 0.005 ? 'Einzahlungen' : 'Externe Cashflows');
+  const ytdAdjustedBase = gesamtRef + _depotFlows;
   const todayPct = todayStats.todayPct;
   const todayAbs = todayStats.todayAbs;
   const modePct = isToday ? todayPct : ytd;
@@ -4810,6 +4829,22 @@ function renderDepot(id) {
         <div class="dh-kpi-mid"><div class="dh-kpi-pct">${f(cashAnteil,1)}%</div><div class="dh-kpi-abs">${f(cash)} €</div></div>
         <div class="dh-cash-label">Cash</div>
       </div>
+    </div>
+    <div class="dh-ytd-bridge" aria-label="Herleitung des aktuellen Depotwerts">
+      <div class="dh-ytd-bridge-head">
+        <div class="dh-ytd-bridge-title">So entsteht der aktuelle Depotwert</div>
+        <div class="dh-ytd-bridge-note">Freigaben werden nicht als Börsengewinn oder -verlust gewertet.</div>
+      </div>
+      <div class="dh-ytd-bridge-grid">
+        <div class="dh-ytd-step"><div class="dh-ytd-step-label">Jahresanfang 01.01.</div><div class="dh-ytd-step-value">${f(gesamtRef)} €</div></div>
+        <div class="dh-ytd-op">+</div>
+        <div class="dh-ytd-step"><div class="dh-ytd-step-label">${ytdFlowLabel}</div><div class="dh-ytd-step-value ${cl(_depotFlows)}">${fc(_depotFlows)}</div></div>
+        <div class="dh-ytd-op">+</div>
+        <div class="dh-ytd-step"><div class="dh-ytd-step-label">Wertentwicklung YTD</div><div class="dh-ytd-step-value ${cl(ytdAbs)}">${fc(ytdAbs)}</div></div>
+        <div class="dh-ytd-op">=</div>
+        <div class="dh-ytd-step"><div class="dh-ytd-step-label">Aktueller Depotwert</div><div class="dh-ytd-step-value">${f(gesamtAkt)} €</div></div>
+      </div>
+      <div class="dh-ytd-formula"><strong>Performance ${fp(ytd)}</strong> auf den Jahresanfangswert von ${f(gesamtRef)} €</div>
     </div>
   </div>`;
 
