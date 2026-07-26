@@ -509,6 +509,11 @@
   };
   function applyBrand(){
     const b = BRANDS[FOLIO_BRAND] || BRANDS.today;
+    const host = (location.hostname || '').toLowerCase();
+    const ref = (document.referrer || '').toLowerCase();
+    const back = host.includes('folio-wax') || ref.includes('folio-wax')
+      ? BRANDS.wax.back
+      : (host.includes('folio-invest') || ref.includes('folio-invest') ? BRANDS.invest.back : null);
     document.title = b.title;
     const np = document.getElementById('wxNameplate');
     if(np) np.innerHTML = esc(b.np[0]) + '<span class="dot">·</span>' + esc(b.np[1]);
@@ -523,7 +528,7 @@
     }
     const bk = document.getElementById('wxBack');
     if(bk){
-      if(b.back){ bk.href = b.back.href; bk.textContent = b.back.label; bk.style.display = ''; }
+      if(back){ bk.href = back.href; bk.textContent = back.label; bk.style.display = ''; }
       else { bk.style.display = 'none'; }
     }
   }
@@ -994,20 +999,14 @@
   const HJ_SB_URL = 'https://ywfpzdniicfrhnrvfqfe.supabase.co';
   const HJ_SB_ANON = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inl3ZnB6ZG5paWNmcmhucnZmcWZlIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzU0Mjc4ODcsImV4cCI6MjA5MTAwMzg4N30.St-f48-kfbmlN_QlAKtv-JbbLQYu5IaPmiPO7pyYQ9A';
   const HJ_STATE_KEY = 'folioHitjourneyState';
+  const HJ_HANDOFF_KEY = 'folioHitjourneyHandoff';
   const HJ_OWNER_KEY = 'folioHitjourneyOwner';
   const HJ_PAGE_ID = 'hj-' + Date.now() + '-' + Math.random().toString(36).slice(2);
   let songs = [], idx = -1, audio = null, loaded = false;
   let passiveMirror = false;
 
-  const HJ_HEARTBEAT_KEY = 'folioHitjourneyHeartbeat';
-  let __hjWasRecentlyActive = false;
-  try{
-    const lastBeat = Number(localStorage.getItem(HJ_HEARTBEAT_KEY) || 0);
-    __hjWasRecentlyActive = (Date.now() - lastBeat) < 8000;
-  }catch(e){}
-  function hjBeat(){ try{ localStorage.setItem(HJ_HEARTBEAT_KEY, String(Date.now())); }catch(e){} }
-  hjBeat();
-  setInterval(hjBeat, 4000);
+  // Autoplay darf nur nach einem frischen Klick-Wechsel Home <-> Headlines passieren.
+  // Ein harter Reload oder neuer App-Start zeigt hoechstens den letzten Titel, spielt aber nie selbst los.
   function markOwner(){
     try{ localStorage.setItem(HJ_OWNER_KEY, JSON.stringify({ id: HJ_PAGE_ID, ts: Date.now() })); }catch(e){}
   }
@@ -1026,6 +1025,16 @@
     }catch(e){ return false; }
   }
   setInterval(function(){ if(audio && !audio.paused) markOwner(); }, 3000);
+  function writeHandoff(){
+    if(idx < 0 || !songs.length || !audio || audio.paused) return;
+    try{
+      localStorage.setItem(HJ_HANDOFF_KEY, JSON.stringify({
+        slug: songs[idx].slug,
+        currentTime: audio.currentTime || 0,
+        ts: Date.now()
+      }));
+    }catch(e){}
+  }
 
   let currentSong = null;
   function showSong(song){
@@ -1128,27 +1137,32 @@
 
       let resumed = false;
       let st = null;
+      let handoff = null;
       try{
         const raw2 = localStorage.getItem(HJ_STATE_KEY);
         if(raw2) st = JSON.parse(raw2);
-        if(st && st.slug && __hjWasRecentlyActive){
-          const foundIdx = songs.findIndex(s => s.slug === st.slug);
+        const rawHandoff = localStorage.getItem(HJ_HANDOFF_KEY);
+        if(rawHandoff) handoff = JSON.parse(rawHandoff);
+        if(handoff && Date.now() - Number(handoff.ts || 0) > 8000) handoff = null;
+        const initial = handoff && handoff.slug ? handoff : st;
+        if(initial && initial.slug){
+          const foundIdx = songs.findIndex(s => s.slug === initial.slug);
           if(foundIdx !== -1){
             idx = foundIdx;
             showSong(songs[idx]);
             const au = ensureAudio();
-            const resumeTime = st.currentTime || 0;
-            const wasPlaying = !st.paused;
+            const resumeTime = initial.currentTime || 0;
             au.src = songs[idx].mp3_url;
             loaded = true;
             au.addEventListener('loadedmetadata', function onMeta(){
               const dur = au.duration;
               au.currentTime = (isFinite(dur) && dur > 0 && resumeTime >= dur - 1.5) ? 0 : resumeTime;
               au.removeEventListener('loadedmetadata', onMeta);
-              if(wasPlaying){
+              if(handoff && handoff.slug){
                 if(otherPageIsPlaying()) passiveMirror = true;
                 else tryResumePlay(au);
               }
+              try{ localStorage.removeItem(HJ_HANDOFF_KEY); }catch(e){}
             });
             resumed = true;
           }
@@ -1169,6 +1183,8 @@
         e.preventDefault(); e.stopPropagation();
         togglePlayPause();
       });
+      const backLink = document.getElementById('wxBack');
+      if(backLink) backLink.addEventListener('click', function(){ writeHandoff(); });
       const randomBtn = document.getElementById('anspielRandomBtn');
       if(randomBtn) randomBtn.addEventListener('click', function(e){
         e.preventDefault(); e.stopPropagation();
