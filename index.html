@@ -983,29 +983,30 @@ body.theme-classic .neg, body.theme-classic .kpi-v.neg, body.theme-classic .benc
    Tonarm-Bewegung ist jetzt 1:1 aus dem hitjourney-Player übernommen (siehe JS weiter unten):
    kontinuierliche Rotation von -9.5° (Start/außen) bis 29° (innen) über die Songdauer, 2 Sekunden
    vor Songende sanfte Rückkehr zur Startposition. */
-.wx-box--dark{display:flex;flex-direction:row;border:1.5px solid #14253F;border-radius:14px;background:#14253F;color:#F5F1E8;overflow:hidden}
-.wx-box-left{display:flex;flex-direction:column;flex:1 1 auto;min-width:0}
-.wx-box--dark .wx-box-head{background:#14253F;color:#F5F1E8;font-size:11.5px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;padding:16px 14px 0 16px;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Inter,Roboto,sans-serif;flex:none}
-.wx-anspiel{flex:1 1 auto;display:flex;align-items:center;gap:14px;padding:0 14px 0 16px}
+.wx-box--dark{display:flex;flex-direction:column;border:1.5px solid #14253F;border-radius:14px;background:#14253F;color:#F5F1E8;overflow:hidden}
+.wx-box-left{display:flex;flex-direction:column;flex:1 1 auto;min-width:0;position:relative}
+.wx-box--dark .wx-box-head{background:#14253F;color:#F5F1E8;font-size:11.5px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;padding:8px 77px 8px 16px;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Inter,Roboto,sans-serif;flex:none}
+.wx-anspiel{flex:1 1 auto;display:flex;align-items:center;gap:0;padding:16px 77px 16px 16px;min-height:87px}
 .wx-play-btn{width:40px;height:40px;border-radius:50%;background:#C8632A;border:0;flex:none;display:flex;align-items:center;justify-content:center;cursor:pointer;padding:0}
 .wx-play-btn:active{transform:scale(.92)}
 .wx-play-btn svg{width:20px;height:20px;color:#14253F}
 .wx-play-btn .icon-pause{display:none}
 .wx-play-btn.is-playing .icon-play{display:none}
 .wx-play-btn.is-playing .icon-pause{display:block}
-.wx-anspiel-txt{flex:0 0 150px;width:150px;min-width:0;font-size:12.5px;line-height:1.4;color:#CBD3E0}
+.wx-play-btn{margin-right:16px}
+.wx-anspiel-txt{flex:1 1 auto;width:auto;min-width:0;font-size:12.5px;line-height:1.4;color:#CBD3E0}
 .wx-anspiel-txt b{display:block;color:#fff;font-family:Georgia,"Iowan Old Style","Times New Roman",Times,serif;font-size:15px;margin-bottom:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .wx-anspiel-txt span{display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 /* Würfel (Random) + roter Signature-Button — jetzt eigenständig in der Zeile, nicht mehr auf dem Deck */
-.wx-random-btn{width:28px;height:28px;flex:none;border:0;padding:0;cursor:pointer;background:transparent;overflow:visible;align-self:flex-end;margin-bottom:-13px}
+.wx-random-btn{position:absolute;right:16px;top:13.93px;width:49px;height:49px;flex:none;border:0;padding:0;cursor:pointer;background:transparent;overflow:visible;align-self:auto;margin:0;z-index:5}
 .wx-random-btn img{width:100%;height:100%;display:block}
 .wx-random-btn:active{transform:scale(.92)}
-.wx-deck-red-btn{width:28px;height:28px;flex:none;border:0;border-radius:50%;background:#C90019;cursor:pointer;box-shadow:0 0 0 1px rgba(255,255,255,.1),0 2px 6px rgba(0,0,0,.4);align-self:flex-end;margin-bottom:-13px}
+.wx-deck-red-btn{position:absolute;right:25.5px;bottom:22.5px;width:30px;height:30px;flex:none;border:0;border-radius:50%;background:#C90019;cursor:pointer;box-shadow:0 0 0 1px rgba(255,255,255,.1),0 2px 6px rgba(0,0,0,.4);align-self:auto;margin:0;z-index:5}
 .wx-deck-red-btn:active{transform:scale(.92)}
-.wx-anspiel-link{display:block;padding:0 16px 16px;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Inter,Roboto,sans-serif;font-size:11px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:#9FD8EA;text-decoration:none;flex:none}
+.wx-anspiel-link{display:block;padding:0 77px 20px 16px;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Inter,Roboto,sans-serif;font-size:11px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:#9FD8EA;text-decoration:none;flex:none}
 .wx-anspiel-link:hover{text-decoration:underline}
 /* Deck-Spalte: reines Deck (keine Buttons mehr drauf), mittig mit Luft nach allen Seiten. */
-.wx-deck-col{flex:none;display:flex;align-items:center;justify-content:center;padding:14px 16px 14px 10px}
+.wx-deck-col{display:none}
 .wx-deck-mini{position:relative;height:100%;aspect-ratio:1/1;border:2px solid #83ABD0;border-radius:8px;background:#000;overflow:hidden;cursor:pointer}
 .wx-deck-cover-wrap{position:absolute;left:7.6%;top:8.4%;width:74.8%;aspect-ratio:1;border-radius:50%;overflow:hidden;z-index:2;background:#000}
 .wx-deck-cover-inner{width:100%;height:100%;position:relative;transform-origin:50% 50%}
@@ -1026,13 +1027,10 @@ body.theme-classic .neg, body.theme-classic .kpi-v.neg, body.theme-classic .benc
 .wx-deck-viewer img{max-width:min(88vw,72vh);max-height:82vh;width:auto;height:auto;object-fit:contain;border-radius:12px;box-shadow:0 24px 80px rgba(0,0,0,.7);background:#050505}
 .wx-deck-viewer-label{position:absolute;left:0;right:0;top:24px;text-align:center;font-size:11px;font-weight:700;letter-spacing:.18em;text-transform:uppercase;color:rgba(159,216,234,.75);pointer-events:none}
 
-/* ---- Player auf Touch-Geräten (iPad + iPhone, Hoch- und Querformat) ----------------------
-   2026-07-16: Der Plattenspieler bleibt dem Desktop vorbehalten. Auf dem iPad war die Box nur
-   ein Drittel der Grid-Breite breit, das Deck (height:100% + aspect-ratio) kollabierte dabei zu
-   einem Strich, und Würfel/roter Button ragten per margin-bottom:-13px aus der Box heraus, die
-   auf overflow:hidden steht — sie wurden also angeschnitten und waren kaum treffbar.
-   Stattdessen hier der schlichte Player aus Folio.invest: Box als Spalte (Kopfzeile, Zeile mit
-   Play-Button + Titel, hitjourney-Link), Deck ausgeblendet.
+/* ---- Schlichter Player (Desktop + iPad + iPhone) -----------------------------------------
+   2026-07-26: Der Plattenspieler ist auch auf dem Desktop ausgeblendet. Die Box nutzt jetzt
+   überall die auf dem iPad bewährte Spaltenform: Kopfzeile, Zeile mit Play-Button + Titel,
+   hitjourney-Link, dazu Würfel und roter Cover/Lyrics-Button rechts verankert.
    Abgegrenzt per Touch-Erkennung statt per Breite: eine reine max-width-Regel würde sonst auch
    Desktop-Fenster und Laptops unter ~1400px treffen und ihnen das Deck wegnehmen. Die Klasse
    .wx-player-simple setzt das kurze Skript direkt unter diesem Stylesheet (iPadOS Safari läuft
