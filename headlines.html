@@ -308,11 +308,13 @@
   .wx-zitat-day cite{font-size:12px;letter-spacing:.12em;text-transform:uppercase;color:var(--ink-faint);font-style:normal;}
 
   .wx-footer{margin-top:36px;padding-top:16px;border-top:1px solid var(--rule);text-align:center;font-size:11px;font-weight:700;letter-spacing:.16em;text-transform:uppercase;color:var(--ink-faint);}
+  .wx-footer a{color:inherit;text-decoration:none;}
+  .wx-footer a:hover{color:var(--flag);}
   .wx-footer .fine{display:block;margin-top:8px;font-weight:400;letter-spacing:.02em;text-transform:none;font-size:10.5px;color:var(--ink-faint);}
 </style>
 </head>
 <body>
-<div class="wx-root">
+<div class="wx-root" id="top">
 
   <div class="wx-wrap">
     <a class="wx-back-link" id="wxBack" href="#" style="display:none"></a>
@@ -321,7 +323,7 @@
       <div class="wx-tagline" id="wxTagline">Das tägliche Briefing</div>
       <div class="wx-dateline">
         <span><b id="wxDate">—</b></span>
-        <span class="mid">Sorgfältig kuratiert für Jörn Kämper</span>
+        <span class="mid">Sorgfältig kuratiert</span>
         <span class="ed" id="wxEdition">—</span>
       </div>
     </header>
@@ -476,8 +478,7 @@
     </section>
 
     <p class="wx-footer" id="wxFooter">
-      joern-kaemper.de
-      <span class="fine">Automatisch kuratiertes Tagesbriefing · alle Texte redaktionell neu formuliert · Links führen zu den Originalquellen · Kurse &amp; Wetter live, ohne Gewähr</span>
+      <a href="#top">Folio.Today</a>
     </p>
 
   </div>
@@ -492,16 +493,12 @@
 <script>
 (function(){
   // ===================== MARKE =====================
-  // NUR diese eine Zeile unterscheidet die drei Ausgaben. Alles andere (Layout + Inhalt
-  // aus `folio_today`) ist byte-für-byte identisch:
-  //   'today'  → joern-kaemper.de (FOLIO·TODAY)
-  //   'wax'    → Folio-WAX-App    (headlines.html, FOLIO·WAX)
-  //   'invest' → Folio-Invest-App (headlines.html, FOLIO·INVEST)
-  const FOLIO_BRAND = 'wax';
+  // Eine einzige Newsletter-Version für Folio-WAX, Folio-Invest und Folio-Today.
+  const FOLIO_BRAND = 'today';
   const BRANDS = {
     today:  { np:['FOLIO','TODAY'],  tagline:'Das tägliche Briefing', title:'FOLIO·TODAY – Das tägliche Briefing',
-              footer:'joern-kaemper.de',
-              fine:'Automatisch kuratiertes Tagesbriefing · alle Texte redaktionell neu formuliert · Links führen zu den Originalquellen · Kurse & Wetter live, ohne Gewähr',
+              footer:'Folio.Today',
+              fine:null,
               back:null },
     wax:    { np:['FOLIO','WAX'],    tagline:'Headlines', title:'Folio.wax – Headlines',
               footer:['WAX','Aktienclub seit 2000'], fine:null,
@@ -522,7 +519,7 @@
       const main = Array.isArray(b.footer)
         ? esc(b.footer[0]) + '<span class="dot">•</span>' + esc(b.footer[1])
         : esc(b.footer);
-      ft.innerHTML = main + (b.fine ? '<span class="fine">' + esc(b.fine) + '</span>' : '');
+      ft.innerHTML = '<a href="#top">' + main + '</a>' + (b.fine ? '<span class="fine">' + esc(b.fine) + '</span>' : '');
     }
     const bk = document.getElementById('wxBack');
     if(bk){

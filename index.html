@@ -955,9 +955,21 @@ body.theme-classic .neg, body.theme-classic .kpi-v.neg, body.theme-classic .benc
 /* Headlines-Zeile: Original-Aufteilung 2/3 Teaser : 1/3 Player, Original-Höhe (unverändert seit
    vor dem Player-Redesign 2026-07-14) — nur der Trackpit-Inhalt der rechten Box wurde neu gestaltet. */
 .headlines-row{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin-bottom:24px;align-items:stretch}
-.headlines-row .headlines-teaser{grid-column:1/3;margin-bottom:0}
+.headlines-row .headlines-teaser{grid-column:1/2;margin-bottom:0;padding:18px 20px 18px;display:flex;flex-direction:column;justify-content:space-between}
+.headlines-row .headlines-teaser-name{font-size:25px}
+.headlines-row .headlines-teaser-tag{margin:4px 0 0}
+.headlines-row .headlines-teaser-dateline{flex-wrap:wrap;justify-content:center;text-align:center;gap:6px 10px;border-top:0;padding-top:0}
+.headlines-row .headlines-teaser-dateline::before{content:"";order:2;flex:0 0 74%;height:1px;background:#14253F;margin:3px 0 5px}
+.headlines-row .headlines-teaser-dateline .mid{order:3;flex:0 0 100%;margin-top:0}
 .headlines-row .wx-box--dark{grid-column:3/4;margin-bottom:0}
-@media(max-width:760px){.headlines-row{grid-template-columns:1fr}.headlines-row .headlines-teaser,.headlines-row .wx-box--dark{grid-column:1/-1}}
+@media(max-width:760px){.headlines-row{grid-template-columns:1fr}.headlines-row .headline-podcast,.headlines-row .headlines-teaser,.headlines-row .wx-box--dark{grid-column:1/-1}}
+
+/* Deep-Dive-Podcast: eigene Farbe, aber mit denselben Navy-/Ivory-/Orange-Ankern wie Headlines. */
+.headline-podcast{grid-column:2/3;display:flex;flex-direction:column;justify-content:space-between;gap:14px;border:1.5px solid rgba(20,37,63,.42);border-radius:14px;background:linear-gradient(135deg,#E4EEF0 0%,#D7E4E8 56%,#F2E7D8 100%);color:#14253F;padding:16px 16px 14px;box-shadow:0 2px 10px rgba(20,37,63,.10);overflow:hidden}
+.headline-podcast-kicker{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Inter,Roboto,sans-serif;font-size:10.5px;font-weight:800;letter-spacing:.15em;text-transform:uppercase;color:#C8632A}
+.headline-podcast-title{font-family:Georgia,"Iowan Old Style","Times New Roman",Times,serif;font-size:18px;font-weight:700;line-height:1.1;color:#14253F;margin-top:4px}
+.headline-podcast-copy{font-size:12px;line-height:1.35;color:#4E6070;margin-top:9px;max-width:29em}
+.headline-podcast audio{width:100%;height:34px;display:block;accent-color:#C8632A}
 
 /* Anspieltipp-Player. Höhe der Box entspricht exakt der Teaser-Höhe (Grid-Stretch, wie im Original).
    2026-07-14 Redesign v5: Box ist eine ZEILE aus zwei Spalten. Linke Spalte (.wx-box-left):
@@ -1325,15 +1337,25 @@ body.theme-classic .dc-mini-kpi.deviation .dc-kpi-line.total strong{color:#16232
   <div id="overviewRankMount" class="dc-wrap"></div>
   <div class="dc-group"><span class="sec-n">3 ·</span> Headlines</div>
   <div class="headlines-row">
-    <a class="headlines-teaser" href="headlines.html" title="Zu Folio.wax Headlines">
-      <div class="headlines-teaser-name">FOLIO<span class="dot">·</span>WAX</div>
-      <div class="headlines-teaser-tag">Headlines</div>
+    <a class="headlines-teaser" href="headlines.html" target="_blank" rel="noopener" title="Zu Folio.Today">
+      <div class="headlines-teaser-name">FOLIO<span class="dot">·</span>TODAY</div>
+      <div class="headlines-teaser-tag">Das tägliche Briefing</div>
       <div class="headlines-teaser-dateline">
         <span id="headlinesTeaserDate"></span>
-        <span class="mid">Sorgfältig kuratiert für den Aktienclub</span>
+        <span class="mid">Sorgfältig kuratiert</span>
         <span id="headlinesTeaserEdition"></span>
       </div>
     </a>
+    <section class="headline-podcast" aria-label="Folio.wax Headlines Deep Dive">
+      <div>
+        <div class="headline-podcast-kicker">Deep Dive</div>
+        <div class="headline-podcast-title">Folio.today</div>
+        <div class="headline-podcast-copy">Ein Blick in den Maschinenraum.</div>
+      </div>
+      <audio controls preload="metadata" src="Ein_KI-Chefredakteur_zwischen_Wall_Street_und_Wiehl.m4a">
+        Dein Browser kann diesen Podcast nicht direkt abspielen.
+      </audio>
+    </section>
     <div class="wx-box--dark">
       <div class="wx-box-left">
         <div class="wx-box-head">Songwriter's Picks</div>
