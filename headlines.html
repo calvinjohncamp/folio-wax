@@ -994,7 +994,10 @@
   const HJ_SB_URL = 'https://ywfpzdniicfrhnrvfqfe.supabase.co';
   const HJ_SB_ANON = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inl3ZnB6ZG5paWNmcmhucnZmcWZlIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzU0Mjc4ODcsImV4cCI6MjA5MTAwMzg4N30.St-f48-kfbmlN_QlAKtv-JbbLQYu5IaPmiPO7pyYQ9A';
   const HJ_STATE_KEY = 'folioHitjourneyState';
+  const HJ_OWNER_KEY = 'folioHitjourneyOwner';
+  const HJ_PAGE_ID = 'hj-' + Date.now() + '-' + Math.random().toString(36).slice(2);
   let songs = [], idx = -1, audio = null, loaded = false;
+  let passiveMirror = false;
 
   const HJ_HEARTBEAT_KEY = 'folioHitjourneyHeartbeat';
   let __hjWasRecentlyActive = false;
@@ -1005,6 +1008,24 @@
   function hjBeat(){ try{ localStorage.setItem(HJ_HEARTBEAT_KEY, String(Date.now())); }catch(e){} }
   hjBeat();
   setInterval(hjBeat, 4000);
+  function markOwner(){
+    try{ localStorage.setItem(HJ_OWNER_KEY, JSON.stringify({ id: HJ_PAGE_ID, ts: Date.now() })); }catch(e){}
+  }
+  function clearOwner(){
+    try{
+      const raw = localStorage.getItem(HJ_OWNER_KEY);
+      const owner = raw ? JSON.parse(raw) : null;
+      if(owner && owner.id === HJ_PAGE_ID) localStorage.removeItem(HJ_OWNER_KEY);
+    }catch(e){}
+  }
+  function otherPageIsPlaying(){
+    try{
+      const raw = localStorage.getItem(HJ_OWNER_KEY);
+      const owner = raw ? JSON.parse(raw) : null;
+      return !!(owner && owner.id && owner.id !== HJ_PAGE_ID && Date.now() - Number(owner.ts || 0) < 8000);
+    }catch(e){ return false; }
+  }
+  setInterval(function(){ if(audio && !audio.paused) markOwner(); }, 3000);
 
   let currentSong = null;
   function showSong(song){
@@ -1020,6 +1041,7 @@
   }
   function saveState(){
     if(idx < 0 || !songs.length) return;
+    if(passiveMirror && (!audio || audio.paused)) return;
     try{
       localStorage.setItem(HJ_STATE_KEY, JSON.stringify({
         slug: songs[idx].slug,
@@ -1037,8 +1059,8 @@
   function ensureAudio(){
     if(audio) return audio;
     audio = new Audio();
-    audio.addEventListener('play', () => { setPlayIcon(true); saveState(); });
-    audio.addEventListener('pause', () => { setPlayIcon(false); saveState(); });
+    audio.addEventListener('play', () => { passiveMirror = false; markOwner(); setPlayIcon(true); saveState(); });
+    audio.addEventListener('pause', () => { setPlayIcon(false); clearOwner(); saveState(); });
     audio.addEventListener('timeupdate', saveStateThrottled);
     audio.addEventListener('ended', () => playRandom());
     return audio;
@@ -1082,8 +1104,8 @@
     } else { idx = 0; }
     playSong(songs[idx]);
   }
-  window.addEventListener('pagehide', saveState);
-  window.addEventListener('beforeunload', saveState);
+  window.addEventListener('pagehide', function(){ saveState(); clearOwner(); });
+  window.addEventListener('beforeunload', function(){ saveState(); clearOwner(); });
 
   (async function init(){
     try{
@@ -1123,7 +1145,10 @@
               const dur = au.duration;
               au.currentTime = (isFinite(dur) && dur > 0 && resumeTime >= dur - 1.5) ? 0 : resumeTime;
               au.removeEventListener('loadedmetadata', onMeta);
-              if(wasPlaying) tryResumePlay(au);
+              if(wasPlaying){
+                if(otherPageIsPlaying()) passiveMirror = true;
+                else tryResumePlay(au);
+              }
             });
             resumed = true;
           }
