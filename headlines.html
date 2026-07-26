@@ -1136,32 +1136,32 @@
       if(!songs.length) return;
 
       let resumed = false;
-      let st = null;
+      let lastSlug = null;
       let handoff = null;
       try{
         const raw2 = localStorage.getItem(HJ_STATE_KEY);
-        if(raw2) st = JSON.parse(raw2);
+        if(raw2){
+          const st = JSON.parse(raw2);
+          if(st && st.slug) lastSlug = st.slug;
+        }
         const rawHandoff = localStorage.getItem(HJ_HANDOFF_KEY);
         if(rawHandoff) handoff = JSON.parse(rawHandoff);
         if(handoff && Date.now() - Number(handoff.ts || 0) > 8000) handoff = null;
-        const initial = handoff && handoff.slug ? handoff : st;
-        if(initial && initial.slug){
-          const foundIdx = songs.findIndex(s => s.slug === initial.slug);
+        if(handoff && handoff.slug){
+          const foundIdx = songs.findIndex(s => s.slug === handoff.slug);
           if(foundIdx !== -1){
             idx = foundIdx;
             showSong(songs[idx]);
             const au = ensureAudio();
-            const resumeTime = initial.currentTime || 0;
+            const resumeTime = handoff.currentTime || 0;
             au.src = songs[idx].mp3_url;
             loaded = true;
             au.addEventListener('loadedmetadata', function onMeta(){
               const dur = au.duration;
               au.currentTime = (isFinite(dur) && dur > 0 && resumeTime >= dur - 1.5) ? 0 : resumeTime;
               au.removeEventListener('loadedmetadata', onMeta);
-              if(handoff && handoff.slug){
-                if(otherPageIsPlaying()) passiveMirror = true;
-                else tryResumePlay(au);
-              }
+              if(otherPageIsPlaying()) passiveMirror = true;
+              else tryResumePlay(au);
               try{ localStorage.removeItem(HJ_HANDOFF_KEY); }catch(e){}
             });
             resumed = true;
@@ -1170,8 +1170,8 @@
       }catch(e){}
       if(!resumed){
         let n = Math.floor(Math.random() * songs.length);
-        if(songs.length > 1 && st && st.slug){
-          const prevIdx = songs.findIndex(s => s.slug === st.slug);
+        if(songs.length > 1 && lastSlug){
+          const prevIdx = songs.findIndex(s => s.slug === lastSlug);
           if(prevIdx === n) n = (n + 1) % songs.length;
         }
         idx = n;
