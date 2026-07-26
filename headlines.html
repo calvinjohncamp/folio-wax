@@ -2,8 +2,8 @@
 <html lang="de">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Folio.wax – Headlines (Ausgabe Nr. 194, 13. Juli 2026)</title>
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>FOLIO·TODAY – Das tägliche Briefing</title>
 <style>
   :root{
     --paper:#F5F1E8;
@@ -16,6 +16,9 @@
     --flag-ink:#FBF3E7;
     --box-navy:#14253F;
     --box-navy-ink:#F5F1E8;
+    --pos:#2E7D4F;
+    --neg:#C0392B;
+    --rain:#4A90D9;
     --font-display:Georgia,"Iowan Old Style","Times New Roman",Times,serif;
     --font-sans:"Satoshi","General Sans",-apple-system,BlinkMacSystemFont,"Segoe UI",Inter,Roboto,sans-serif;
   }
@@ -44,17 +47,24 @@
   .wx-dateline .mid{font-family:var(--font-display);font-style:italic;font-size:13px;color:var(--ink);}
   .wx-dateline .ed{font-weight:700;color:var(--flag);letter-spacing:.03em;}
 
-  /* ================= LEAD + RAIL ================= */
-  .wx-top{display:grid;grid-template-columns:2fr 1fr;gap:44px;margin-bottom:8px;}
+  /* ================= RESSORT-MENÜ (sticky, sitzt UNTER dem Einstieg) ================= */
+  .wx-nav{position:sticky;top:0;z-index:90;background:var(--paper);border-top:1px solid var(--rule-strong);border-bottom:1px solid var(--rule-strong);margin:20px 0 6px;}
+  .wx-nav-in{max-width:1180px;margin:0 auto;padding:0 26px;display:flex;gap:2px;overflow-x:auto;scrollbar-width:none;
+    -webkit-mask-image:linear-gradient(90deg,transparent,#000 18px,#000 calc(100% - 18px),transparent);
+    mask-image:linear-gradient(90deg,transparent,#000 18px,#000 calc(100% - 18px),transparent);}
+  .wx-nav-in::-webkit-scrollbar{display:none;}
+  .wx-nav a{flex:none;font-family:var(--font-sans);font-size:11px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--ink-faint);padding:8px 12px 12px;white-space:nowrap;border-bottom:2px solid transparent;transition:.15s;}
+  .wx-nav a:hover{color:var(--ink);}
+  .wx-nav a.active{color:var(--flag);border-bottom-color:var(--flag);}
+
+  /* ================= LEAD + RAIL (Einstieg) ================= */
+  .wx-top{display:grid;grid-template-columns:2fr 1fr;gap:44px;margin-bottom:8px;scroll-margin-top:64px;}
   @media (max-width:940px){ .wx-top{grid-template-columns:1fr;gap:30px;} }
-  /* Grid-Items haben von Haus aus min-width:auto — die Spalte wird dann nie schmaler als der
-     breiteste Inhalt und sprengt auf dem iPhone das Raster (Player ragte rechts heraus). */
   .wx-top > *{min-width:0;}
   .wx-top aside{display:flex;flex-direction:column;}
 
   .wx-kicker{font-size:11px;font-weight:700;letter-spacing:.16em;text-transform:uppercase;color:var(--flag);margin-bottom:8px;display:block;}
 
-  /* Ganzer Leitartikel (Ueberschrift+Text) ist EIN Link — kein separater "Quelle"-Link mehr noetig */
   a.wx-lead-link{display:block;color:inherit;}
   a.wx-lead-link:hover h1{color:var(--flag);}
   .wx-lead h1{font-family:var(--font-display);font-weight:700;font-size:34px;line-height:1.12;margin:0 0 12px;text-wrap:balance;color:var(--ink);}
@@ -65,7 +75,7 @@
   .wx-lead .dropcap{float:left;font-family:var(--font-display);font-weight:700;font-size:58px;line-height:.72;padding:5px 7px 0 0;color:var(--ink);}
   .wx-byline{margin-top:12px;font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:var(--ink-faint);}
 
-  /* ---- "Am Rande": mehrere kurze Meldungen, fuellen die Flaeche unter dem Leitartikel ---- */
+  /* ---- Finanzen·Börse: 6 kleine Karten unter dem Leitartikel ---- */
   .wx-hl-row{display:grid;grid-template-columns:repeat(3,1fr);gap:24px;margin-top:6px;}
   @media (max-width:900px){ .wx-hl-row{grid-template-columns:repeat(2,1fr);} }
   @media (max-width:560px){ .wx-hl-row{grid-template-columns:1fr;} }
@@ -75,7 +85,7 @@
   .wx-hl-card p{font-size:12px;line-height:1.48;color:var(--ink-soft);margin:0 0 6px;}
   .wx-hl-card .src{font-size:10px;letter-spacing:.08em;text-transform:uppercase;color:var(--ink-faint);}
 
-  /* ---- Zweite Meldung unter den Kaesten ---- */
+  /* ---- 2. Aufmacher (lead2) ---- */
   .wx-lead2{margin-top:24px;padding-top:22px;border-top:1px solid var(--rule);}
   .wx-lead2 a.wx-lead-link:hover h2{color:var(--flag);}
   .wx-lead2 h2{font-family:var(--font-display);font-weight:700;font-size:23px;line-height:1.2;margin:0 0 10px;text-wrap:balance;color:var(--ink);}
@@ -83,7 +93,19 @@
   .wx-lead2 .body{columns:1;font-size:13.5px;line-height:1.58;color:var(--ink);}
   .wx-lead2 .body p{margin:0 0 12px;}
 
-  /* ---- Boxen ---- */
+  /* ---- "Kurz notiert": volle Breite, 6 Meldungen nebeneinander ---- */
+  .wx-kurz-section{margin-top:16px;scroll-margin-top:60px;}
+  .wx-kurz{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:0 26px;}
+  @media (max-width:560px){ .wx-kurz{grid-template-columns:repeat(2,1fr);} }
+  a.wx-kurz-item{display:block;padding:12px 0;border-top:1px solid var(--rule);}
+  a.wx-kurz-item:hover h4{color:var(--flag);}
+  .wx-kurz-item h4{font-family:var(--font-display);font-weight:700;font-size:14.5px;line-height:1.26;margin:0 0 4px;color:var(--ink);}
+  .wx-kurz-item .src{font-size:10px;letter-spacing:.08em;text-transform:uppercase;color:var(--ink-faint);}
+
+  /* Rubrik-Kopf innerhalb der Leitartikel-Spalte: mit Oberlinie */
+  .wx-lead .wx-rubric{margin-top:22px;padding-top:20px;border-top:1px solid var(--rule);}
+
+  /* ---- Boxen (Rail) ---- */
   .wx-box{border:1.5px solid var(--ink);margin-bottom:26px;}
   .wx-box-head{background:var(--flag);color:var(--flag-ink);font-size:11.5px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;padding:8px 14px;}
   .wx-box--dark .wx-box-head{background:var(--box-navy);color:var(--box-navy-ink);}
@@ -94,22 +116,7 @@
   .wx-tickrow .t-dek{font-size:11px;color:var(--ink-soft);line-height:1.4;}
   a.wx-tickrow:hover .t-head{color:var(--flag);}
 
-  /* ---- Anspieltipp: schlanke Box (dunkles Navy, orangener Button, Querformat) ----
-     2026-07-16: Button-Look von der Home übernommen — Würfel 49px oben rechts, darunter der rote
-     Lyrics-Button 30px, zueinander zentriert. Der Plattenspieler der Home bleibt bewusst DRAUSSEN
-     (Nutzer-Entscheidung): der Newsletter behält seinen ruhigen Zeitungscharakter, hier steht auf
-     allen Geräten derselbe schlanke Player.
-     Beide Buttons sind absolut in .wx-box--dark verankert, weil sie Zeilen überspannen: der Würfel
-     reicht hoch bis neben die Kopfzeile, der rote Button runter bis neben "hitjourney.com".
-     Anker (am gerenderten Newsletter gemessen, Bezugspunkte wie auf der Home):
-       Würfel  top:13.93px   -> Mitte mittig zwischen Baseline der Kopfzeile und Oberkante der
-                                Songtitel-Grossbuchstaben (Cap-Höhe der Schrift, songunabhängig)
-       Rot     bottom:22.5px -> Unterkante = Baseline von "hitjourney.com"
-     Die Werte sind mit der Home identisch, weil vertikale Paddings (8/8, 16/16, 0/20), Schrift-
-     größen und Schriftfamilien in beiden Dateien übereinstimmen (--font-display ist dieselbe
-     Georgia-Kette; --font-sans fällt mangels geladenem Satoshi auf -apple-system zurück).
-     min-height ersetzt die Höhe, die vorher der 60px-Würfel im Fluss erzeugt hat — ohne sie
-     schrumpft die Box, sobald die Buttons absolut sind. */
+  /* ---- Player ---- */
   .wx-box--dark{border-color:var(--box-navy);background:var(--box-navy);color:var(--box-navy-ink);position:relative;}
   .wx-box--dark .wx-box-head{background:var(--box-navy);color:var(--box-navy-ink);padding-left:16px;padding-right:77px;}
   .wx-anspiel{display:flex;align-items:center;padding:16px 77px 16px 16px;min-height:87px;}
@@ -129,11 +136,18 @@
   .wx-deck-red-btn:active{transform:scale(.92);}
   .wx-anspiel-link{display:block;padding:0 77px 20px 16px;font-family:var(--font-sans);font-size:11px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:#9FD8EA;}
   .wx-anspiel-link:hover{text-decoration:underline;}
-  /* Cover/Lyrics-Betrachter, öffnet sich per rotem Button — 1:1 die Funktion aus der Home */
   .wx-deck-viewer{position:fixed;inset:0;z-index:400;display:none;align-items:center;justify-content:center;padding:24px;background:rgba(6,20,32,.92);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);cursor:pointer;}
   .wx-deck-viewer.active{display:flex;}
   .wx-deck-viewer img{max-width:min(88vw,72vh);max-height:82vh;width:auto;height:auto;object-fit:contain;border-radius:12px;box-shadow:0 24px 80px rgba(0,0,0,.7);background:#050505;}
   .wx-deck-viewer-label{position:absolute;left:0;right:0;top:24px;text-align:center;font-size:11px;font-weight:700;letter-spacing:.18em;text-transform:uppercase;color:rgba(159,216,234,.75);pointer-events:none;}
+
+  /* ---- Aside-Zitat (Rail) ---- */
+  .wx-aside-quote{flex:1 1 auto;display:flex;flex-direction:column;justify-content:center;margin:14px 0 0;text-align:center;padding:0 6px;}
+  .wx-aside-quote a{display:block;color:inherit;}
+  .wx-aside-quote a:hover p{color:var(--flag);}
+  .wx-aside-quote .mark{font-family:var(--font-display);font-size:56px;color:var(--flag);line-height:.4;display:block;margin-bottom:10px;}
+  .wx-aside-quote p{font-family:var(--font-display);font-style:italic;font-size:26px;line-height:1.46;color:var(--ink);margin:0 0 12px;text-wrap:balance;}
+  .wx-aside-quote .src{font-size:12px;letter-spacing:.14em;text-transform:uppercase;color:var(--ink-faint);}
 
   /* ================= RUBRIK-KOPF ================= */
   .wx-rubric{
@@ -144,46 +158,114 @@
     color:var(--flag);
     margin:26px 0 14px;padding-bottom:8px;
     border-bottom:1px solid var(--ink);
+    scroll-margin-top:60px;
   }
   .wx-rubric:first-child{margin-top:0;}
   .wx-rubric .dot{color:var(--flag);font-size:10px;}
-  /* "Am Rande" sitzt in der Leitartikel-Spalte, oberhalb der 5er-Reihe, ohne Spaltenfluss-Kontext */
-  .wx-lead .wx-rubric{margin-top:22px;padding-top:20px;border-top:1px solid var(--rule);}
 
-  /* ================= SPALTENFLUSS ================= */
-  .wx-columns{columns:3;column-gap:34px;column-rule:1px solid var(--rule);border-top:3px double var(--rule-strong);padding-top:26px;margin-top:18px;}
-  @media (max-width:940px){ .wx-columns{columns:2;} }
-  @media (max-width:600px){ .wx-columns{columns:1;} }
+  /* ================= BLÖCKE (3-Spalten-Fluss) ================= */
+  .wx-block{columns:3;column-gap:34px;column-rule:1px solid var(--rule);border-top:3px double var(--rule-strong);padding-top:26px;margin-top:34px;}
+  @media (max-width:940px){ .wx-block{columns:2;} }
+  @media (max-width:600px){ .wx-block{columns:1;} }
+  /* Rubrik-Kopf spannt die volle Breite → die 6 Artikel darunter starten in ALLEN
+     Spalten auf derselben Linie (sonst drückt der Kopf nur Spalte 1 nach unten). */
+  .wx-block .wx-rubric{column-span:all;}
+  .wx-block .wx-rubric:first-child{margin-top:0;}
 
-  /* Digest-Items: 3 kompakte Meldungen pro Rubrik, Ueberschrift+Text komplett verlinkt */
   a.wx-digest-item{display:block;break-inside:avoid;margin:0 0 12px;padding-bottom:11px;border-bottom:1px solid var(--rule);}
-  a.wx-digest-item:last-of-type{border-bottom:none;}
   a.wx-digest-item:hover h4{color:var(--flag);}
   .wx-digest-item h4{font-family:var(--font-display);font-weight:700;font-size:14.5px;line-height:1.3;margin:0 0 3px;color:var(--ink);}
   .wx-digest-item p{font-size:11.8px;line-height:1.46;color:var(--ink-soft);margin:0;}
 
-  /* Kein Rahmen mehr oben/unten — Zitat sitzt frei, mit gleich grossem Abstand nach oben/unten */
-  .wx-pullquote{column-span:all;text-align:center;max-width:680px;margin:56px auto 56px;padding:0;}
+  /* ================= PULLQUOTE (Zitat #2) ================= */
+  .wx-pullquote{text-align:center;max-width:680px;margin:52px auto;padding:0;}
   .wx-pullquote a{display:block;color:inherit;}
   .wx-pullquote a:hover p{color:var(--flag);}
   .wx-pullquote .mark{font-family:var(--font-display);font-size:56px;color:var(--flag);line-height:.4;display:block;margin-bottom:10px;}
   .wx-pullquote p{font-family:var(--font-display);font-style:italic;font-size:26px;line-height:1.46;color:var(--ink);margin:0 0 12px;text-wrap:balance;}
   .wx-pullquote .src{font-size:12px;letter-spacing:.14em;text-transform:uppercase;color:var(--ink-faint);}
 
-  /* 2026-07-16: margin-top war -26px und hob damit den 26px-Abstand der Player-Box exakt auf
-     (Abstand 0). Weil .mark mit font-size:56px + line-height:.4 arbeitet, ragt die Glyphe des
-     Anfuehrungszeichens 19,3px ueber ihre Zeilenbox hinaus — sie stand dadurch 16,8px IM Player.
-     +14px ergibt gemessene 23,2px Luft zwischen Player-Unterkante und Glyphen-Oberkante und
-     bleibt damit nah am 26px-Rhythmus der uebrigen Boxen. */
-  .wx-aside-quote{flex:1 1 auto;display:flex;flex-direction:column;justify-content:center;margin:14px 0 0;text-align:center;padding:0 6px;}
-  .wx-aside-quote a{display:block;color:inherit;}
-  .wx-aside-quote a:hover p{color:var(--flag);}
-  .wx-aside-quote .mark{font-family:var(--font-display);font-size:56px;color:var(--flag);line-height:.4;display:block;margin-bottom:10px;}
-  .wx-aside-quote p{font-family:var(--font-display);font-style:italic;font-size:26px;line-height:1.46;color:var(--ink);margin:0 0 12px;text-wrap:balance;}
-  .wx-aside-quote .src{font-size:12px;letter-spacing:.14em;text-transform:uppercase;color:var(--ink-faint);}
+  /* ================= SEKTIONEN (Märkte / Aktie / Wetter) ================= */
+  .wx-section{border-top:3px double var(--rule-strong);padding-top:24px;margin-top:34px;scroll-margin-top:60px;}
+  .wx-section-head{display:flex;align-items:baseline;gap:12px;margin-bottom:16px;flex-wrap:wrap;}
+  .wx-section-eyebrow{font-size:11px;font-weight:700;letter-spacing:.24em;text-transform:uppercase;color:var(--flag);}
+  .wx-section-head h2{font-family:var(--font-display);font-weight:700;font-size:24px;margin:0;color:var(--ink);}
+  .wx-section-note{margin-left:auto;font-size:11px;color:var(--ink-faint);letter-spacing:.05em;align-self:flex-end;}
+
+  /* ---- Märkte-Kacheln (Live) ---- */
+  .wx-mk-grid{display:grid;grid-template-columns:repeat(4,1fr);border:1.5px solid var(--ink);}
+  @media (max-width:760px){ .wx-mk-grid{grid-template-columns:repeat(2,1fr);} }
+  @media (max-width:420px){ .wx-mk-grid{grid-template-columns:1fr;} }
+  .wx-mk{padding:14px 16px;border-right:1px solid var(--rule);border-bottom:1px solid var(--rule);font-variant-numeric:tabular-nums;}
+  .wx-mk-l{font-family:var(--font-display);font-weight:700;font-size:15px;color:var(--ink);margin-bottom:8px;line-height:1.15;}
+  .wx-mk-price{font-size:17px;font-weight:700;color:var(--ink);margin-bottom:9px;}
+  .wx-mk-row{display:flex;align-items:baseline;justify-content:space-between;gap:8px;font-size:12px;margin-bottom:3px;}
+  .wx-mk-k{font-size:10px;letter-spacing:.06em;text-transform:uppercase;color:var(--ink-faint);}
+  .wx-mk .v{font-weight:700;font-size:12.5px;}
+  .wx-mk .v.pos,.wx-mk .pos{color:var(--pos);}
+  .wx-mk .v.neg,.wx-mk .neg{color:var(--neg);}
+  .wx-mk-sub{display:flex;justify-content:space-between;gap:8px;font-size:10.5px;color:var(--ink-faint);margin-top:8px;padding-top:7px;border-top:1px solid var(--rule);}
+  .wx-mk-cr{margin-top:5px;padding-top:0;border-top:none;font-weight:700;}
+
+  /* ---- Aktie des Tages ---- */
+  .wx-co{border:1.5px solid var(--ink);}
+  .wx-co-head{background:var(--flag);color:var(--flag-ink);display:flex;align-items:center;justify-content:space-between;gap:10px;padding:8px 14px;}
+  .wx-co-head .t{font-size:11.5px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;}
+  .wx-co-head .chip{font-size:9.5px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;border:1px solid var(--flag-ink);border-radius:5px;padding:3px 7px;opacity:.9;}
+  .wx-co-body{padding:16px;}
+  .wx-co-name{font-family:var(--font-display);font-weight:700;font-size:26px;line-height:1.1;color:var(--ink);}
+  .wx-co-sub{font-size:11px;letter-spacing:.05em;color:var(--ink-faint);margin-top:4px;text-transform:uppercase;}
+  .wx-co-metrics{display:grid;grid-template-columns:repeat(4,1fr);border:1px solid var(--rule);margin:14px 0;}
+  @media (max-width:560px){ .wx-co-metrics{grid-template-columns:repeat(2,1fr);} }
+  .wx-co-metric{padding:10px 12px;text-align:center;border-right:1px solid var(--rule);}
+  .wx-co-metric:last-child{border-right:none;}
+  .wx-co-metric .l{font-size:9.5px;letter-spacing:.1em;text-transform:uppercase;color:var(--ink-faint);margin-bottom:4px;}
+  .wx-co-metric .v{font-size:17px;font-weight:700;color:var(--ink);font-variant-numeric:tabular-nums;}
+  .wx-co-metric .v.pos{color:var(--pos);} .wx-co-metric .v.neg{color:var(--neg);}
+  .wx-co-text{font-size:14px;line-height:1.6;color:var(--ink);margin:0 0 14px;max-width:74ch;}
+  .wx-co-cc{display:grid;grid-template-columns:1fr 1fr;gap:18px;}
+  @media (max-width:560px){ .wx-co-cc{grid-template-columns:1fr;} }
+  .wx-co-cc h5{font-size:10px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;margin:0 0 7px;}
+  .wx-co-cc .ch h5{color:var(--pos);} .wx-co-cc .ri h5{color:var(--neg);}
+  .wx-co-cc ul{list-style:none;margin:0;padding:0;}
+  .wx-co-cc li{position:relative;font-size:12.5px;color:var(--ink-soft);padding:3px 0 3px 14px;line-height:1.45;}
+  .wx-co-cc li::before{content:"";position:absolute;left:0;top:9px;width:5px;height:5px;border-radius:50%;}
+  .wx-co-cc .ch li::before{background:var(--pos);} .wx-co-cc .ri li::before{background:var(--neg);}
+  .wx-co-link{display:inline-block;margin-top:14px;font-family:var(--font-sans);font-size:11px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--flag);}
+  .wx-co-link:hover{text-decoration:underline;}
+
+  /* ---- Wetter ---- */
+  .wx-weather{display:grid;grid-template-columns:minmax(230px,300px) 1fr;gap:22px;align-items:stretch;}
+  @media (max-width:760px){ .wx-weather{grid-template-columns:1fr;} }
+  .wx-wx-today{border:1.5px solid var(--ink);border-radius:16px;padding:20px 22px;display:flex;flex-direction:column;justify-content:space-between;background:linear-gradient(160deg,#FBF7EE,#F0EADB);}
+  .wx-wx-today-top{display:flex;align-items:center;gap:14px;}
+  .wx-wx-today-top svg{flex:none;width:64px;height:64px;}
+  .wx-wx-temp{font-family:var(--font-display);font-weight:700;font-size:46px;line-height:1;color:var(--ink);}
+  .wx-wx-cond{font-size:13px;color:var(--ink-soft);margin-top:3px;line-height:1.3;}
+  .wx-wx-place{font-size:11px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--flag);margin-bottom:10px;}
+  .wx-wx-meta{display:flex;flex-wrap:wrap;gap:6px 18px;margin-top:16px;padding-top:14px;border-top:1px solid var(--rule);font-size:12px;color:var(--ink-soft);}
+  .wx-wx-meta b{color:var(--ink);font-weight:700;}
+  .wx-wx-days{display:grid;grid-template-columns:repeat(6,1fr);gap:10px;}
+  @media (max-width:620px){ .wx-wx-days{grid-template-columns:repeat(3,1fr);} }
+  @media (max-width:380px){ .wx-wx-days{grid-template-columns:repeat(2,1fr);} }
+  .wx-wx-day{border:1px solid var(--rule);border-radius:14px;padding:12px 8px 10px;text-align:center;background:#FBF7EE;}
+  .wx-wx-day .d{font-size:11px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--ink-soft);margin-bottom:8px;}
+  .wx-wx-day svg{width:38px;height:38px;display:block;margin:0 auto 8px;}
+  .wx-wx-day .hi{font-family:var(--font-display);font-weight:700;font-size:16px;color:var(--ink);}
+  .wx-wx-day .lo{font-size:12px;color:var(--ink-faint);margin-top:1px;}
+  .wx-wx-day .pp{font-size:10.5px;color:var(--rain);margin-top:6px;font-weight:600;font-variant-numeric:tabular-nums;}
+  /* Stündliche Regenkurve */
+  .wx-wx-hourly{margin-top:18px;border:1px solid var(--rule);border-radius:14px;padding:14px 18px 12px;background:#FBF7EE;}
+  .wx-wx-hourly .hd{font-size:11px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--ink-soft);margin-bottom:14px;}
+  .wx-wx-bars{display:flex;align-items:flex-end;gap:6px;}
+  .wx-wx-bar{flex:1;display:flex;flex-direction:column;align-items:center;}
+  .wx-wx-bar .pct{font-size:9px;color:var(--rain);font-weight:700;height:12px;line-height:12px;}
+  .wx-wx-bar .track{width:100%;max-width:22px;height:64px;display:flex;align-items:flex-end;background:rgba(74,144,217,.10);border-radius:5px;overflow:hidden;}
+  .wx-wx-bar .fill{width:100%;background:var(--rain);border-radius:5px 5px 0 0;min-height:2px;}
+  .wx-wx-bar .hr{font-size:9.5px;color:var(--ink-faint);margin-top:6px;font-variant-numeric:tabular-nums;}
 
   /* ================= PODCASTS ================= */
-  .wx-pod-section{border-top:3px double var(--rule-strong);padding-top:22px;margin-top:34px;}
+  .wx-pod-section{border-top:3px double var(--rule-strong);padding-top:22px;margin-top:34px;scroll-margin-top:60px;}
   .wx-pod-head{display:flex;align-items:baseline;gap:14px;margin-bottom:8px;flex-wrap:wrap;}
   .wx-pod-eyebrow{font-size:11px;font-weight:700;letter-spacing:.24em;text-transform:uppercase;color:var(--flag);}
   .wx-pod-head h2{font-family:var(--font-display);font-weight:700;font-size:24px;margin:0;color:var(--ink);}
@@ -219,29 +301,33 @@
     .wx-pod-mid{flex:1 1 100%;order:1;margin:2px 0 0;}
   }
 
+  /* ================= ZITAT DES TAGES ================= */
+  .wx-zitat-day{border-top:3px double var(--rule-strong);margin-top:40px;padding-top:34px;text-align:center;max-width:760px;margin-left:auto;margin-right:auto;scroll-margin-top:60px;}
+  .wx-zitat-label{font-size:11px;font-weight:700;letter-spacing:.24em;text-transform:uppercase;color:var(--flag);display:block;margin-bottom:16px;}
+  .wx-zitat-day blockquote{font-family:var(--font-display);font-style:italic;font-size:28px;line-height:1.4;color:var(--ink);margin:0 0 14px;text-wrap:balance;}
+  .wx-zitat-day cite{font-size:12px;letter-spacing:.12em;text-transform:uppercase;color:var(--ink-faint);font-style:normal;}
+
   .wx-footer{margin-top:36px;padding-top:16px;border-top:1px solid var(--rule);text-align:center;font-size:11px;font-weight:700;letter-spacing:.16em;text-transform:uppercase;color:var(--ink-faint);}
-  .wx-footer .dot{display:inline-block;margin:0 .6em;color:var(--rule);}
+  .wx-footer .fine{display:block;margin-top:8px;font-weight:400;letter-spacing:.02em;text-transform:none;font-size:10.5px;color:var(--ink-faint);}
 </style>
-
-
 </head>
 <body>
 <div class="wx-root">
+
   <div class="wx-wrap">
-
-    <a class="wx-back-link" href="index.html">&larr; Folio.wax</a>
-
+    <a class="wx-back-link" id="wxBack" href="#" style="display:none"></a>
     <header class="wx-masthead">
-      <h1 class="wx-nameplate">FOLIO<span class="dot">·</span>WAX</h1>
-      <div class="wx-tagline">Headlines</div>
+      <h1 class="wx-nameplate" id="wxNameplate">FOLIO<span class="dot">·</span>TODAY</h1>
+      <div class="wx-tagline" id="wxTagline">Das tägliche Briefing</div>
       <div class="wx-dateline">
         <span><b id="wxDate">—</b></span>
-        <span class="mid">Sorgfältig kuratiert für den Aktienclub</span>
+        <span class="mid">Sorgfältig kuratiert für Jörn Kämper</span>
         <span class="ed" id="wxEdition">—</span>
       </div>
     </header>
 
-    <div class="wx-top">
+    <!-- ============ EINSTIEG (klassisch, wie Folio News) ============ -->
+    <div class="wx-top" id="wxLead">
       <article class="wx-lead" id="wxLeadMount">
         <p style="font-size:13px;color:var(--ink-faint)">Lade aktuelle Ausgabe …</p>
       </article>
@@ -249,7 +335,7 @@
       <aside>
         <div class="wx-box">
           <div class="wx-box-head">Märkte · USA</div>
-          <div class="wx-box-body" id="wxMarketsMount">
+          <div class="wx-box-body" id="wxMarketsUsMount">
             <div class="wx-tickrow"><div class="t-dek">Lade aktuelle Marktmeldungen …</div></div>
           </div>
         </div>
@@ -285,29 +371,79 @@
       </aside>
     </div>
 
-    <div class="wx-columns">
+    <!-- Kurz notiert: übrige Top-Meldungen, volle Breite (6 nebeneinander) -->
+    <section class="wx-kurz-section" id="wxKurz" style="display:none">
+      <div class="wx-rubric"><span class="dot">◆</span>Kurz notiert</div>
+      <div class="wx-kurz" id="wxKurzMount"></div>
+    </section>
+  </div>
 
-      <div id="wxRubrikenMount">
-        <div class="wx-rubric"><span class="dot">◆</span>Wird geladen …</div>
+  <!-- ============ MENÜ (unter dem Einstieg, klebend) ============ -->
+  <nav class="wx-nav"><div class="wx-nav-in" id="wxNav"></div></nav>
+
+  <div class="wx-wrap">
+
+    <!-- Block 1: Politik & Welt · Wirtschaft & Unternehmen · Tech & KI (zusammengelegt) -->
+    <div class="wx-block" id="blockNachrichten"></div>
+
+    <!-- Märkte im Blick (Live) -->
+    <section class="wx-section" id="wxMarkets">
+      <div class="wx-section-head">
+        <span class="wx-section-eyebrow">Börse</span>
+        <h2>Märkte im Blick</h2>
+        <span class="wx-section-note">Live-Kurse · 52-Wochen-Spanne</span>
       </div>
+      <div class="wx-mk-grid" id="wxMkGrid"></div>
+    </section>
 
-      <blockquote class="wx-pullquote" id="mainQuote" style="display:none">
-        <a href="https://mein-lieber-sohn.de" target="_blank" rel="noopener">
-          <span class="mark">&ldquo;</span>
-          <p id="mainQuoteText"></p>
-          <span class="src" id="mainQuoteSrc"></span>
-        </a>
-      </blockquote>
+    <!-- Aktie des Tages -->
+    <section class="wx-section" id="wxCo" style="display:none">
+      <div class="wx-co">
+        <div class="wx-co-head">
+          <span class="t">Aktie des Tages</span>
+          <span class="chip">Keine Anlageberatung</span>
+        </div>
+        <div class="wx-co-body" id="wxCoBody"></div>
+      </div>
+    </section>
 
-    </div>
+    <!-- Zitat #2 (mein-lieber-sohn) -->
+    <blockquote class="wx-pullquote" id="mainQuote" style="display:none">
+      <a href="https://mein-lieber-sohn.de" target="_blank" rel="noopener">
+        <span class="mark">&ldquo;</span>
+        <p id="mainQuoteText"></p>
+        <span class="src" id="mainQuoteSrc"></span>
+      </a>
+    </blockquote>
 
-    <section class="wx-pod-section">
+    <!-- Block 3a: Sport, Gesundheit & Genuss -->
+    <div class="wx-block" id="blockBoulevardA"></div>
+
+    <!-- Wetter (zwischen den beiden Boulevard-Hälften) -->
+    <section class="wx-section" id="wxWeather" style="display:none">
+      <div class="wx-section-head">
+        <span class="wx-section-eyebrow">Wetter</span>
+        <h2>Wiehl · heute + Ausblick</h2>
+        <span class="wx-section-note" id="wxWeatherNote">51674 Wiehl</span>
+      </div>
+      <div class="wx-weather">
+        <div class="wx-wx-today" id="wxWeatherToday"></div>
+        <div class="wx-wx-days" id="wxWeatherDays"></div>
+      </div>
+      <div class="wx-wx-hourly" id="wxWeatherHourly" style="display:none"></div>
+    </section>
+
+    <!-- Block 3b: Promi, Panorama & Kultur -->
+    <div class="wx-block" id="blockBoulevardB"></div>
+
+    <!-- Podcasts -->
+    <section class="wx-pod-section" id="wxPods">
       <div class="wx-pod-head">
         <span class="wx-pod-eyebrow">🎧 Zum Reinhören</span>
         <h2>Unsere Podcast-Empfehlungen</h2>
         <span class="wx-pod-count">3 Favoriten · 6 Tagestipps</span>
       </div>
-      <p class="wx-pod-dek">Von der Eskalation um die Straße von Hormus bis zum VW-Sparkurs — sechs frische Empfehlungen zu den Themen des Tages, plus drei Dauerbrenner, die immer eine Folge wert sind.</p>
+      <p class="wx-pod-dek">Drei Dauerbrenner, die immer eine Folge wert sind — plus sechs frische Tagestipps, passend zu den Themen dieser Ausgabe.</p>
 
       <div class="wx-pod-sub">Die Dauerbrenner</div>
       <div class="wx-fav-strip">
@@ -329,11 +465,20 @@
       </div>
 
       <div class="wx-pod-sub">Tagestipps</div>
-
       <div id="wxPodcastsMount"></div>
     </section>
 
-    <p class="wx-footer">WAX<span class="dot">&#8226;</span>Aktienclub seit 2000</p>
+    <!-- Zitat des Tages -->
+    <section class="wx-zitat-day" id="wxZitat" style="display:none">
+      <span class="wx-zitat-label">Zitat des Tages</span>
+      <blockquote id="wxZitatText"></blockquote>
+      <cite id="wxZitatCite"></cite>
+    </section>
+
+    <p class="wx-footer" id="wxFooter">
+      joern-kaemper.de
+      <span class="fine">Automatisch kuratiertes Tagesbriefing · alle Texte redaktionell neu formuliert · Links führen zu den Originalquellen · Kurse &amp; Wetter live, ohne Gewähr</span>
+    </p>
 
   </div>
 </div>
@@ -343,17 +488,73 @@
   <img alt="" id="wxDeckViewerImg" src=""/>
 </div>
 
+<!-- ============================ REDAKTION / RENDER ============================ -->
 <script>
 (function(){
-  // Headlines-Inhalt kommt jetzt live aus Supabase (Worker "wax-entwicklungen" schreibt
-  // 2x/Tag nach `wax_headlines`, Worker "wax-cnbc" nach `cnbc_news`) — kein Git-Commit/
-  // Seiten-Deploy pro Ausgabe mehr noetig. Player und Zitate weiter unten bleiben unangetastet.
+  // ===================== MARKE =====================
+  // NUR diese eine Zeile unterscheidet die drei Ausgaben. Alles andere (Layout + Inhalt
+  // aus `folio_today`) ist byte-für-byte identisch:
+  //   'today'  → joern-kaemper.de (FOLIO·TODAY)
+  //   'wax'    → Folio-WAX-App    (headlines.html, FOLIO·WAX)
+  //   'invest' → Folio-Invest-App (headlines.html, FOLIO·INVEST)
+  const FOLIO_BRAND = 'wax';
+  const BRANDS = {
+    today:  { np:['FOLIO','TODAY'],  tagline:'Das tägliche Briefing', title:'FOLIO·TODAY – Das tägliche Briefing',
+              footer:'joern-kaemper.de',
+              fine:'Automatisch kuratiertes Tagesbriefing · alle Texte redaktionell neu formuliert · Links führen zu den Originalquellen · Kurse & Wetter live, ohne Gewähr',
+              back:null },
+    wax:    { np:['FOLIO','WAX'],    tagline:'Headlines', title:'Folio.wax – Headlines',
+              footer:['WAX','Aktienclub seit 2000'], fine:null,
+              back:{href:'index.html', label:'← Folio.wax'} },
+    invest: { np:['FOLIO','INVEST'], tagline:'Headlines', title:'Folio.invest – Headlines',
+              footer:['FOLIO','INVEST'], fine:null,
+              back:{href:'index.html', label:'← Folio.invest'} },
+  };
+  function applyBrand(){
+    const b = BRANDS[FOLIO_BRAND] || BRANDS.today;
+    document.title = b.title;
+    const np = document.getElementById('wxNameplate');
+    if(np) np.innerHTML = esc(b.np[0]) + '<span class="dot">·</span>' + esc(b.np[1]);
+    const tg = document.getElementById('wxTagline');
+    if(tg) tg.textContent = b.tagline;
+    const ft = document.getElementById('wxFooter');
+    if(ft){
+      const main = Array.isArray(b.footer)
+        ? esc(b.footer[0]) + '<span class="dot">•</span>' + esc(b.footer[1])
+        : esc(b.footer);
+      ft.innerHTML = main + (b.fine ? '<span class="fine">' + esc(b.fine) + '</span>' : '');
+    }
+    const bk = document.getElementById('wxBack');
+    if(bk){
+      if(b.back){ bk.href = b.back.href; bk.textContent = b.back.label; bk.style.display = ''; }
+      else { bk.style.display = 'none'; }
+    }
+  }
+
   const SB_URL = 'https://ywfpzdniicfrhnrvfqfe.supabase.co';
   const SB_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inl3ZnB6ZG5paWNmcmhucnZmcWZlIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzU0Mjc4ODcsImV4cCI6MjA5MTAwMzg4N30.St-f48-kfbmlN_QlAKtv-JbbLQYu5IaPmiPO7pyYQ9A';
-  const RUBRIK_LABELS = { politik:'Politik', wirtschaft:'Wirtschaft', tech:'Tech & Digital', sport:'Sport', wissen:'Wissen', kultur:'Leben & Kultur', talk:'Talk of Town' };
-  const RUBRIK_ORDER = ['politik','wirtschaft','tech','sport','wissen','kultur','talk'];
+
+  const RESSORT_TITLE = { politik:'Politik & Welt', wirtschaft:'Wirtschaft & Unternehmen', boerse:'Börse & Finanzen', sport:'Sport', promi:'Promi & People', film:'Film, Serien & Streaming', genuss:'Essen, Genuss & Reisen', tech:'Tech & KI', gesundheit:'Gesundheit & Fitness', panorama:'Panorama / Viral' };
+
+  // Thematische Blöcke: Börse steckt im Einstieg (6 Finanzen-Karten), erscheint hier NICHT doppelt.
+  const BLOCKS = [
+    { mount:'blockNachrichten', keys:['politik','wirtschaft','tech'] },
+    { mount:'blockBoulevardA',  keys:['sport','gesundheit','genuss'] },
+    { mount:'blockBoulevardB',  keys:['promi','panorama','film'] },
+  ];
+  const NAV = [
+    ['wxLead','Aufmacher'],['r-politik','Politik'],['r-wirtschaft','Wirtschaft'],['r-tech','Tech'],
+    ['wxMarkets','Märkte'],['wxCo','Aktie'],
+    ['r-sport','Sport'],['r-gesundheit','Gesundheit'],['r-genuss','Genuss'],
+    ['wxWeather','Wetter'],
+    ['r-promi','Promi'],['r-panorama','Panorama'],['r-film','Film'],
+    ['wxPods','Podcasts'],
+  ];
 
   function esc(s){ return String(s==null?'':s).replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c])); }
+  function paras(text){
+    return String(text||'').split(/\n\s*\n/).map(s=>s.trim()).filter(Boolean).map(p=>'<p>'+esc(p)+'</p>').join('');
+  }
 
   function renderDateline(){
     const now = new Date();
@@ -373,98 +574,424 @@
     }
   }
 
-  function leadHTML(payload){
-    const l = payload.leitartikel, l2 = payload.lead2, cards = payload.finanzCards || [];
-    const bodyP = (arr, dropcap) => (arr||[]).map((p,i)=>{
-      if(i===0 && dropcap && p.length){ return '<p><span class="dropcap">'+esc(p[0])+'</span>'+esc(p.slice(1))+'</p>'; }
-      return '<p>'+esc(p)+'</p>';
-    }).join('');
+  // ---- Menü + Scroll-Spy ----
+  function buildNav(){
+    const nav = document.getElementById('wxNav');
+    if(!nav) return;
+    nav.innerHTML = NAV.map((it,i) => '<a href="#'+it[0]+'"'+(i===0?' class="active"':'')+'>'+esc(it[1])+'</a>').join('');
+  }
+  let __spyObs;
+  function initSpy(){
+    const nav = document.getElementById('wxNav');
+    if(!nav) return;
+    const links = [].slice.call(nav.querySelectorAll('a'));
+    const map = {};
+    links.forEach(a => { const id = a.getAttribute('href').slice(1); const el = document.getElementById(id); if(el) map[id] = a; });
+    if(__spyObs) __spyObs.disconnect();
+    __spyObs = new IntersectionObserver(es => {
+      es.forEach(e => {
+        if(e.isIntersecting){
+          const a = map[e.target.id];
+          if(a){ links.forEach(l => l.classList.remove('active')); a.classList.add('active'); }
+        }
+      });
+    }, { rootMargin:'-20% 0px -70% 0px' });
+    Object.keys(map).forEach(id => { const el = document.getElementById(id); if(el) __spyObs.observe(el); });
+  }
+
+  // ---- Kartenbausteine ----
+  function hlCard(c){
+    return '<a class="wx-hl-card" href="'+esc(c.url||'#')+'" target="_blank" rel="noopener"><h3>'+esc(c.h)+'</h3>'
+      + (c.p ? '<p>'+esc(c.p)+'</p>' : '')
+      + (c.src ? '<span class="src">'+esc(c.src)+'</span>' : '')+'</a>';
+  }
+  function digestItem(it){
+    return '<a class="wx-digest-item" href="'+esc(it.url||'#')+'" target="_blank" rel="noopener"><h4>'+esc(it.h)+'</h4>'
+      + (it.p ? '<p>'+esc(it.p)+'</p>' : '')+'</a>';
+  }
+
+  // ---- Einstieg: Leitartikel + Finanzen·Börse (6) + 2. Aufmacher + Kurz notiert ----
+  function entryHTML(payload){
+    const H = payload.heisser || [];
+    const boerse = (payload.ressorts && payload.ressorts.boerse && payload.ressorts.boerse.items) || [];
     let html = '';
-    if(l && l.h1){
-      html += '<span class="wx-kicker">'+esc(l.kicker||'Leitartikel')+'</span>'
+
+    // 1) Leitartikel = wichtigste Meldung (heisser[0], mit sum + 2 Absätzen)
+    const l = H[0];
+    if(l && l.h){
+      const arr = String(l.p||'').split(/\n\s*\n/).map(s=>s.trim()).filter(Boolean);
+      const body = arr.map((p,i) => (i===0 && p.length)
+        ? '<p><span class="dropcap">'+esc(p[0])+'</span>'+esc(p.slice(1))+'</p>'
+        : '<p>'+esc(p)+'</p>').join('');
+      html += '<span class="wx-kicker">'+esc(l.kick || ('Aufmacher · '+(l.src||'')))+'</span>'
         + '<a class="wx-lead-link" href="'+esc(l.url||'#')+'" target="_blank" rel="noopener">'
-        + '<h1>'+esc(l.h1)+'</h1>'
-        + (l.dek ? '<p class="dek">'+esc(l.dek)+'</p>' : '')
-        + '<div class="body">'+bodyP(l.body, true)+'</div>'
-        + '</a>';
+        + '<h1>'+esc(l.h)+'</h1>'
+        + (l.sum ? '<p class="dek">'+esc(l.sum)+'</p>' : '')
+        + '<div class="body">'+body+'</div></a>'
+        + (l.src ? '<div class="wx-byline">Quelle: '+esc(l.src)+'</div>' : '');
     }
-    if(cards.length){
-      html += '<div class="wx-rubric"><span class="dot">◆</span>Finanzen · Börse</div><div class="wx-hl-row">'
-        + cards.map(c => '<a class="wx-hl-card" href="'+esc(c.url||'#')+'" target="_blank" rel="noopener"><h3>'+esc(c.h)+'</h3><p>'+esc(c.p)+'</p></a>').join('')
-        + '</div>';
+
+    // 2) Finanzen · Börse — 6 kleine Karten (Börse-Ressort)
+    if(boerse.length){
+      html += '<div class="wx-rubric"><span class="dot">◆</span>Finanzen · Börse</div>'
+        + '<div class="wx-hl-row">' + boerse.slice(0,6).map(hlCard).join('') + '</div>';
     }
-    if(l2 && l2.h2){
-      html += '<article class="wx-lead2"><span class="wx-kicker">'+esc(l2.kicker||'')+'</span>'
+
+    // 3) 2. Aufmacher = zweitwichtigste Meldung (heisser[1])
+    const l2 = H[1];
+    if(l2 && l2.h){
+      html += '<article class="wx-lead2"><span class="wx-kicker">'+esc(l2.kick || l2.src || '')+'</span>'
         + '<a class="wx-lead-link" href="'+esc(l2.url||'#')+'" target="_blank" rel="noopener">'
-        + '<h2>'+esc(l2.h2)+'</h2>'
-        + (l2.dek ? '<p class="dek">'+esc(l2.dek)+'</p>' : '')
-        + '<div class="body">'+bodyP(l2.body, false)+'</div>'
-        + '</a></article>';
+        + '<h2>'+esc(l2.h)+'</h2>'
+        + '<div class="body">'+paras(l2.p)+'</div></a></article>';
     }
-    return html;
+
+    return html || '<p style="font-size:13px;color:var(--ink-faint)">Noch keine Ausgabe verfügbar.</p>';
   }
 
-  function marketsHTML(items){
-    if(!items || !items.length) return '<div class="wx-tickrow"><div class="t-dek">Zurzeit keine Marktmeldungen verfügbar.</div></div>';
-    return items.map(it => '<a class="wx-tickrow" href="'+esc(it.url||'#')+'" target="_blank" rel="noopener"><div class="t-head">'+esc(it.title)+'</div></a>').join('');
+  // ---- Kurz notiert: übrige Top-Meldungen (heisser[2..7]), volle Breite ----
+  function kurzHTML(H){
+    const kurz = (H||[]).slice(2,8).filter(x => x && x.h);
+    if(!kurz.length) return '';
+    return kurz.map(k =>
+      '<a class="wx-kurz-item" href="'+esc(k.url||'#')+'" target="_blank" rel="noopener"><h4>'+esc(k.h)+'</h4>'
+      + (k.src ? '<span class="src">'+esc(k.src)+'</span>' : '')+'</a>').join('');
   }
 
-  function rubrikenHTML(rubriken){
-    if(!rubriken) return '';
-    return RUBRIK_ORDER.map(key => {
-      const items = rubriken[key] || [];
+  // ---- Themenblock (3-Spalten-Fluss über eine oder mehrere Rubriken) ----
+  // Jede Rubrik-Überschrift spannt (per CSS) die volle Breite, darunter starten ihre
+  // 6 Artikel in allen Spalten auf derselben Linie. Kein separates Super-Label mehr.
+  function blockHTML(block, ressorts){
+    if(!ressorts) return '';
+    return block.keys.map(key => {
+      const r = ressorts[key];
+      const items = (r && r.items) || [];
       if(!items.length) return '';
-      return '<div class="wx-rubric"><span class="dot">◆</span>'+esc(RUBRIK_LABELS[key])+'</div>'
-        + items.map(it => '<a class="wx-digest-item" href="'+esc(it.url||'#')+'" target="_blank" rel="noopener"><h4>'+esc(it.h)+'</h4><p>'+esc(it.p)+'</p></a>').join('');
+      const title = (r && r.title) || RESSORT_TITLE[key] || key;
+      return '<div class="wx-rubric" id="r-'+key+'"><span class="dot">◆</span>'+esc(title)+'</div>'
+        + items.map(digestItem).join('');
     }).join('');
   }
 
+  // ---- Aktie des Tages ----
+  let __coTicker = '';
+  function unternehmenHTML(u){
+    if(!u || !u.name || u.name==='—') return null;
+    __coTicker = u.ticker || '';
+    const metrics = (u.metrics && u.metrics.length ? u.metrics : [{l:'Kurs',v:'—'},{l:'Heute',v:'—'},{l:'Marktkap.',v:'—'},{l:'KGV',v:'—'}]);
+    const met = metrics.map(m => '<div class="wx-co-metric"><div class="l">'+esc(m.l)+'</div><div class="v '+(m.cls||'')+'">'+esc(m.v)+'</div></div>').join('');
+    const ch = (u.chancen||[]).map(x => '<li>'+esc(x)+'</li>').join('');
+    const ri = (u.risiken||[]).map(x => '<li>'+esc(x)+'</li>').join('');
+    const searchUrl = 'https://www.google.com/search?q='+encodeURIComponent((u.name||'')+' Aktie Analyse');
+    return '<div class="wx-co-name">'+esc(u.name)+'</div>'
+      + (u.sub ? '<div class="wx-co-sub">'+esc(u.sub)+'</div>' : '')
+      + '<div class="wx-co-metrics" id="wxCoMetrics">'+met+'</div>'
+      + (u.body ? '<p class="wx-co-text">'+esc(u.body)+'</p>' : '')
+      + ((ch||ri) ? '<div class="wx-co-cc"><div class="ch"><h5>Chancen</h5><ul>'+ch+'</ul></div><div class="ri"><h5>Risiken</h5><ul>'+ri+'</ul></div></div>' : '')
+      + '<a class="wx-co-link" href="'+esc(u.url||searchUrl)+'" target="_blank" rel="noopener">Analystenstimmen &amp; Chart →</a>';
+  }
+
+  // ---- Podcasts (Tagestipps) ----
   function podcastsHTML(podcasts){
     if(!podcasts || !podcasts.length) return '';
     return podcasts.map((p,i) => '<a class="wx-podbar" href="'+esc(p.url||'#')+'" target="_blank" rel="noopener">'
       + '<span class="wx-pod-mark">'+(i+1)+'</span>'
-      + '<span class="wx-pod-show"><span class="name">'+esc(p.s)+'</span><span class="genre">'+esc(p.genre)+'</span></span>'
-      + '<div class="wx-pod-mid"><h3>'+esc(p.h)+'</h3><p>'+esc(p.p)+'</p></div>'
+      + '<span class="wx-pod-show"><span class="name">'+esc(p.s||'')+'</span>'+(p.genre?'<span class="genre">'+esc(p.genre)+'</span>':'')+'</span>'
+      + '<div class="wx-pod-mid"><h3>'+esc(p.h||'')+'</h3>'+(p.p?'<p>'+esc(p.p)+'</p>':'')+'</div>'
       + '</a>').join('');
   }
 
-  async function ladeHeadlines(){
+  // ---- CNBC "Märkte · USA" ----
+  function marketsUsHTML(items){
+    if(!items || !items.length) return '<div class="wx-tickrow"><div class="t-dek">Zurzeit keine Marktmeldungen verfügbar.</div></div>';
+    return items.map(it => '<a class="wx-tickrow" href="'+esc(it.url||'#')+'" target="_blank" rel="noopener"><div class="t-head">'+esc(it.title)+'</div></a>').join('');
+  }
+
+  // ---- Zitat des Tages ----
+  function renderZitat(z){
+    if(!z || !z.text) return;
+    const sec = document.getElementById('wxZitat');
+    const t = document.getElementById('wxZitatText');
+    const c = document.getElementById('wxZitatCite');
+    if(t) t.textContent = '„' + z.text + '“';
+    if(c) c.textContent = z.cite ? '— ' + z.cite : '';
+    if(sec) sec.style.display = '';
+  }
+
+  // ======================= Live-Kurse (Märkte-Kacheln + Aktie) =======================
+  // Reihenfolge: Zeile 1 = S&P 500 · Dow · Nasdaq · DAX  ·  Zeile 2 = Hang Seng · Gold · Bitcoin · Ø.
+  // Bitcoin in US-Dollar (BTC-USD) — damit sind auch 52-Wochen-Hoch/Tief & Potential/Risiko auf Dollarbasis.
+  const MK = [
+    {l:'S&P 500', t:'^GSPC',  unit:'Pkt.', dec:0, kind:'index'},
+    {l:'Dow',     t:'^DJI',   unit:'Pkt.', dec:0, kind:'index'},
+    {l:'Nasdaq',  t:'^IXIC',  unit:'Pkt.', dec:0, kind:'index'},
+    {l:'DAX',     t:'^GDAXI', unit:'Pkt.', dec:0, kind:'index'},
+    {l:'Hang Seng',t:'^HSI',  unit:'Pkt.', dec:0, kind:'index'},
+    {l:'Gold',    t:'GC=F',   unit:'$',    dec:0, kind:'index'},
+    {l:'Bitcoin', t:'BTC-USD',unit:'$',    dec:0, kind:'index'},
+    {l:'Ø Benchmarks', kind:'avg', avgOf:['^GSPC','^IXIC','^DJI','^GDAXI','^HSI']},
+  ];
+  async function cfq(t){ try{ const r=await fetch('https://wax-kurse.calvinjohncamp.workers.dev/?ticker='+encodeURIComponent(t)+'&_='+Math.floor(Date.now()/60000)); if(!r.ok)return null; const j=await r.json(); const price=Number(j.price??j.regularMarketPrice??0)||null; const prev=Number(j.previousClose??j.regularMarketPreviousClose??0)||null; const pe=Number(j.trailingPE??0)||null; const mc=Number(j.marketCap??0)||null; return price?{price,prev,pe,mc}:null; }catch(e){ return null; } }
+  async function cfHist(t){ try{ const r=await fetch('https://jk-invest.calvinjohncamp.workers.dev/?ticker='+encodeURIComponent(t)+'&_='+Math.floor(Date.now()/3600000)); if(!r.ok)return null; const j=await r.json(); const prices=(j.prices||[]).map(p=>({date:p&&p.date,close:Number(p&&p.close)})).filter(p=>p.date&&Number.isFinite(p.close)); if(!prices.length)return null; const closes=prices.map(p=>p.close); const yearPrefix=String(new Date().getFullYear())+'-'; const firstOfYear=prices.find(p=>p.date.startsWith(yearPrefix)); return{high:Math.max(...closes),low:Math.min(...closes),ytdBase:firstOfYear?firstOfYear.close:null}; }catch(e){ return null; } }
+  function fmtPct(v){ if(v==null||isNaN(v))return null; const s=v>=0?'+':'−'; return s+Math.abs(v*100).toFixed(1).replace('.',',')+'%'; }
+  function fmtLevel(v,unit,dec){ if(v==null||isNaN(v))return '—'; return v.toLocaleString('de-DE',{minimumFractionDigits:dec,maximumFractionDigits:dec})+' '+unit; }
+  function fmtMarketCap(v){ if(v==null||isNaN(v)||v<=0)return null; if(v>=1e9)return (v/1e9).toLocaleString('de-DE',{minimumFractionDigits:1,maximumFractionDigits:1})+' Mrd. €'; return (v/1e6).toLocaleString('de-DE',{minimumFractionDigits:0,maximumFractionDigits:0})+' Mio. €'; }
+
+  function mkTileHTML(m){
+    if(m.kind==='avg'){
+      return '<div class="wx-mk" data-kind="avg" data-avgof="'+esc((m.avgOf||[]).join(','))+'">'
+        + '<div class="wx-mk-l">'+esc(m.l)+'</div>'
+        + '<div class="wx-mk-price" style="visibility:hidden">·</div>'
+        + '<div class="wx-mk-row"><span class="wx-mk-k">Heute</span><span class="v mk-today">·</span></div>'
+        + '<div class="wx-mk-row"><span class="wx-mk-k">YTD</span><span class="v mk-ytd">·</span></div>'
+        + '</div>';
+    }
+    return '<div class="wx-mk" data-t="'+esc(m.t)+'" data-unit="'+esc(m.unit)+'" data-dec="'+m.dec+'">'
+      + '<div class="wx-mk-l">'+esc(m.l)+'</div>'
+      + '<div class="wx-mk-price mk-price">—</div>'
+      + '<div class="wx-mk-row"><span class="wx-mk-k">Heute</span><span class="v mk-today">·</span></div>'
+      + '<div class="wx-mk-row"><span class="wx-mk-k">YTD</span><span class="v mk-ytd">·</span></div>'
+      + '<div class="wx-mk-sub"><span class="mk-hi">Hoch —</span><span class="mk-lo">Tief —</span></div>'
+      + '<div class="wx-mk-sub wx-mk-cr"><span class="mk-chance">Potential —</span><span class="mk-risk">Risiko —</span></div>'
+      + '</div>';
+  }
+  function fillMarkets(){
+    const box = document.getElementById('wxMkGrid');
+    if(!box) return;
+    const results = {};
+    const cells = [].slice.call(box.querySelectorAll('.wx-mk[data-t]'));
+    const fetches = cells.map(cell => {
+      const t=cell.getAttribute('data-t'), unit=cell.getAttribute('data-unit'), dec=Number(cell.getAttribute('data-dec'))||0;
+      return Promise.all([cfq(t),cfHist(t)]).then(([q,h]) => {
+        const price=cell.querySelector('.mk-price'), todayEl=cell.querySelector('.mk-today'), ytdEl=cell.querySelector('.mk-ytd'),
+              hi=cell.querySelector('.mk-hi'), lo=cell.querySelector('.mk-lo'), ch=cell.querySelector('.mk-chance'), ri=cell.querySelector('.mk-risk');
+        let todayVal=null, ytdVal=null;
+        if(q&&q.price&&q.prev) todayVal=(q.price-q.prev)/q.prev;
+        if(q&&q.price&&h&&h.ytdBase) ytdVal=(q.price-h.ytdBase)/h.ytdBase;
+        results[t]={today:todayVal,ytd:ytdVal};
+        if(price) price.textContent=(q&&q.price)?fmtLevel(q.price,unit,dec):'—';
+        if(todayEl){ if(todayVal!=null){todayEl.textContent=fmtPct(todayVal);todayEl.className='v mk-today '+(todayVal>=0?'pos':'neg');} else todayEl.textContent='—'; }
+        if(ytdEl){ if(ytdVal!=null){ytdEl.textContent=fmtPct(ytdVal);ytdEl.className='v mk-ytd '+(ytdVal>=0?'pos':'neg');} else ytdEl.textContent='—'; }
+        if(hi) hi.textContent='Hoch '+((h&&h.high!=null)?fmtLevel(h.high,unit,dec):'—');
+        if(lo) lo.textContent='Tief '+((h&&h.low!=null)?fmtLevel(h.low,unit,dec):'—');
+        if(ch){ if(q&&q.price&&h&&h.high!=null){const up=h.high/q.price-1;ch.textContent='Potential '+fmtPct(up);ch.className='mk-chance '+(up>=0?'pos':'neg');} else ch.textContent='Potential —'; }
+        if(ri){ if(q&&q.price&&h&&h.low!=null){const dn=h.low/q.price-1;ri.textContent='Risiko '+fmtPct(dn);ri.className='mk-risk '+(dn>=0?'pos':'neg');} else ri.textContent='Risiko —'; }
+      });
+    });
+    Promise.all(fetches).then(() => {
+      const avgCell=box.querySelector('.wx-mk[data-kind="avg"]');
+      if(!avgCell) return;
+      const of=(avgCell.getAttribute('data-avgof')||'').split(',').filter(Boolean);
+      const avg=arr=>arr.length?arr.reduce((a,b)=>a+b,0)/arr.length:null;
+      const todayAvg=avg(of.map(t=>results[t]&&results[t].today).filter(v=>v!=null));
+      const ytdAvg=avg(of.map(t=>results[t]&&results[t].ytd).filter(v=>v!=null));
+      const todayEl=avgCell.querySelector('.mk-today'), ytdEl=avgCell.querySelector('.mk-ytd');
+      if(todayEl){ if(todayAvg!=null){todayEl.textContent=fmtPct(todayAvg);todayEl.className='v mk-today '+(todayAvg>=0?'pos':'neg');} else todayEl.textContent='—'; }
+      if(ytdEl){ if(ytdAvg!=null){ytdEl.textContent=fmtPct(ytdAvg);ytdEl.className='v mk-ytd '+(ytdAvg>=0?'pos':'neg');} else ytdEl.textContent='—'; }
+    });
+  }
+  function fillCo(){
+    if(!__coTicker) return;
+    cfq(__coTicker).then(q => {
+      const m=document.getElementById('wxCoMetrics'); if(!q||!m) return;
+      const c=m.querySelectorAll('.wx-co-metric .v');
+      if(c[0]&&q.price) c[0].textContent=q.price.toLocaleString('de-DE',{minimumFractionDigits:2,maximumFractionDigits:2})+' €';
+      if(c[1]&&q.prev){ const ch=(q.price-q.prev)/q.prev; c[1].textContent=fmtPct(ch); c[1].className='v '+(ch>=0?'pos':'neg'); }
+      if(c[2]){ const mc=fmtMarketCap(q.mc); if(mc) c[2].textContent=mc; }
+      if(c[3]&&q.pe) c[3].textContent=q.pe.toLocaleString('de-DE',{minimumFractionDigits:1,maximumFractionDigits:1});
+    });
+  }
+
+  // ======================= Render + Laden =======================
+  function renderMarketTiles(){
+    const box = document.getElementById('wxMkGrid');
+    if(box) box.innerHTML = MK.map(mkTileHTML).join('');
+  }
+
+  async function laden(){
+    applyBrand();
     renderDateline();
+    buildNav();
+    renderMarketTiles();
+
     const headers = { apikey: SB_KEY, Authorization: 'Bearer ' + SB_KEY };
     try{
-      const [hlRes, cnbcRes] = await Promise.all([
-        fetch(SB_URL + '/rest/v1/wax_headlines?select=payload&order=stand.desc&limit=1', { headers }),
+      const [ftRes, cnbcRes] = await Promise.all([
+        fetch(SB_URL + '/rest/v1/folio_today?select=payload&order=stand.desc&limit=1', { headers }),
         fetch(SB_URL + '/rest/v1/cnbc_news?select=items&order=stand.desc&limit=1', { headers }),
       ]);
-      if(hlRes.ok){
-        const rows = await hlRes.json();
-        const payload = rows && rows[0] && rows[0].payload;
-        const leadMount = document.getElementById('wxLeadMount');
-        const rubMount = document.getElementById('wxRubrikenMount');
-        const podMount = document.getElementById('wxPodcastsMount');
+
+      if(ftRes.ok){
+        const rows = await ftRes.json();
+        let payload = rows && rows[0] && rows[0].payload;
+        if(typeof payload === 'string'){ try{ payload = JSON.parse(payload); }catch(e){ payload = null; } }
         if(payload){
-          if(leadMount) leadMount.innerHTML = leadHTML(payload);
-          if(rubMount) rubMount.innerHTML = rubrikenHTML(payload.rubriken);
+          const leadMount = document.getElementById('wxLeadMount');
+          if(leadMount) leadMount.innerHTML = entryHTML(payload);
+          const kurzMount = document.getElementById('wxKurzMount');
+          if(kurzMount){ const kh = kurzHTML(payload.heisser); kurzMount.innerHTML = kh; const ks = document.getElementById('wxKurz'); if(ks) ks.style.display = kh ? '' : 'none'; }
+          BLOCKS.forEach(b => { const el = document.getElementById(b.mount); if(el) el.innerHTML = blockHTML(b, payload.ressorts); });
+          const podMount = document.getElementById('wxPodcastsMount');
           if(podMount) podMount.innerHTML = podcastsHTML(payload.podcasts);
+          const coHTML = unternehmenHTML(payload.unternehmen);
+          if(coHTML){ document.getElementById('wxCoBody').innerHTML = coHTML; document.getElementById('wxCo').style.display=''; fillCo(); }
+          renderZitat(payload.zitat);
         } else {
+          const leadMount = document.getElementById('wxLeadMount');
           if(leadMount) leadMount.innerHTML = '<p style="font-size:13px;color:var(--ink-faint)">Noch keine Ausgabe verfügbar.</p>';
         }
       }
+
       if(cnbcRes.ok){
         const rows = await cnbcRes.json();
         const items = rows && rows[0] && rows[0].items;
-        const marketsMount = document.getElementById('wxMarketsMount');
-        if(marketsMount) marketsMount.innerHTML = marketsHTML(items);
+        const mnt = document.getElementById('wxMarketsUsMount');
+        if(mnt) mnt.innerHTML = marketsUsHTML(items);
       }
     }catch(e){
       const leadMount = document.getElementById('wxLeadMount');
       if(leadMount) leadMount.innerHTML = '<p style="font-size:13px;color:var(--ink-faint)">Inhalt konnte nicht geladen werden — bitte Seite neu laden.</p>';
     }
+
+    fillMarkets();
+    loadWeather();
+    initSpy();
   }
-  ladeHeadlines();
+
+  // ======================= WETTER (Open-Meteo, Wiehl 51674) =======================
+  const WX_LAT = 50.949, WX_LON = 7.546;
+  function wxMap(code){
+    const c = Number(code);
+    if(c===0) return {t:'Klar',ic:'sun'};
+    if(c===1) return {t:'Überwiegend klar',ic:'sun'};
+    if(c===2) return {t:'Teils bewölkt',ic:'partly'};
+    if(c===3) return {t:'Bewölkt',ic:'cloud'};
+    if(c===45||c===48) return {t:'Nebel',ic:'fog'};
+    if(c>=51&&c<=57) return {t:'Nieselregen',ic:'rain'};
+    if(c>=61&&c<=67) return {t:'Regen',ic:'rain'};
+    if(c>=71&&c<=77) return {t:'Schnee',ic:'snow'};
+    if(c>=80&&c<=82) return {t:'Regenschauer',ic:'rain'};
+    if(c===85||c===86) return {t:'Schneeschauer',ic:'snow'};
+    if(c>=95) return {t:'Gewitter',ic:'thunder'};
+    return {t:'Wechselhaft',ic:'partly'};
+  }
+  function wxIcon(key,size){
+    const s = size||48;
+    const open = '<svg viewBox="0 0 64 64" width="'+s+'" height="'+s+'" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">';
+    const cloud = (fill,stroke,x,y,sc)=>'<g transform="translate('+x+','+y+') scale('+sc+')"><path d="M18 44h26a11 11 0 0 0 2-21.7A15 15 0 0 0 16 20a11 11 0 0 0 2 24z" fill="'+fill+'" stroke="'+stroke+'" stroke-width="2"/></g>';
+    const rays = '<g stroke="#F5A623" stroke-width="3" stroke-linecap="round"><path d="M32 5v7M32 52v7M5 32h7M52 32h7M12 12l5 5M47 47l5 5M52 12l-5 5M12 52l5-5"/></g>';
+    switch(key){
+      case 'sun':
+        return open + rays + '<circle cx="32" cy="32" r="13" fill="#FBC02D" stroke="#F5A623" stroke-width="2"/></svg>';
+      case 'partly':
+        return open
+          + '<circle cx="24" cy="22" r="10" fill="#FBC02D" stroke="#F5A623" stroke-width="2"/>'
+          + '<g stroke="#F5A623" stroke-width="2.4" stroke-linecap="round"><path d="M24 4v5M6 22h5M11 9l3.5 3.5M37 9l-3.5 3.5M24 40v-5"/></g>'
+          + cloud('#DCE6EC','#9FB2C0', 8, 8, .9) + '</svg>';
+      case 'cloud':
+        return open + cloud('#E3EAEF','#B4C0C8', 2, 6, .95) + cloud('#CBD7DE','#9FB2C0', 6, 2, 1) + '</svg>';
+      case 'fog':
+        return open + cloud('#DCE6EC','#B4C0C8', 4, -2, 1)
+          + '<g stroke="#B4C0C8" stroke-width="3" stroke-linecap="round"><path d="M14 50h30M18 57h26M12 43h24"/></g></svg>';
+      case 'rain':
+        return open + cloud('#CBD7DE','#9FB2C0', 4, -4, 1)
+          + '<g stroke="#4A90D9" stroke-width="3.4" stroke-linecap="round"><path d="M20 46l-3 8M32 46l-3 8M44 46l-3 8"/></g></svg>';
+      case 'snow':
+        return open + cloud('#DCE6EC','#B4C0C8', 4, -4, 1)
+          + '<g fill="#7FB5E6"><circle cx="19" cy="50" r="2.4"/><circle cx="31" cy="55" r="2.4"/><circle cx="43" cy="50" r="2.4"/></g></svg>';
+      case 'thunder':
+        return open + cloud('#B9C6CE','#8CA0AC', 4, -4, 1)
+          + '<path d="M32 44l-8 12h7l-3 9 12-15h-7l3-6z" fill="#FBC02D" stroke="#F5A623" stroke-width="1.5"/></svg>';
+      default:
+        return open + cloud('#DCE6EC','#B4C0C8', 4, 4, 1) + '</svg>';
+    }
+  }
+  async function loadWeather(){
+    try{
+      const url = 'https://api.open-meteo.com/v1/forecast?latitude='+WX_LAT+'&longitude='+WX_LON
+        + '&current=temperature_2m,apparent_temperature,weather_code,wind_speed_10m,relative_humidity_2m'
+        + '&hourly=precipitation_probability'
+        + '&daily=weather_code,temperature_2m_max,temperature_2m_min,precipitation_probability_max'
+        + '&timezone=Europe%2FBerlin&forecast_days=6';
+      const r = await fetch(url);
+      if(!r.ok) return;
+      const d = await r.json();
+      const cur = d.current || {};
+      const dl = d.daily || {};
+      const m = wxMap(cur.weather_code);
+      const round = v => (v==null||isNaN(v)) ? '—' : Math.round(v);
+      const todayMax = dl.temperature_2m_max && dl.temperature_2m_max[0];
+      const todayMin = dl.temperature_2m_min && dl.temperature_2m_min[0];
+
+      const todayEl = document.getElementById('wxWeatherToday');
+      if(todayEl){
+        todayEl.innerHTML =
+          '<div>'
+          + '<div class="wx-wx-place">Wiehl · heute</div>'
+          + '<div class="wx-wx-today-top">'+wxIcon(m.ic,64)
+          + '<div><div class="wx-wx-temp">'+round(cur.temperature_2m)+'°</div>'
+          + '<div class="wx-wx-cond">'+esc(m.t)+'</div></div></div>'
+          + '</div>'
+          + '<div class="wx-wx-meta">'
+          + '<span>Höchst <b>'+round(todayMax)+'°</b></span>'
+          + '<span>Tief <b>'+round(todayMin)+'°</b></span>'
+          + '<span>Gefühlt <b>'+round(cur.apparent_temperature)+'°</b></span>'
+          + '<span>Wind <b>'+round(cur.wind_speed_10m)+' km/h</b></span>'
+          + '<span>Feuchte <b>'+round(cur.relative_humidity_2m)+'%</b></span>'
+          + '</div>';
+      }
+
+      const daysEl = document.getElementById('wxWeatherDays');
+      if(daysEl && dl.time){
+        const wd = new Intl.DateTimeFormat('de-DE',{weekday:'short'});
+        let html = '';
+        for(let i=0;i<dl.time.length;i++){
+          const dt = new Date(dl.time[i]+'T12:00:00');
+          const label = i===0 ? 'Heute' : wd.format(dt).replace('.','');
+          const dm = wxMap(dl.weather_code && dl.weather_code[i]);
+          const pp = dl.precipitation_probability_max && dl.precipitation_probability_max[i];
+          html += '<div class="wx-wx-day">'
+            + '<div class="d">'+esc(label)+'</div>'
+            + wxIcon(dm.ic,38)
+            + '<div class="hi">'+round(dl.temperature_2m_max[i])+'°</div>'
+            + '<div class="lo">'+round(dl.temperature_2m_min[i])+'°</div>'
+            + (pp!=null ? '<div class="pp">💧 '+Math.round(pp)+'%</div>' : '')
+            + '</div>';
+        }
+        daysEl.innerHTML = html;
+      }
+
+      // Stündliche Regenwahrscheinlichkeit (ab jetzt, 12 Stunden)
+      const hourly = d.hourly;
+      const hoEl = document.getElementById('wxWeatherHourly');
+      if(hoEl && hourly && hourly.time && hourly.precipitation_probability){
+        const now = new Date();
+        let start = hourly.time.findIndex(t => new Date(t) >= now);
+        if(start < 0) start = 0;
+        const N = 12;
+        let bars = '';
+        for(let i=start;i<start+N && i<hourly.time.length;i++){
+          const p = Math.max(0, Math.round(hourly.precipitation_probability[i]||0));
+          const hr = new Date(hourly.time[i]).getHours();
+          bars += '<div class="wx-wx-bar">'
+            + '<span class="pct">'+(p>=15?p+'%':'')+'</span>'
+            + '<div class="track"><div class="fill" style="height:'+p+'%"></div></div>'
+            + '<span class="hr">'+hr+'</span></div>';
+        }
+        hoEl.innerHTML = '<div class="hd">💧 Regenwahrscheinlichkeit heute im Tagesverlauf</div><div class="wx-wx-bars">'+bars+'</div>';
+        hoEl.style.display = '';
+      }
+
+      document.getElementById('wxWeather').style.display = '';
+      initSpy();
+    }catch(e){ /* Wetter optional — Sektion bleibt ausgeblendet */ }
+  }
+
+  laden();
 })();
 </script>
 
+<!-- ============================ HITJOURNEY-PLAYER (unverändert) ============================ -->
 <script>
 (function(){
   const HJ_SB_URL = 'https://ywfpzdniicfrhnrvfqfe.supabase.co';
@@ -472,11 +999,6 @@
   const HJ_STATE_KEY = 'folioHitjourneyState';
   let songs = [], idx = -1, audio = null, loaded = false;
 
-  // Erkennt, ob die App (auf diesem oder einem anderen Tab/derselben Seite) in den letzten
-  // Sekunden noch aktiv lief — z.B. weil man gerade von Home zu Headlines gewechselt hat.
-  // Nur dann wird die zuletzt gehoerte Position fortgesetzt; nach echtem Schliessen und
-  // spaeterem Neuoeffnen der App (Heartbeat laengst verstummt) startet stattdessen unten
-  // ein neuer Zufallssong.
   const HJ_HEARTBEAT_KEY = 'folioHitjourneyHeartbeat';
   let __hjWasRecentlyActive = false;
   try{
@@ -521,24 +1043,15 @@
     audio.addEventListener('play', () => { setPlayIcon(true); saveState(); });
     audio.addEventListener('pause', () => { setPlayIcon(false); saveState(); });
     audio.addEventListener('timeupdate', saveStateThrottled);
-    // Nach Songende laeuft die Playlist automatisch in Zufallswiedergabe weiter.
     audio.addEventListener('ended', () => playRandom());
     return audio;
   }
-  // iOS/Safari blockiert programmatisches play() nach einer Seitennavigation (kein
-  // synchroner User-Gesture-Kontext mehr) — au.play() liefert dann eine rejected Promise.
-  // Fallback: beim naechsten Tap/Klick/Tastendruck irgendwo auf der Seite automatisch
-  // fortsetzen, statt dass der Nutzer gezielt den Play-Button treffen muss.
   function tryResumePlay(au){
     const p = au.play();
     if(p && p.catch){
       p.catch(() => {
         let done = false;
         const events = ['touchend','click','keydown'];
-        // Wenn der naechste Tap gezielt der Play-/Zufalls-Button ist, soll togglePlayPause()
-        // ihn allein steuern (sonst Race: dieser Fallback startet die Wiedergabe, und der
-        // Button-eigene Klick-Handler pausiert sie im selben Zug wieder, weil au.paused
-        // durch den Fallback bereits synchron auf false gesprungen ist).
         const resume = (e) => {
           if(done || !au.paused) return;
           if(e && e.target && e.target.closest && e.target.closest('#anspielPlayBtn,#anspielRandomBtn')) return;
@@ -594,8 +1107,6 @@
       songs = orderedSlugs.map(slug => bySlug[slug]).filter(Boolean);
       if(!songs.length) return;
 
-      // Laufende Wiedergabe von der anderen Folio.wax-Seite (Home/Headlines) übernehmen,
-      // statt neu von vorn/zufällig zu starten.
       let resumed = false;
       let st = null;
       try{
@@ -612,10 +1123,6 @@
             au.src = songs[idx].mp3_url;
             loaded = true;
             au.addEventListener('loadedmetadata', function onMeta(){
-              // Falls die gespeicherte Position zu nah am Songende liegt, wuerde das
-              // Anspringen dieser Stelle sofort ein 'ended' ausloesen und ungewollt zu
-              // einem zufaelligen naechsten Song weiterspringen, statt den angezeigten
-              // Song abzuspielen — in dem Fall lieber von vorn beginnen.
               const dur = au.duration;
               au.currentTime = (isFinite(dur) && dur > 0 && resumeTime >= dur - 1.5) ? 0 : resumeTime;
               au.removeEventListener('loadedmetadata', onMeta);
@@ -626,9 +1133,6 @@
         }
       }catch(e){}
       if(!resumed){
-        // Echter Neustart der App (kein Tab/keine Seite lief in den letzten Sekunden) —
-        // frischer Zufallssong statt der zuletzt gehoerten Position; wiederholt nach
-        // Moeglichkeit nicht direkt denselben Titel wie beim letzten Mal.
         let n = Math.floor(Math.random() * songs.length);
         if(songs.length > 1 && st && st.slug){
           const prevIdx = songs.findIndex(s => s.slug === st.slug);
@@ -649,8 +1153,6 @@
         playRandom();
       });
 
-      // Roter Button: 1. Klick zeigt Cover, 2. Klick Lyrics, danach schliesst ein weiterer
-      // Klick (auf den Button oder irgendwo im Viewer) — 1:1 die Funktion aus der Home.
       let deckViewerPhase = 0;
       const deckViewer = document.getElementById('wxDeckViewer');
       const deckViewerImg = document.getElementById('wxDeckViewerImg');
@@ -691,10 +1193,8 @@
   })();
 })();
 
+/* ============================ MEIN-LIEBER-SOHN-ZITATE (unverändert) ============================ */
 (async function(){
-  // Zwei Zitate aus dem echten Fundus von mein-lieber-sohn.de (data/quotes.json),
-  // zufällig gezogen und nach Länge gefiltert statt gekürzt, damit sie in die
-  // jeweilige Kartenhöhe passen — gleiche Logik wie renderDiscoverQuotes() in index.html.
   try{
     const res = await fetch('https://mein-lieber-sohn.de/data/quotes.json');
     if(!res.ok) return;
