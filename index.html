@@ -207,8 +207,8 @@ td:nth-child(2) { text-align: left; }
 .ct-footer{display:flex;justify-content:space-between;gap:10px;margin-top:14px;padding-top:10px;border-top:1px solid var(--wax-border);font-size:11px;color:var(--wax-muted-2)}
 /* kleiner Rückgänge-Schnellzugriff oben rechts auf jeder Index-Kachel */
 .bk-item{position:relative}
-.bk-crash-btn{position:absolute;top:10px;right:10px;width:24px;height:24px;border-radius:50%;border:1px solid var(--wax-border);background:var(--wax-card);color:var(--wax-muted);font-size:13px;line-height:1;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all .15s;padding:0}
-.bk-crash-btn:hover{border-color:var(--brand-orange);color:var(--brand-orange)}
+.bk-hist-btn{position:absolute;top:10px;right:10px;width:26px;height:26px;border-radius:50%;border:1px solid var(--wax-border);background:var(--wax-card);color:var(--wax-muted);font-size:15px;font-weight:800;line-height:1;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all .15s;padding:0}
+.bk-hist-btn:hover{border-color:var(--brand-orange);color:var(--brand-orange)}
 @media (max-width: 480px){.chart-modal{padding:16px}.chart-modal-price{font-size:22px}}
 .info-box { background: var(--wax-panel); border: 1px solid var(--wax-border); padding: 12px; border-radius: 3px; margin-bottom: 14px; font-size: 11px; color: #555; line-height: 1.6; }
 .statusbar { background: var(--wax-status); border-bottom: 1px solid #222; padding: 5px 24px; display: flex; align-items: center; gap: 8px; font-size: 10px; color: var(--wax-muted); position: sticky; top: calc(102px + env(safe-area-inset-top,0px)); z-index: 98; }
@@ -3421,9 +3421,12 @@ function bkChgHTML(idToday, idYtd, extra){
 }
 function bkTileHTML(cfg){
   const id = bkIdBase(cfg.t);
-  const crashBtn = CRASH_TABLES[cfg.t] ? `<button type="button" class="bk-crash-btn" data-crash-btn data-chart-ticker="${cfg.t}" data-chart-name="${cfg.l}" data-chart-unit="${cfg.unit}" data-chart-dec="${cfg.dec}" title="History">⟳</button>` : '';
+  // "H" = History: auf JEDER Benchmark-Kachel (nicht bei Durchschnitt/Mein Depot). Der Button trägt keine
+  // eigene Klick-Logik – der Klick blubbert zur Kachel (data-chart-ticker) und öffnet den Kursverlauf
+  // (openIndexChart), also genau dasselbe wie ein Klick auf die Kachel selbst.
+  const histBtn = `<button type="button" class="bk-hist-btn" title="Kursverlauf" aria-label="Kursverlauf anzeigen">H</button>`;
   return `<div class="bk-item" data-chart-ticker="${cfg.t}" data-chart-name="${cfg.l}" data-chart-unit="${cfg.unit}" data-chart-dec="${cfg.dec}">
-  ${crashBtn}
+  ${histBtn}
   <div class="bk-l">${cfg.l}</div>
   <div class="bk-hero"><span class="bk-price" id="bkPrice${id}">·</span>${bkChgHTML('bkToday'+id,'bkYtd'+id)}</div>
   <div class="bk-sub"><span id="bkHi${id}">Hoch ·</span><span id="bkLo${id}">Tief ·</span></div>
