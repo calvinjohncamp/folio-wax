@@ -548,7 +548,7 @@ body:not(.theme-original) .badge.b-new:hover {
 // Cache-Bereinigung ohne aggressive Storage-Resets
 // WICHTIG: Dieser String muss bei JEDER deploy-relevanten Änderung an dieser Datei
 // von Hand hochgezählt werden – er ist die einzige Grundlage für den Update-Check unten.
-const WAX_BUILD = '1786500000000-ipad-slim-images-20260807';
+const WAX_BUILD = '1786510000000-ipad-submitlock-fix-20260807';
 try {
   sessionStorage.setItem('wax_build_seen', WAX_BUILD);
 } catch(e) {}
@@ -5550,8 +5550,9 @@ function calcFreigabe() {
 
 async function saveFreigabe() {
   if(!isAdmin()){ alert('Nur für den Administrator.'); return; }
-  // ── SUBMIT-LOCK ──
-  const _btn = document.activeElement;
+  // ── SUBMIT-LOCK ── (immer den echten Button referenzieren, NIE document.activeElement:
+  //    auf iOS ist beim Button-Tap das aktive Element der <body> → textContent-Trick unten würde die ganze Seite zerstören)
+  const _btn = document.querySelector('#modalOverlay button[onclick*="saveFreigabe"]');
   if(_btn && _btn._waxSubmitting){ return; }
   if(_btn){ _btn._waxSubmitting=true; _btn.disabled=true; _btn.dataset._origText=_btn.textContent; _btn.textContent='…'; }
   try {
@@ -5631,8 +5632,9 @@ function showReiseBestätigung() {
 async function saveReise() {
   if(!isAdmin()){ alert('Nur für den Administrator.'); return; }
   if(!reiseVorschauData){calcReise();return;}
-  // ── SUBMIT-LOCK ──
-  const _btn = document.activeElement;
+  // ── SUBMIT-LOCK ── (immer den echten Button referenzieren, NIE document.activeElement:
+  //    auf iOS ist beim Button-Tap das aktive Element der <body> → textContent-Trick unten würde die ganze Seite zerstören)
+  const _btn = document.querySelector('#modalOverlay button[onclick*="saveReise"]');
   if(_btn && _btn._waxSubmitting){ return; }
   if(_btn){ _btn._waxSubmitting=true; _btn.disabled=true; _btn.dataset._origText=_btn.textContent; _btn.textContent='…'; }
   try {
@@ -6030,8 +6032,9 @@ async function undoGroupedCashBookingSafe(last, sign, expectedTyp) {
 
 async function saveComdirect() {
   if(!isAdmin()){ alert('Nur für den Administrator.'); return; }
-  // ── SUBMIT-LOCK ──
-  const _btn = document.activeElement;
+  // ── SUBMIT-LOCK ── (immer den echten Button referenzieren, NIE document.activeElement:
+  //    auf iOS ist beim Button-Tap das aktive Element der <body> → textContent-Trick unten würde die ganze Seite zerstören)
+  const _btn = document.querySelector('#modalOverlay button[onclick*="saveComdirect"]');
   if(_btn && _btn._waxSubmitting){ return; }
   if(_btn){ _btn._waxSubmitting=true; _btn.disabled=true; _btn.dataset._origText=_btn.textContent; _btn.textContent='…'; }
   try {
