@@ -6609,8 +6609,9 @@ html,body{background:#aeb6c4;color:var(--ink);font-family:'IBM Plex Sans',sans-s
 .cover-sub{margin-top:16px;font-size:15px;color:#C7D4D8;max-width:64%;line-height:1.5}
 .cover-date{margin-top:26px;display:inline-flex;align-items:center;gap:13px;font-size:13px;color:#AEBCC1;flex-wrap:wrap}
 .cover-date .pill{font-family:'IBM Plex Mono',monospace;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.18);padding:7px 13px;border-radius:3px;color:var(--wax-card);letter-spacing:.04em}
-.cover-hero{margin-top:34px;position:relative;z-index:2;border-top:1px solid rgba(255,255,255,.16);padding-top:24px;display:grid;grid-template-columns:1fr 1fr;gap:24px 34px}
+.cover-hero{margin-top:34px;position:relative;z-index:2;border-top:1px solid rgba(255,255,255,.16);padding-top:24px;display:grid;grid-template-columns:1fr 1fr;gap:24px 46px}
 .hero-item{min-width:150px}
+.hero-item:nth-child(even){padding-left:8px}
 .hero-item .l{font-size:10px;letter-spacing:.2em;text-transform:uppercase;color:var(--blue-soft);margin-bottom:9px}
 .hero-item .v{font-family:'IBM Plex Mono',monospace;font-size:32px;font-weight:500;line-height:1}
 .hero-item .v.big{font-size:42px;color:var(--wax-card)}
@@ -6819,7 +6820,7 @@ html,body{background:#aeb6c4;color:var(--ink);font-family:'IBM Plex Sans',sans-s
       <p class="cover-sub">Stand der Dinge im Gesamtdepot und in den sechs Einzeldepots — eingefroren, dokumentiert und kommentiert zum Stichtag.</p>
       <div class="cover-date"><span>Stichtag</span><span class="pill">${heute}</span><span>Geschäftsjahr</span><span class="pill">${gj}</span></div></div>
     <div class="cover-hero">
-      <div class="hero-item"><div class="l">Gesamtwert</div><div class="v big">${eur0(d.gesamtEcht)}</div><div class="d ${updown(d.ytdAbs)}">${seur0(d.ytdAbs)} seit 31.12.</div></div>
+      <div class="hero-item"><div class="l">Gesamtwert</div><div class="v big">${eur0(d.gesamtEcht)}</div><div class="d ${updown(d.ytdAbs)}">${seur0(d.ytdAbs)} seit 31.12., davon ${eur0(d.comdirect)} Cash</div></div>
       <div class="hero-item"><div class="l">Ø pro Person</div><div class="v">${eur0(d.proPerson)}</div><div class="d">echter Wert / 6 Mitglieder</div></div>
       <div class="hero-item"><div class="l">Performance lfd. Jahr</div><div class="v ${updown(d.ytdPct)}">${pct(d.ytdPct)}</div><div class="d">ggü. Jahresabschluss ${refJahr}</div></div>
       <div class="hero-item"><div class="l">Alltime p. a.</div><div class="v ${updown(d.clubXirr)}">${pct(d.clubXirr)}</div><div class="d ${updown(d.gesamtGewinnAt)}">${seur0(d.gesamtGewinnAt)} seit Start</div></div></div>
