@@ -6356,6 +6356,9 @@ function waxBerichtDaten(){
     const ref   = (REF[m.id] && REF[m.id].total) || 0;
     const at    = calcAlltimeLive(m.id) || {wert_echt:depot, perf_pa:0};
     const gewinnAt = at.wert_echt - (typeof EINSATZ_PP!=='undefined' ? EINSATZ_PP : 0);
+    const externalFlows = (typeof netExternalFlows==='function') ? netExternalFlows(m.id) : 0;
+    const ytdAbs = depot - ref - externalFlows;
+    const ytdPct = ref>0 ? ytdAbs/ref : 0;
     const rows = db.positionen.filter(p=>p.mitglied_id===m.id && !p.verkauft && num(p.stueck)>0)
       .map(p=>{
         const k = liveKurse[p.wkn];
@@ -6374,7 +6377,7 @@ function waxBerichtDaten(){
     rows.forEach(p=>{ cats[p.category]=(cats[p.category]||0)+p.wertAkt; });
     const top = [...rows].sort((a,b)=>b.wertAkt-a.wertAkt).slice(0,5);
     return { id:m.id, name:m.name, depot, cash, cashRef, investWP, ref,
-             ytdPct: ref>0?(depot-ref)/ref:0, ytdAbs: depot-ref,
+             ytdPct, ytdAbs, externalFlows,
              perfPa: at.perf_pa, wertEcht: at.wert_echt, gewinnAt,
              cashAnteil: depot>0 ? cash/depot : 0,
              anteil: gesamtEinzeldepots>0 ? depot/gesamtEinzeldepots : 0,
@@ -6514,6 +6517,10 @@ function waxBerichtHtml(d){
     const cashAkt = m.cash, cashRef = m.cashRef;
     const cashAbs = cashAkt - cashRef;
     const cashPct = cashRef>0 ? cashAbs/cashRef : 0;
+    const flowLabel = m.externalFlows < -0.005 ? 'Freigaben / Entnahmen (neutralisiert)' : (m.externalFlows > 0.005 ? 'Einzahlungen / Freigaben (neutralisiert)' : 'Externe Cashflows (neutralisiert)');
+    const flowRow = Math.abs(m.externalFlows||0)>0.005
+      ? `<tr class="realized"><td>${flowLabel}</td><td></td><td>—</td><td>—</td><td>nicht YTD</td><td class="${cls(m.externalFlows)}">${seurP(m.externalFlows)}</td></tr>`
+      : '';
     const posRows = m.posRows.map(p=>
       `<tr><td>${esc(p.name)}</td><td>${esc(p.wkn)}</td><td>${n2(p.wertRef)}</td><td>${n2(p.wertAkt)}</td><td class="${cls(p.ytdPct)}">${pct(p.ytdPct)}</td><td class="${cls(p.ytdAbs)}">${seurP(p.ytdAbs)}</td></tr>`
     ).join('') || '<tr><td colspan="6" style="text-align:center;color:var(--muted)">Keine aktiven Positionen.</td></tr>';
@@ -6538,9 +6545,10 @@ function waxBerichtHtml(d){
           ${posRows}
           <tr class="subtot"><td>Summe Wertpapiere</td><td></td><td>${n2(m.sumWPRef)}</td><td>${n2(m.sumWPAkt)}</td><td class="${cls(wpPct)}">${pct(wpPct)}</td><td class="${cls(wpAbs)}">${seurP(wpAbs)}</td></tr>
           <tr class="realized"><td>Realisiert YTD (verkaufte Papiere)</td><td></td><td>—</td><td>—</td><td></td><td class="${cls(m.realizedYtd)}">${seurP(m.realizedYtd)}</td></tr>
+          ${flowRow}
           <tr class="cash"><td>Cash · Kontoguthaben</td><td></td><td>${n2(cashRef)}</td><td>${n2(cashAkt)}</td><td class="${cls(cashPct)}">${pct(cashPct)}</td><td class="${cls(cashAbs)}">${seurP(cashAbs)}</td></tr>
         </tbody>
-        <tfoot><tr><td>Gesamtdepot</td><td></td><td>${n2(m.ref)}</td><td>${n2(m.depot)}</td><td class="${cls(m.ytdPct)}">${pct(m.ytdPct)}</td><td class="${cls(m.ytdAbs)}">${seurP(m.ytdAbs)}</td></tr></tfoot>
+        <tfoot><tr><td>Gesamtdepot · Performance YTD</td><td></td><td>${n2(m.ref)}</td><td>${n2(m.depot)}</td><td class="${cls(m.ytdPct)}">${pct(m.ytdPct)}</td><td class="${cls(m.ytdAbs)}">${seurP(m.ytdAbs)}</td></tr></tfoot>
       </table>
       <div class="pagefoot">Vertraulich · Folio.wax</div><div class="pagenum">${String(4+k).padStart(2,'0')} / 10</div>
     </section>`;
