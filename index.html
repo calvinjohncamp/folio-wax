@@ -6609,7 +6609,7 @@ html,body{background:#aeb6c4;color:var(--ink);font-family:'IBM Plex Sans',sans-s
 .hero-item .d{font-family:'IBM Plex Mono',monospace;font-size:12.5px;margin-top:8px}
 .up{color:#4DD4A3}.down{color:#FF9D5C}
 .cover-foot{position:absolute;left:60px;right:60px;bottom:30px;display:flex;justify-content:space-between;font-size:10px;letter-spacing:.16em;text-transform:uppercase;color:#AEBCC1;z-index:2}
-.editable{outline:1px dashed rgba(255,122,0,0);transition:outline-color .15s,background .15s;border-radius:3px}
+.editable{outline:1px dashed rgba(255,122,0,0);transition:outline-color .15s,background .15s;border-radius:3px;max-width:100%;white-space:normal;overflow-wrap:anywhere;word-break:normal}
 .editable:hover{outline-color:rgba(255,122,0,.55);background:rgba(255,122,0,.04)}
 .editable:focus{outline:1px solid var(--gold);background:#FFF8F1}
 .edit-tag{display:inline-block;font-size:9px;letter-spacing:.16em;text-transform:uppercase;color:var(--gold);border:1px solid rgba(255,122,0,.5);border-radius:2px;padding:2px 7px;margin-bottom:9px;background:#FFF3E6}
@@ -6621,7 +6621,7 @@ html,body{background:#aeb6c4;color:var(--ink);font-family:'IBM Plex Sans',sans-s
 .brief-card{height:219mm;border:1px solid var(--line);border-left:4px solid var(--gold);background:linear-gradient(180deg,var(--wax-card),#fbfcff);border-radius:6px;padding:8.5mm 10mm 7.5mm;box-shadow:0 8px 24px rgba(22,35,42,.04);display:flex;flex-direction:column;overflow:hidden;font-family:'IBM Plex Sans',sans-serif;color:#2A3940;letter-spacing:0}
 .brief-fixed{font-family:'IBM Plex Serif',serif!important;font-size:14px;line-height:1.28;font-weight:700;color:var(--navy)}
 .brief-salute{margin-bottom:10px}.brief-close{margin-top:10px}.brief-name{margin-top:5px;color:#B5590A}
-.brief-body{flex:1;min-height:0;overflow:hidden;white-space:pre-wrap;font-family:'IBM Plex Sans',sans-serif!important;font-size:12.4px!important;line-height:1.36!important;color:#2A3940!important;font-weight:400!important;outline:none;padding:0 1px;letter-spacing:0!important}
+.brief-body{flex:1;min-height:0;overflow:hidden;white-space:pre-wrap;overflow-wrap:anywhere;word-break:normal;font-family:'IBM Plex Sans',sans-serif!important;font-size:12.4px!important;line-height:1.36!important;color:#2A3940!important;font-weight:400!important;outline:none;padding:0 1px;letter-spacing:0!important}
 .brief-body *{font-family:'IBM Plex Sans',sans-serif!important;font-size:12.4px!important;line-height:1.36!important;color:#2A3940!important;font-weight:400!important;letter-spacing:0!important;background:transparent!important}
 .brief-body b,.brief-body strong{font-weight:600!important;color:var(--navy)!important}
 .brief-body p,.brief-body div{margin:0 0 2.8px 0!important}.brief-body ul,.brief-body ol{margin:0 0 2.8px 16px!important}.brief-body li{margin:0 0 2px 0!important}
@@ -6636,7 +6636,7 @@ html,body{background:#aeb6c4;color:var(--ink);font-family:'IBM Plex Sans',sans-s
 .mk-kern-h{margin-bottom:10px}
 .mk-kern-h .edit-tag{color:var(--gold-soft);border-color:rgba(255,143,42,.45);background:rgba(255,143,42,.08)}
 .mk-kern-list{list-style:none;counter-reset:kern;margin:0;padding:0}
-.mk-kern-list li{counter-increment:kern;position:relative;padding:8px 0 8px 34px;font-size:13.5px;line-height:1.5;color:#eaf0fb;border-bottom:1px solid rgba(255,255,255,.1)}
+.mk-kern-list li{counter-increment:kern;position:relative;padding:8px 0 8px 34px;font-size:13.5px;line-height:1.5;color:#eaf0fb;border-bottom:1px solid rgba(255,255,255,.1);white-space:normal;overflow-wrap:anywhere;word-break:normal}
 .mk-kern-list li:last-child{border-bottom:none}
 .mk-kern-list li::before{content:counter(kern);position:absolute;left:0;top:7px;width:22px;height:22px;border-radius:50%;background:var(--gold);color:var(--navy);font-family:'IBM Plex Mono',monospace;font-weight:600;font-size:12px;display:flex;align-items:center;justify-content:center}
 .mk-kern-list li.editable:hover{background:rgba(255,122,0,.1)}
@@ -6647,10 +6647,10 @@ html,body{background:#aeb6c4;color:var(--ink);font-family:'IBM Plex Sans',sans-s
 .mk-blk .mk-no{color:var(--blue);font-size:15px}
 .mk-blk.mk-depot{border-left:3px solid var(--gold)}
 .mk-blk.mk-depot h3{color:#B5590A}
-.mk-list{list-style:disc;margin:0;padding-left:18px;min-height:82px;max-width:100%;white-space:normal;overflow-wrap:anywhere;word-break:normal;flex:1}
-.mk-list li{font-size:11.3px;line-height:1.45;color:#43545C;margin-bottom:5px;padding-left:2px;white-space:normal;overflow-wrap:anywhere;word-break:normal}
+.mk-list{list-style:none;margin:0;padding-left:0;min-height:82px;max-width:100%;white-space:normal;overflow-wrap:anywhere;word-break:normal;flex:1}
+.mk-list li{font-size:11.3px;line-height:1.45;color:#43545C;margin-bottom:5px;padding-left:14px;position:relative;white-space:normal;overflow-wrap:anywhere;word-break:normal}
 .mk-list li:last-child{margin-bottom:0}
-.mk-list li::marker{color:var(--gold)}
+.mk-list li::before{content:"•";position:absolute;left:0;top:0;color:var(--gold);font-weight:700}
 .kpis7{display:grid;grid-template-columns:repeat(4,1fr);gap:11px}
 .kpi{background:var(--paper-2);border:1px solid var(--line);border-left:3px solid var(--gold);border-radius:4px;padding:13px 14px}
 .kpi.alt{border-left-color:var(--blue)}
@@ -7020,12 +7020,98 @@ html,body{background:#aeb6c4;color:var(--ink);font-family:'IBM Plex Sans',sans-s
     else list.appendChild(next);
     focusLi(next);
   }
+  function plainClipboard(e){
+    var cd=e.clipboardData || window.clipboardData;
+    return cd ? (cd.getData('text/plain') || cd.getData('Text') || '') : '';
+  }
+  function stripPasteBullet(s){
+    return String(s||'')
+      .replace(/^\\s*(?:[•‣◦⁃∙]+|[-–—*]+|>+|\\d+[.)]|[①②③④⑤])\\s*/,'')
+      .replace(/\\s+/g,' ')
+      .trim();
+  }
+  function looksLikeHeading(s){
+    var t=stripPasteBullet(s).replace(/[:：]+$/,'').trim().toLowerCase();
+    return /^(kernaussagen?|politik|geopolitik|politik & geopolitik|wirtschaft|zinsen|wirtschaft & zinsen|unternehmen|technologie|unternehmen & technologie|auswirkungen? auf unser depot|depot)$/i.test(t);
+  }
+  function pasteItems(text){
+    var items=[];
+    String(text||'').replace(/\\r/g,'').split('\\n').forEach(function(line){
+      var raw=line.trim();
+      if(!raw || looksLikeHeading(raw)) return;
+      String(raw).split(/\\s*[•‣◦⁃∙]\\s+/).forEach(function(part){
+        var clean=stripPasteBullet(part);
+        if(clean) items.push(clean);
+      });
+    });
+    return items;
+  }
+  function isPlaceholderList(list){
+    var txt=(list && (list.innerText || list.textContent) || '').trim();
+    return /^\\[.*\\]$/s.test(txt) || /\\[(?:Dritter Punkt|Zweiter Punkt|Wahlen|Notenbanken|KI-Rally|Was bedeutet|Auswirkungen)/.test(txt);
+  }
+  function insertText(text){
+    if(document.queryCommandSupported && document.queryCommandSupported('insertText')){
+      document.execCommand('insertText', false, text);
+      return;
+    }
+    var sel=window.getSelection();
+    if(!sel || !sel.rangeCount) return;
+    var r=sel.getRangeAt(0);
+    r.deleteContents();
+    r.insertNode(document.createTextNode(text));
+    r.collapse(false);
+  }
+  function insertMkItems(list, items){
+    if(!items.length) return;
+    if(isPlaceholderList(list)) list.innerHTML='';
+    var sel=window.getSelection();
+    var li=sel && sel.rangeCount ? closestLi(sel.anchorNode) : null;
+    var anchor=(li && li.parentNode===list && !isPlaceholderList(list)) ? li : null;
+    items.forEach(function(txt){
+      var node=document.createElement('li');
+      node.textContent=txt;
+      if(anchor){ anchor.insertAdjacentElement('afterend', node); anchor=node; }
+      else { list.appendChild(node); anchor=node; }
+    });
+    focusLi(anchor);
+  }
+  function pasteKernItems(li, items){
+    if(!items.length) return;
+    var all=[].slice.call(document.querySelectorAll('.mk-kern-list li.editable'));
+    var start=Math.max(0, all.indexOf(li));
+    items.slice(0, all.length-start).forEach(function(txt,i){
+      all[start+i].textContent=txt;
+      all[start+i].dataset.orig=all[start+i].innerHTML;
+    });
+    focusLi(all[Math.min(all.length-1, start+items.length-1)]);
+  }
   document.addEventListener('keydown',function(e){
     var list=e.target && e.target.closest ? e.target.closest('.mk-list[contenteditable="true"]') : null;
     if(!list || e.key!=='Enter' || e.shiftKey || e.altKey || e.ctrlKey || e.metaKey) return;
     e.preventDefault();
     insertMkBullet(list);
   });
+  document.addEventListener('paste',function(e){
+    var editable=e.target && e.target.closest ? e.target.closest('.editable[contenteditable="true"]') : null;
+    if(!editable) return;
+    var text=plainClipboard(e);
+    if(!text) return;
+    var list=editable.matches && editable.matches('.mk-list') ? editable : null;
+    if(list){
+      var items=pasteItems(text);
+      if(items.length){ e.preventDefault(); insertMkItems(list, items); }
+      return;
+    }
+    if(editable.matches && editable.matches('.mk-kern-list li')){
+      var kernItems=pasteItems(text);
+      if(kernItems.length>1){ e.preventDefault(); pasteKernItems(editable, kernItems); return; }
+    }
+    if(editable.matches && editable.matches('.bench .pc')) return;
+    e.preventDefault();
+    insertText(text.replace(/\\r/g,'').replace(/\\n{3,}/g,'\\n\\n'));
+    try{ updateBriefCount(); updatePageNumbers(); }catch(_e){}
+  }, true);
 
   // ---- DB-Archiv-Anbindung: editierbare Texte einsammeln / zurückschreiben ----
   var __d = JSON.parse(${dEmbed});
