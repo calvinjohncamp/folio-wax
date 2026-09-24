@@ -148,6 +148,9 @@ td:nth-child(2) { text-align: left; }
 .badge { display: inline-block; font-size: 8px; font-weight: 700; padding: 2px 5px; border-radius: 2px; margin-left: 4px; vertical-align: middle; }
 .b-new { background: #e8f4e8; color: var(--wax-positive); border: 1px solid #b0d8b0; }
 .b-out { background: #fde8e8; color: #8a1010; border: 1px solid #e8b0b0; }
+.b-manual { background: #fff3d8; color: #7a5310; border: 1px solid #e4c37a; }
+.manual-quote-input { width: 88px; min-width: 76px; padding: 7px 8px; border: 1px solid #ddd; border-radius: 3px; font: inherit; text-align: right; }
+.manual-quote-input:focus { outline: none; border-color: var(--wax-accent); }
 .sold { color: var(--wax-muted-2); text-decoration: line-through; }
 .btn { font-family: 'DM Sans', sans-serif; font-size: 11px; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; padding: 8px 16px; border-radius: 3px; cursor: pointer; transition: all .15s; border: 1px solid; }
 .btn-red { background: var(--wax-accent); border-color: var(--wax-accent); color: var(--wax-card); }
@@ -1608,7 +1611,8 @@ body.theme-classic .dc-mini-kpi.deviation .dc-kpi-line.total strong{color:#16232
   <div class="sec-t" style="margin-top:28px"><span class="sec-n">5.5 ·</span> Kursdaten prüfen</div>
   <div class="info-box" style="margin-bottom:12px">
     Aktive Positionen ohne Yahoo-Ticker oder ohne Kursdaten werden hier angezeigt.<br>
-    <strong>Test</strong> prüft nur den Ticker — schreibt nichts. <strong>Übernehmen</strong> speichert den Ticker im Security Master.
+    <strong>Test</strong> prüft nur den Ticker — schreibt nichts. <strong>Übernehmen</strong> speichert den Ticker im Security Master.<br>
+    Ein <strong>manueller Kurs</strong> ersetzt nur die aktuelle Bewertung; Kaufwert und Jahresanfangswerte bleiben unverändert. Auch 0,00 € ist zulässig.
   </div>
   <div id="tickerCheckInfo" style="font-size:12px;color:var(--wax-muted);margin-bottom:10px"></div>
   <div class="tw" id="tickerCheckWrap" style="display:none">
@@ -1619,6 +1623,7 @@ body.theme-classic .dc-mini-kpi.deviation .dc-kpi-line.total strong{color:#16232
         <th style="text-align:left">Status</th>
         <th style="text-align:left">Yahoo-Ticker</th>
         <th>Währung</th>
+        <th>Manueller Kurs</th>
         <th></th>
       </tr></thead>
       <tbody id="tickerCheckBody"></tbody>
@@ -1982,6 +1987,37 @@ function sanitizeDatabase(data) {
 let db = { mitglieder:[], positionen:[], cash:[], alltime:[], buchungen:[], security_master:[] };
 let liveKurse = {};
 let prevKurse = {};
+let manualKurse = {};
+let manualKursMeta = {};
+
+function hydrateManualQuotes(actions){
+  manualKurse = {};
+  manualKursMeta = {};
+  [...(actions || [])].sort((a,b)=>Number(a.id||0)-Number(b.id||0)).forEach(row => {
+    const wkn = repairKnownWkn(row?.wkn || '');
+    if (!wkn) return;
+    const typ = String(row.typ || '').toUpperCase();
+    if (typ === 'KURS_AUTO') {
+      delete manualKurse[wkn];
+      delete manualKursMeta[wkn];
+      return;
+    }
+    const kurs = Number(row.kurs);
+    if (typ === 'KURS_MANUELL' && Number.isFinite(kurs) && kurs >= 0) {
+      manualKurse[wkn] = kurs;
+      manualKursMeta[wkn] = { datum:String(row.datum || '').slice(0,10), id:row.id, notiz:row.notiz || '' };
+    }
+  });
+}
+function hasManualQuote(wkn){
+  return Object.prototype.hasOwnProperty.call(manualKurse, repairKnownWkn(wkn));
+}
+function applyManualQuotes(){
+  Object.entries(manualKurse).forEach(([wkn,kurs]) => {
+    liveKurse[wkn] = Number(kurs);
+    delete prevKurse[wkn];
+  });
+}
 // === Kaufkurse-/Analyse-Ansicht (52W-Hoch/Tief, KGV, Potential/Risiko, S&P-Benchmark) ===
 let liveKgv = {};            // wkn -> Trailing-PE (aktive + verkaufte Titel)
 let anaKurse = {};           // wkn -> aktueller EUR-Kurs für VERKAUFTE Titel (aktive stehen in liveKurse)
@@ -3291,6 +3327,8 @@ async function loadKurse() {
       missingTickerWkns.push(wkn);
     }
   }));
+  // Bewusst gesetzte Bewertungen haben Vorrang vor einem Live-Kurs. Der Wert 0 ist gültig.
+  applyManualQuotes();
 }
 
 // Zusätzliche Daten für die Kaufkurse-Analyse: aktueller Kurs/KGV der VERKAUFTEN Titel,
@@ -3378,6 +3416,8 @@ async function refreshMarketData() {
   setRefreshButtonsLoading(true);
   setStatus('loading','Aktualisiere Kurse & Wechselkurse…');
   try {
+    liveKurse = {};
+    prevKurse = {};
     await loadFX();
     await Promise.all([loadKurse(), loadBenchmarks()]);
     const loaded = Object.keys(liveKurse).length;
@@ -3548,15 +3588,17 @@ async function init() {
     }
   } catch(e) { /* Fallback auf REF_FALLBACK */ }
 
-  const [mitglieder, positionen, cash, alltime, buchungen, security_master] = await Promise.all([
+  const [mitglieder, positionen, cash, alltime, buchungen, security_master, kursaktionen] = await Promise.all([
     sbGet('mitglieder','order=sortierung'),
     sbGet('positionen','order=mitglied_id,id'),
     sbGet('cash','order=mitglied_id'),
     sbGet('alltime','order=mitglied_id'),
     sbGet('buchungen','order=datum.desc&limit=200'),
-    sbGet('security_master','order=wkn')
+    sbGet('security_master','order=wkn'),
+    sbGet('buchungen','typ=in.(KURS_MANUELL,KURS_AUTO)&order=id.asc&limit=1000')
   ]);
   db = sanitizeDatabase({ mitglieder, positionen, cash, alltime, buchungen, security_master });
+  hydrateManualQuotes(kursaktionen);
   hydrateSecurityMaster(); // Kein automatischer localStorage→Supabase-Sync; Ticker nur bewusst per Admin-Button speichern
   populateSelects();
   setRefreshButtonsLoading(false);
@@ -4919,14 +4961,15 @@ function renderDepot(id) {
     let sumAktVisible = 0;
     sortedPos.forEach((p,idx)=>{
       const k=liveKurse[p.wkn];
-      const prevK=(prevKurse[p.wkn] != null && !isNaN(prevKurse[p.wkn])) ? prevKurse[p.wkn] : k;
+      const isManualQuote = hasManualQuote(p.wkn);
+      const prevK=isManualQuote ? null : ((prevKurse[p.wkn] != null && !isNaN(prevKurse[p.wkn])) ? prevKurse[p.wkn] : k);
       const isNewCurrentYear = p.kauf_datum && String(p.kauf_datum).slice(0,4) > String(REF_JAHR);
       const wAkt=k!=null?k*p.stueck:(p.wert_ref||p.kaufwert);
       // YTD-Basis = 31.12.-Wert (wert_ref) bzw. Kaufwert bei unterjährig gekauften Titeln,
       // die es am 31.12. noch nicht gab. Heute-Basis = Vortageswert (prevK × Stück).
       // Beide Veränderungen werden parallel in eigenen Spalten angezeigt (kein Umschalter mehr).
       const wBaseYTD=(p.wert_ref!=null && !isNaN(p.wert_ref)) ? p.wert_ref : p.kaufwert;
-      const wBaseToday=(prevK!=null?prevK:k)*p.stueck;
+      const wBaseToday=prevK!=null ? prevK*p.stueck : null;
       sumAktVisible += (wAkt || 0);
       sumBaseVisible += (wBaseYTD || 0);
       const share = totalAktSec>0 ? (wAkt/totalAktSec) : 0;
@@ -4936,6 +4979,9 @@ function renderDepot(id) {
       const deToday=(k!=null&&wBaseToday!=null)?wAkt-wBaseToday:null;
       const dateBadge=(isNewCurrentYear && p.kauf_datum)?`<span class="badge b-new">NEU ${fdate(p.kauf_datum)}</span>`:'';
       const kursDisplay = k!=null ? f(k,2) : `<span class="kurs-loading">lädt…</span>`;
+      const manualLine = isManualQuote
+        ? `<div class="dc-sub"><span class="badge b-manual" style="margin-left:0">MANUELL</span> ${fdate(manualKursMeta[repairKnownWkn(p.wkn)]?.datum)}</div>`
+        : '';
       const refKurs = (p.kurs_ref!=null && !isNaN(p.kurs_ref)) ? Number(p.kurs_ref) : null;
       const refWert = (p.wert_ref!=null && !isNaN(p.wert_ref)) ? Number(p.wert_ref) : null;
       const refKursLine = refKurs!=null ? `<div class="dc-sub">31.12.: ${f(refKurs,2)}</div>` : '';
@@ -4945,7 +4991,7 @@ function renderDepot(id) {
         <div class="dc-col dc-share"><div class="dc-share-top">${f(share*100,1)}%</div><div class="dc-bar"><div class="dc-bar-fill" style="width:${Math.min(share*100,100).toFixed(1)}%"></div></div></div>
         <div class="dc-col ${cl(deYTD)}"><div class="dc-top">${dpYTD!=null?fp(dpYTD):'—'}</div><div class="dc-sub">${deYTD!=null?fc(deYTD):'—'}</div></div>
         <div class="dc-col ${cl(deToday)}"><div class="dc-top">${dpToday!=null?fp(dpToday):'—'}</div><div class="dc-sub">${deToday!=null?fc(deToday):'—'}</div></div>
-        <div class="dc-col"><div class="dc-top">${kursDisplay}</div>${refKursLine}<div class="dc-sub">Kauf: ${f(p.kaufkurs,2)}</div></div>
+        <div class="dc-col"><div class="dc-top">${kursDisplay}</div>${manualLine}${refKursLine}<div class="dc-sub">Kauf: ${f(p.kaufkurs,2)}</div></div>
         <div class="dc-col"><div class="dc-top">${f(wAkt)} €</div>${refWertLine}<div class="dc-sub">Kauf: ${f(p.kaufwert)} €</div></div>
       </div></article>`;
     });
@@ -5103,9 +5149,10 @@ function renderPerf() {
 // LOG
 function renderLog() {
   const typen={KAUF:'🟢',VERKAUF:'🔴',EINZAHLUNG:'🔵',ENTNAHME:'🟡',REISE:'✈️',FREIGABE:'⬆️',KONTOSTAND:'💳',SPLIT:'🔀'};
+  const visibleBookings = (db.buchungen || []).filter(b => !['KURS_MANUELL','KURS_AUTO'].includes(String(b.typ || '').toUpperCase()));
   let html='';
-  if (!db.buchungen.length) html='<tr><td colspan="8" style="text-align:center;color:var(--wax-muted-2);padding:20px">Noch keine Buchungen</td></tr>';
-  else db.buchungen.forEach(b=>{
+  if (!visibleBookings.length) html='<tr><td colspan="8" style="text-align:center;color:var(--wax-muted-2);padding:20px">Noch keine Buchungen</td></tr>';
+  else visibleBookings.forEach(b=>{
     const m=getMitglied(b.mitglied_id);
     html+=`<tr>
       <td>${fdate(b.datum)}</td><td>${((b.typ==='ENTNAHME'||b.typ==='KONTOSTAND') && /Comdirect-Gesamtstand/i.test(b.bezeichnung||'')) ? '💳 Kontostand' : `${typen[b.typ]||''} ${b.typ}`}</td>
@@ -5180,11 +5227,13 @@ function renderMissingTickerTable(){
     const meta = findSecurityMeta({ wkn });
     const infoResolved = resolveTickerByWKN(wkn);
     const hasTicker = !!infoResolved?.t;
-    const hasLiveKurs = liveKurse[wkn] != null;
+    const manual = hasManualQuote(wkn);
+    const hasLiveKurs = liveKurse[wkn] != null && !manual;
     let status = 'ok';
-    if (!hasTicker) status = 'missing';
+    if (manual) status = 'manual';
+    else if (!hasTicker) status = 'missing';
     else if (!hasLiveKurs) status = 'no_quote';
-    return { wkn, name: meta?.name || meta?.bezeichnung || p.bezeichnung || '', info:infoResolved, meta, hasLiveKurs, status };
+    return { wkn, name: meta?.name || meta?.bezeichnung || p.bezeichnung || '', info:infoResolved, meta, hasLiveKurs, manual, status };
   }).filter(x => x.status !== 'ok');
 
   if (!issues.length) {
@@ -5207,9 +5256,13 @@ function renderMissingTickerTable(){
     const suggestedCcy = normalizeCurrency(
       (issue.status === 'no_quote' ? (def.fx || def.currency || map.fx || issue.info?.fx) : (issue.info?.fx || def.fx || def.currency || map.fx)) || inferCurrencyFromTicker(suggestedTicker)
     );
-    const statusLabel = issue.status === 'missing'
-      ? '<span class="ticker-warn">kein Ticker</span>'
-      : '<span class="ticker-warn">kein Kurs</span><div class="ticker-mini">gespeicherter Ticker liefert keinen Kurs</div>';
+    const manualMeta = manualKursMeta[issue.wkn] || {};
+    const statusLabel = issue.status === 'manual'
+      ? '<span class="badge b-manual">MANUELL</span><div class="ticker-mini">seit ' + escapeHtml(fdate(manualMeta.datum) || '—') + '</div>'
+      : issue.status === 'missing'
+        ? '<span class="ticker-warn">kein Ticker</span>'
+        : '<span class="ticker-warn">kein Kurs</span><div class="ticker-mini">gespeicherter Ticker liefert keinen Kurs</div>';
+    const manualValue = issue.manual ? String(manualKurse[issue.wkn]).replace('.', ',') : '';
     return '<tr>' +
       '<td class="bold">' + escapeHtml(issue.wkn) + '</td>' +
       '<td>' + escapeHtml(issue.name || '—') + '</td>' +
@@ -5218,9 +5271,12 @@ function renderMissingTickerTable(){
       '<td><select class="ticker-select" id="tc_' + issue.wkn + '">' +
         ['EUR','USD','CHF','CAD','AUD'].map(c=>'<option' + (normalizeCurrency(suggestedCcy)===c?' selected':'') + '>' + c + '</option>').join('') +
       '</select></td>' +
+      '<td><input class="manual-quote-input" id="mq_' + issue.wkn + '" inputmode="decimal" value="' + escapeHtml(manualValue) + '" placeholder="0,00" aria-label="Manueller Kurs in Euro"></td>' +
       '<td><div class="ticker-actions">' +
         '<button class="btn btn-outline" data-wkn="' + escapeHtml(issue.wkn) + '" data-action="test">Test</button>' +
         '<button class="btn btn-outline" data-wkn="' + escapeHtml(issue.wkn) + '" data-action="save">Übernehmen</button>' +
+        '<button class="btn btn-outline" data-wkn="' + escapeHtml(issue.wkn) + '" data-action="manual">Kurs setzen</button>' +
+        (issue.manual ? '<button class="btn btn-outline" data-wkn="' + escapeHtml(issue.wkn) + '" data-action="auto">Automatik</button>' : '') +
       '</div></td>' +
     '</tr>';
   }).join('');
@@ -5229,7 +5285,9 @@ function renderMissingTickerTable(){
     btn.addEventListener('click', () => {
       const wkn = btn.dataset.wkn;
       if (btn.dataset.action === 'test') testTickerForWkn(wkn);
-      else saveTickerForWkn(wkn);
+      else if (btn.dataset.action === 'save') saveTickerForWkn(wkn);
+      else if (btn.dataset.action === 'manual') saveManualQuote(wkn);
+      else if (btn.dataset.action === 'auto') resetManualQuote(wkn);
     });
   });
   applyPflegeAccess();
@@ -5279,6 +5337,70 @@ async function saveTickerForWkn(wkn){
   await loadKurse();
   renderAll();
   alert('✓ Ticker ' + ticker + ' dauerhaft in Supabase gespeichert. 5.5 und 5.6 wurden neu aus Supabase aufgebaut.');
+}
+
+async function saveManualQuote(wkn){
+  if (!isAdmin()) { alert('Nur für den Administrator.'); return; }
+  const key = repairKnownWkn(wkn);
+  const raw = String(document.getElementById('mq_' + key)?.value ?? '').trim().replace(',', '.');
+  if (raw === '') { alert('Bitte einen manuellen Kurs eingeben. Auch 0,00 € ist zulässig.'); return; }
+  const kurs = Number(raw);
+  if (!Number.isFinite(kurs) || kurs < 0) { alert('Bitte einen gültigen Kurs ab 0,00 € eingeben.'); return; }
+  const pos = db.positionen.find(p=>repairKnownWkn(p.wkn)===key) || {};
+  const name = securityDisplayName(key, pos.bezeichnung || key);
+  if (!confirm(`${name} (${key}) jetzt manuell mit ${f(kurs,4)} € bewerten?\n\nKaufwert und Jahresanfangswerte bleiben unverändert.`)) return;
+
+  const datum = new Date().toISOString().slice(0,10);
+  const result = await sbPostRow('buchungen', {
+    datum,
+    typ:'KURS_MANUELL',
+    mitglied_id:null,
+    bezeichnung:name,
+    wkn:key,
+    kurs,
+    betrag:0,
+    notiz:'Manuelle aktuelle Bewertung'
+  });
+  if (!result.ok) {
+    alert('Manueller Kurs konnte nicht gespeichert werden.\n\n' + (result.error || 'Unbekannter Fehler'));
+    return;
+  }
+  manualKurse[key] = kurs;
+  manualKursMeta[key] = { datum, id:result.row?.id, notiz:'Manuelle aktuelle Bewertung' };
+  applyManualQuotes();
+  renderAll();
+  alert(`✓ ${name} wird jetzt manuell mit ${f(kurs,4)} € bewertet.`);
+}
+
+async function resetManualQuote(wkn){
+  if (!isAdmin()) { alert('Nur für den Administrator.'); return; }
+  const key = repairKnownWkn(wkn);
+  const pos = db.positionen.find(p=>repairKnownWkn(p.wkn)===key) || {};
+  const name = securityDisplayName(key, pos.bezeichnung || key);
+  if (!confirm(`Manuelle Bewertung für ${name} (${key}) aufheben?\n\nDanach verwendet die App wieder den automatischen Kurs. Falls keiner verfügbar ist, erscheint der bisherige Ersatzwert.`)) return;
+
+  const datum = new Date().toISOString().slice(0,10);
+  const result = await sbPostRow('buchungen', {
+    datum,
+    typ:'KURS_AUTO',
+    mitglied_id:null,
+    bezeichnung:name,
+    wkn:key,
+    kurs:0,
+    betrag:0,
+    notiz:'Manuelle Bewertung aufgehoben'
+  });
+  if (!result.ok) {
+    alert('Die manuelle Bewertung konnte nicht aufgehoben werden.\n\n' + (result.error || 'Unbekannter Fehler'));
+    return;
+  }
+  delete manualKurse[key];
+  delete manualKursMeta[key];
+  delete liveKurse[key];
+  delete prevKurse[key];
+  await loadKurse();
+  renderAll();
+  alert(`✓ ${name} verwendet wieder die automatische Kursversorgung.`);
 }
 
 
