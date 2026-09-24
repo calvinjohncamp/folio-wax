@@ -5865,6 +5865,8 @@ function formatStueckSafe(v){
 function waxEq(field, value){ return `${field}=eq.${encodeURIComponent(String(value ?? ''))}`; }
 function waxAlmost(a,b,eps=1e-7){ return Math.abs((Number(a)||0)-(Number(b)||0)) <= eps; }
 function waxSortDescById(rows){ return [...(rows||[])].sort((a,b)=>Number(b.id||0)-Number(a.id||0)); }
+function waxDateOnly(v){ return String(v || '').trim().slice(0,10); }
+function waxSameDate(a,b){ return waxDateOnly(a) === waxDateOnly(b); }
 function waxAbort(msg){ alert('Abbruch: ' + msg); return false; }
 async function waxCreateUndoSnapshot(group, last){
   try {
@@ -5921,7 +5923,6 @@ async function undoLastKaufSafe(b) {
   const mid = Number(b.mitglied_id);
   const wkn = repairKnownWkn(b.wkn);
   const st = Number(b.stueck)||0;
-  const kurs = Number(b.kurs)||0;
   const betrag = Math.abs(Number(b.betrag)||0);
   if(!mid || !wkn || st<=0 || kurs<=0 || betrag<=0) return waxAbort('Die Kaufbuchung ist unvollständig.');
 
@@ -5949,10 +5950,19 @@ async function undoLastVerkaufSafe(b) {
   const mid = Number(b.mitglied_id);
   const wkn = repairKnownWkn(b.wkn);
   const st = Number(b.stueck)||0;
+  const kurs = Number(b.kurs)||0;
   const betrag = Math.abs(Number(b.betrag)||0);
   if(!mid || !wkn || st<=0 || betrag<=0) return waxAbort('Die Verkaufsbuchung ist unvollständig.');
 
-  const allSold = waxSortDescById(await sbGet('positionen', [waxEq('mitglied_id', mid), waxEq('wkn', wkn), 'verkauft=eq.true', waxEq('verkauf_datum', b.datum), 'order=id.desc', 'limit=100'].join('&')));
+  let allSold = waxSortDescById(await sbGet('positionen', [waxEq('mitglied_id', mid), waxEq('wkn', wkn), 'verkauft=eq.true', waxEq('verkauf_datum', b.datum), 'order=id.desc', 'limit=100'].join('&')));
+  if(!allSold.length){
+    const broadSold = await sbGet('positionen', [waxEq('mitglied_id', mid), 'verkauft=eq.true', 'order=id.desc', 'limit=250'].join('&'));
+    allSold = waxSortDescById((broadSold||[]).filter(p =>
+      repairKnownWkn(p.wkn) === wkn &&
+      waxSameDate(p.verkauf_datum, b.datum) &&
+      (!b.bezeichnung || !p.bezeichnung || String(p.bezeichnung) === String(b.bezeichnung))
+    ));
+  }
   const selected = [];
   let sum = 0;
   for(const lot of allSold){
@@ -5970,8 +5980,10 @@ async function undoLastVerkaufSafe(b) {
 
   const restorePlan = [];
   for(const sold of selected){
-    const candidates = (await sbGet('positionen', [waxEq('mitglied_id', mid), waxEq('wkn', wkn), waxEq('kauf_datum', sold.kauf_datum), 'order=id.asc', 'limit=100'].join('&')))
+    const candidatesRaw = await sbGet('positionen', [waxEq('mitglied_id', mid), waxEq('kauf_datum', sold.kauf_datum), 'order=id.asc', 'limit=100'].join('&'));
+    const candidates = (candidatesRaw||[])
       .filter(p => Number(p.id)!==Number(sold.id)
+        && repairKnownWkn(p.wkn) === wkn
         && waxAlmost(p.kaufkurs, sold.kaufkurs)
         && (p.verkauf_datum == null || p.verkauf_datum === '')
         && (!sold.bezeichnung || !p.bezeichnung || String(p.bezeichnung) === String(sold.bezeichnung)));
@@ -5979,7 +5991,13 @@ async function undoLastVerkaufSafe(b) {
     const orig = candidates[0];
     const newSt = (Number(orig.stueck)||0) + (Number(sold.stueck)||0);
     const kk = Number(orig.kaufkurs || sold.kaufkurs)||0;
-    restorePlan.push({ sold, orig, patch:{ stueck:newSt, kaufwert:newSt*kk, verkauft:false, verkauf_datum:null } });
+    const patch = { stueck:newSt, kaufwert:newSt*kk, verkauft:false, verkauf_datum:null };
+    const origRef = (orig.wert_ref != null && !isNaN(orig.wert_ref)) ? Number(orig.wert_ref) : null;
+    const soldRef = (sold.wert_ref != null && !isNaN(sold.wert_ref)) ? Number(sold.wert_ref) : null;
+    if(origRef != null || soldRef != null) patch.wert_ref = Number(origRef||0) + Number(soldRef||0);
+    if(orig.kurs_ref != null && !isNaN(orig.kurs_ref)) patch.kurs_ref = Number(orig.kurs_ref);
+    else if(sold.kurs_ref != null && !isNaN(sold.kurs_ref)) patch.kurs_ref = Number(sold.kurs_ref);
+    restorePlan.push({ sold, orig, patch });
   }
 
   for(const r of restorePlan){
